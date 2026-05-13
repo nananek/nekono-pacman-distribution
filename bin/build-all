@@ -1,0 +1,89 @@
+#!/usr/bin/env bash
+# build-all: pkgs/* の PKGBUILD を順番に makepkg + gpg --detach-sign +
+# repo-add する pipeline。
+#
+# 前提:
+#   - Arch build host で実行
+#   - YubiKey (Nekono GPG) が NFC リーダー上に乗ってる、gpg-agent / scdaemon
+#     経路が生きてる (= gpg --card-status で OpenPGP card が見える)
+#   - PIN cache が build 全体を覆える長さで効いてる (gpg-agent.conf の
+#     default-cache-ttl は 3600+ 推奨。最初の sign で 1 度入力)
+#   - repo-add の base path = repo/x86_64/ (.gitignore で git 管理外)
+#
+# 使い方:
+#   bin/build-all                 # 全 pkgs を build + sign + db に追加
+#   bin/build-all vesktop-bin     # 個別指定 (1 つだけ build)
+#
+# Exit code:
+#   0 = 全部成功
+#   1 = 1 つでも fail (途中で止まる、--keep-going 派生は将来必要なら検討)
+
+set -euo pipefail
+
+NEKONO_GPG_FP="483DC691DF9F29327EA106BD030130E2F156CD74"
+REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+REPO_DIR="$REPO_ROOT/repo/x86_64"
+DB_NAME="nekono"
+
+mkdir -p "$REPO_DIR"
+
+# 引数で個別 package が指定されたらそれだけ、なければ pkgs/* 全て。
+if [[ $# -gt 0 ]]; then
+    packages=("$@")
+else
+    packages=()
+    for d in "$REPO_ROOT"/pkgs/*/; do
+        packages+=("$(basename "$d")")
+    done
+fi
+
+if [[ ${#packages[@]} -eq 0 ]]; then
+    echo "[ERROR] no packages found under $REPO_ROOT/pkgs/" >&2
+    exit 1
+fi
+
+echo "[*] Warming up gpg-agent (YubiKey PIN cache)"
+gpg-connect-agent "SCD SERIALNO" /bye >/dev/null
+
+for pkg in "${packages[@]}"; do
+    pkg_dir="$REPO_ROOT/pkgs/$pkg"
+    if [[ ! -f "$pkg_dir/PKGBUILD" ]]; then
+        echo "[WARN] skip $pkg (no PKGBUILD)" >&2
+        continue
+    fi
+
+    echo ""
+    echo "============================================================"
+    echo "[*] Building $pkg"
+    echo "============================================================"
+
+    pushd "$pkg_dir" >/dev/null
+
+    # 既存の同一 package version の中間物 / sig は掃除して再現性確保
+    rm -f -- *.pkg.tar.zst *.pkg.tar.zst.sig
+
+    # makepkg: deps install + tarball verify + build + package。
+    # -s で deps を pacman -S、-c で build 後 src/pkg を clean。
+    # --sign は makepkg が builtin GPG 署名する flag、Nekono GPG fp を指定。
+    makepkg -sc --noconfirm --sign --key "$NEKONO_GPG_FP"
+
+    # 生成物 (.pkg.tar.zst + .sig) を repo/x86_64/ に移動
+    mv -- *.pkg.tar.zst *.pkg.tar.zst.sig "$REPO_DIR/"
+
+    popd >/dev/null
+done
+
+echo ""
+echo "[*] Updating $DB_NAME repo db at $REPO_DIR"
+pushd "$REPO_DIR" >/dev/null
+
+# repo-add: 既存 db に新 pkg を追加 (or 上書き)。--sign で db 自体も
+# Nekono GPG で署名 (= /etc/pacman.conf の SigLevel = Required DatabaseRequired
+# を満たす)。
+repo-add --sign --key "$NEKONO_GPG_FP" "$DB_NAME.db.tar.gz" \
+    *.pkg.tar.zst
+
+popd >/dev/null
+
+echo ""
+echo "[OK] build-all completed. $(ls -1 "$REPO_DIR"/*.pkg.tar.zst | wc -l) signed packages in $REPO_DIR"

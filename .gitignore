@@ -1,0 +1,15 @@
+# makepkg の中間生成物 + 成果物
+pkgs/*/src/
+pkgs/*/pkg/
+pkgs/*/*.pkg.tar.zst
+pkgs/*/*.pkg.tar.zst.sig
+pkgs/*/*.log
+pkgs/*/*.tar.gz
+pkgs/*/*.tar.xz
+
+# 配信先 (build host で hosting する signed artifact、git には載せない)
+repo/
+
+# env-specific
+.env
+*.local

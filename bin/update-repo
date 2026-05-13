@@ -1,0 +1,31 @@
+#!/usr/bin/env bash
+# update-repo: repo-add wrapper。repo/x86_64/ 配下の .pkg.tar.zst を
+# nekono.db.tar.gz に登録 + db 自体も Nekono GPG で署名する。
+# build-all から自動で呼ばれるが、手で db だけ rebuild したい時用に独立。
+#
+# 使い方:
+#   bin/update-repo
+
+set -euo pipefail
+
+NEKONO_GPG_FP="483DC691DF9F29327EA106BD030130E2F156CD74"
+REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+REPO_DIR="$REPO_ROOT/repo/x86_64"
+DB_NAME="nekono"
+
+if [[ ! -d "$REPO_DIR" ]]; then
+    echo "[ERROR] $REPO_DIR not found (build-all 1 回も走らせていない?)" >&2
+    exit 1
+fi
+
+pkgs=("$REPO_DIR"/*.pkg.tar.zst)
+if [[ ! -e "${pkgs[0]}" ]]; then
+    echo "[ERROR] no .pkg.tar.zst found in $REPO_DIR" >&2
+    exit 1
+fi
+
+cd "$REPO_DIR"
+repo-add --sign --key "$NEKONO_GPG_FP" "$DB_NAME.db.tar.gz" \
+    *.pkg.tar.zst
+
+echo "[OK] $DB_NAME.db.tar.gz updated ($(ls -1 *.pkg.tar.zst | wc -l) packages)"

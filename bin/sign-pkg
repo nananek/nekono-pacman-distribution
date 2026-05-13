@@ -1,0 +1,30 @@
+#!/usr/bin/env bash
+# sign-pkg: 個別の .pkg.tar.zst を Nekono GPG で detach-sign する単発 wrapper。
+# build-all から漏れた / 後から手で再 sign したい時用。
+#
+# 使い方:
+#   bin/sign-pkg <path-to-pkg.tar.zst>
+
+set -euo pipefail
+
+NEKONO_GPG_FP="483DC691DF9F29327EA106BD030130E2F156CD74"
+
+if [[ $# -ne 1 ]]; then
+    echo "Usage: $0 <path-to-pkg.tar.zst>" >&2
+    exit 2
+fi
+
+pkg="$1"
+
+if [[ ! -f "$pkg" ]]; then
+    echo "[ERROR] $pkg not found" >&2
+    exit 1
+fi
+
+# 既存の .sig があれば置き換え (--yes)。--detach-sign + --use-agent で
+# gpg-agent (= YubiKey) 経由で signing。
+gpg --batch --yes --detach-sign --use-agent \
+    --local-user "$NEKONO_GPG_FP" \
+    "$pkg"
+
+echo "[OK] $pkg.sig created"

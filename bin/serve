@@ -1,0 +1,75 @@
+#!/usr/bin/env bash
+# serve: build host の repo/ を Tailscale interface に bind して HTTP 配信。
+# nginx の最小 config を /tmp に書き出して `nginx -p <root> -c <conf>` で
+# 起動 (foreground、終了は Ctrl-C)。本番運用は systemd unit で常駐化を検討。
+#
+# 使い方:
+#   bin/serve                    # tailscale0 IP に bind、port 80
+#   bin/serve 8080               # port 上書き
+#
+# 前提:
+#   - tailscale が動いていて `tailscale ip -4` で v4 IP が取れる
+#   - nginx が install されている
+
+set -euo pipefail
+
+REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+REPO_DIR="$REPO_ROOT/repo"
+PORT="${1:-80}"
+
+if [[ ! -d "$REPO_DIR/x86_64" ]]; then
+    echo "[ERROR] $REPO_DIR/x86_64 が無い。bin/build-all を先に走らせる" >&2
+    exit 1
+fi
+
+if ! command -v nginx >/dev/null; then
+    echo "[ERROR] nginx not found。pacman -S nginx で install" >&2
+    exit 1
+fi
+
+ts_ip=$(tailscale ip -4 2>/dev/null | head -1 || true)
+if [[ -z "$ts_ip" ]]; then
+    echo "[WARN] tailscale ip -4 が空。Tailscale が up していない可能性" >&2
+    echo "       全 interface (0.0.0.0) に bind してしまうのを避けるため、" >&2
+    echo "       tailscale up してから再実行" >&2
+    exit 1
+fi
+
+CONF_FILE=$(mktemp /tmp/nekono-pacman-nginx.XXXXXX.conf)
+trap 'rm -f "$CONF_FILE"' EXIT
+
+cat > "$CONF_FILE" <<EOF
+worker_processes auto;
+error_log /dev/stderr warn;
+pid /tmp/nekono-pacman-nginx.pid;
+
+events {
+    worker_connections 64;
+}
+
+http {
+    access_log /dev/stdout combined;
+    sendfile on;
+    types_hash_max_size 2048;
+    include /etc/nginx/mime.types;
+    default_type application/octet-stream;
+
+    server {
+        listen ${ts_ip}:${PORT};
+        server_name _;
+
+        location / {
+            root ${REPO_DIR};
+            autoindex on;
+        }
+    }
+}
+EOF
+
+echo "[*] Serving $REPO_DIR on http://${ts_ip}:${PORT}/"
+echo "[*] Client pacman.conf:"
+echo "      [nekono]"
+echo "      SigLevel = Required DatabaseRequired"
+echo "      Server  = http://${ts_ip}:${PORT}/\$arch"
+echo ""
+exec nginx -g 'daemon off;' -c "$CONF_FILE"
