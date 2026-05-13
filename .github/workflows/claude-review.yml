@@ -1,0 +1,71 @@
+name: Claude PR review
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+  pull_request_review_comment:
+    types: [created]
+  issue_comment:
+    types: [created]
+
+permissions:
+  contents: read
+  pull-requests: write
+  issues: write
+  id-token: write
+
+jobs:
+  claude-review:
+    # Trigger conditions:
+    #   - any PR open/sync/reopen
+    #   - PR review comment mentioning @claude
+    #   - issue/PR comment mentioning @claude
+    if: >-
+      github.event_name == 'pull_request' ||
+      (github.event_name == 'pull_request_review_comment' && contains(github.event.comment.body, '@claude')) ||
+      (github.event_name == 'issue_comment' && github.event.issue.pull_request != null && contains(github.event.comment.body, '@claude'))
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: anthropics/claude-code-action@v1
+        with:
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          prompt: |
+            This repo (`nekono-pacman-distribution`) is a self-hosted pacman
+            package distribution for Arch Linux. It contains PKGBUILDs forked
+            from AUR plus build/sign/serve tooling. Packages are signed by
+            the owner's GPG (`483DC691DF9F29327EA106BD030130E2F156CD74`) and
+            served over Tailscale.
+
+            Review this PR with a supply-chain mindset. Focus on:
+
+            - PKGBUILD `source` URLs must point at the upstream official path
+              (no typosquatting, no domain spoof, no random mirror).
+            - `sha256sums` must be present and non-`SKIP` for every external
+              `source` entry. If a source is a git ref, prefer a pinned commit
+              SHA or signed tag.
+            - `prepare()` / `build()` / `package()` must not perform network
+              fetches outside `source=()`, nor `curl | sh`, nor any opaque
+              binary execution. Flag suspicious `eval` / dynamic command
+              construction.
+            - `depends` / `makedepends` / `optdepends` must be coherent with
+              what the package actually links / runs.
+            - Compare the diff against AUR's current PKGBUILD for the same
+              package when relevant; flag divergences without justification
+              in REVIEW.md.
+            - Any shell script under `bin/` must be reviewed for injection
+              (unquoted `$var`, `eval`, `IFS` tricks) and for handling of
+              GPG secrets / Tailscale state.
+            - No secrets in the diff: private keys, tokens, passwords,
+              `.gpg` keyring files, ssh private keys, etc.
+            - `REVIEW.md` updates must record: source URL verified, sha256
+              source (where the hash came from), and reviewer's conclusion.
+            - Commit messages should describe the *why*, not just the *what*.
+
+            Write the review in Japanese. Use inline review comments where
+            possible. End with an overall verdict line:
+              `verdict: approve | request-changes | block`.
