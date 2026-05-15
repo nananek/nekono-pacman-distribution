@@ -66,6 +66,15 @@ jobs:
               source (where the hash came from), and reviewer's conclusion.
             - Commit messages should describe the *why*, not just the *what*.
 
-            Write the review in Japanese. Use inline review comments where
-            possible. End with an overall verdict line:
-              `verdict: approve | request-changes | block`.
+            **Output**:
+              - Use the GitHub MCP tool to post a **top-level PR comment**
+                containing the review summary (review が空に見えるとレビュー
+                したことが伝わらない、必ず可視 comment を出すこと)。
+              - For per-line issues, post **inline review comments** via the
+                pull-request review API (state=COMMENT で start)、line-
+                specific findings がない場合は inline は省略可。
+              - Top-level comment の冒頭 1 行目に必ず以下のいずれかの
+                verdict 行を入れる: `verdict: approve` / `verdict: request-changes` /
+                `verdict: block`。
+
+            Write the review in Japanese.
