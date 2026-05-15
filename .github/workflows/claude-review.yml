@@ -34,6 +34,11 @@ jobs:
       - uses: anthropics/claude-code-action@v1
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          # `gh pr comment` を allow して Claude が直接 PR conversation に
+          # 投稿できるようにする。default では Bash tool が制限されてて、
+          # action 内蔵の buffered inline comment 経路を Claude が選ばない
+          # ため silent で終わる事案があった。
+          claude_args: '--allowed-tools Bash(gh pr comment:*),Bash(gh pr review:*),Bash(gh api:*)'
           prompt: |
             This repo (`nekono-pacman-distribution`) is a self-hosted pacman
             package distribution for Arch Linux. It contains PKGBUILDs forked
@@ -66,15 +71,20 @@ jobs:
               source (where the hash came from), and reviewer's conclusion.
             - Commit messages should describe the *why*, not just the *what*.
 
-            **Output**:
-              - Use the GitHub MCP tool to post a **top-level PR comment**
-                containing the review summary (review が空に見えるとレビュー
-                したことが伝わらない、必ず可視 comment を出すこと)。
-              - For per-line issues, post **inline review comments** via the
-                pull-request review API (state=COMMENT で start)、line-
-                specific findings がない場合は inline は省略可。
-              - Top-level comment の冒頭 1 行目に必ず以下のいずれかの
-                verdict 行を入れる: `verdict: approve` / `verdict: request-changes` /
-                `verdict: block`。
+            **Output (必須)**:
+            review summary を **必ず top-level PR comment として post** すること。
+            silent で終わらない。手順:
 
-            Write the review in Japanese.
+            1. Review 内容を markdown でまとめる (= verdict 行 + 検証項目別
+               の OK/NG 表 + 補足説明)
+            2. 投稿:
+               `gh pr comment <PR_NUMBER> --body "<review markdown>"`
+               (PR_NUMBER は `$GITHUB_REF_NAME` の `pkg/<name>` から推測、
+               または `gh pr list --head <branch> --json number` で取得)
+            3. 1 行目に **verdict: approve / request-changes / block** の
+               いずれかを必ず入れる
+            4. 行依存の finding があれば追加で
+               `gh pr review <N> --comment --body "..."` で個別 line comment
+               (= 任意、無くてもよい)
+
+            日本語で書くこと。
