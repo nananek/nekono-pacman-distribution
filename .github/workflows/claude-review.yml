@@ -18,12 +18,18 @@ jobs:
   claude-review:
     # Trigger conditions:
     #   - any PR open/sync/reopen
-    #   - PR review comment mentioning @claude
-    #   - issue/PR comment mentioning @claude
+    #   - PR review comment mentioning @claude (= 人による mention のみ、
+    #     bot 投稿は除外して self-trigger spam を防ぐ)
+    #   - issue/PR comment mentioning @claude (同上)
     if: >-
       github.event_name == 'pull_request' ||
-      (github.event_name == 'pull_request_review_comment' && contains(github.event.comment.body, '@claude')) ||
-      (github.event_name == 'issue_comment' && github.event.issue.pull_request != null && contains(github.event.comment.body, '@claude'))
+      (github.event_name == 'pull_request_review_comment' &&
+       github.event.comment.user.type != 'Bot' &&
+       contains(github.event.comment.body, '@claude')) ||
+      (github.event_name == 'issue_comment' &&
+       github.event.issue.pull_request != null &&
+       github.event.comment.user.type != 'Bot' &&
+       contains(github.event.comment.body, '@claude'))
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
