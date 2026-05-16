@@ -1,13 +1,13 @@
 pkgbase = nekonopaw
 	pkgdesc = PipeWire output mixer Web UI (per-stream / per-sink volume control)
-	pkgver = 0.1.1
+	pkgver = 0.1.2
 	pkgrel = 1
 	url = https://github.com/nananek/nekonopaw
 	arch = x86_64
 	license = MIT
 	makedepends = go
 	depends = pipewire
-	source = nekonopaw-0.1.1.tar.gz::https://github.com/nananek/nekonopaw/archive/refs/tags/v0.1.1.tar.gz
-	sha256sums = 6b94b01774f6fcdec660d03309f76185cf65d62859e91bf947128295613a5104
+	source = nekonopaw-0.1.2.tar.gz::https://github.com/nananek/nekonopaw/archive/refs/tags/v0.1.2.tar.gz
+	sha256sums = 3de929b8517dfc40705cc7dbc948ff506f8b282e480d3a3e00833eeca1b50788
 
 pkgname = nekonopaw

@@ -2,12 +2,37 @@
 
 ## 状態
 
-**review 済み、approve** (2026-05-16、v0.1.1 cgo flag fix、本 repo PKGBUILD SHA `7d0202de007c11c4f686444962b2f1b00068f258`)
+**review 済み、approve** (2026-05-16、v0.1.2 bump: SPA_POD_OBJECT_FOREACH implicit declaration fix + GitHub Actions CI 追加)
 
 直前の review:
+- 2026-05-16, v0.1.1 cgo flag fix (本 repo PKGBUILD SHA `7d0202de007c11c4f686444962b2f1b00068f258`) — `CGO_*_ALLOW='.*'` 追加
 - 2026-05-16, v0.1.1: LICENSE 追加 + license=MIT に bump
 - 2026-05-16, v0.1.0 (本 repo PKGBUILD SHA `2a09fb89252b8acf1d95ae53f6296de37658e7cf`)
   — initial release、license=unknown で approve (Claude bot 軽微指摘あり)
+
+## 2026-05-16 v0.1.2 bump (build error fix + CI)
+
+build host (Arch、libpipewire 最新) で v0.1.1 build 中に:
+
+```
+pw_glue.c:113:9: error: implicit declaration of function 'SPA_POD_OBJECT_FOREACH'
+```
+
+`SPA_POD_OBJECT_FOREACH` macro は `spa/pod/iter.h` で定義されているが、
+ayaka (Debian、libpipewire-0.3-dev 1.4.2) では他 header からの transitive
+include で間接的に解決されていた。新 version では transitive が外れた様子。
+
+upstream v0.1.2 (= PR #2 merge) で:
+- `pw_glue.c` に `#include <spa/pod/iter.h>` を明示追加
+- `.github/workflows/build.yml` で GitHub Actions CI を追加 (ubuntu-latest
+  + libpipewire-0.3-dev で毎 push & pull_request に go vet/build/test を
+  実行、再発防止)
+
+source 内容変更のため新 release v0.1.2 を切って bump:
+- pkgver: 0.1.1 → 0.1.2
+- sha256: 6b94b017... → 3de929b8... (= 新 tarball、curl + sha256sum で実測一致)
+- pkgrel=1 のまま (= 過去の v0.1.1 もまだ一度も配布されていないため bump 不要)
+- license=MIT は維持 (LICENSE は v0.1.1 で追加済 → v0.1.2 も継承)
 
 ## 2026-05-16 cgo flag fix (v0.1.1 pkgrel 据置)
 
@@ -54,17 +79,17 @@ ansible 側 (roles/nekonopaw) の責務。
 
 - Upstream: https://github.com/nananek/nekonopaw
   - 主開発者 nananek (= ansible-nekonodesk owner)
-  - tag `v0.1.1` (= merge commit `a873c15`、`v0.1.0` + LICENSE 追加)
+  - tag `v0.1.2` (= merge commit `2365cd2`、`v0.1.1` + SPA include fix + GitHub Actions CI)
 
 ## 検証結果
 
-- [x] `source` URL = `github.com/nananek/nekonopaw/archive/refs/tags/v0.1.1.tar.gz`
+- [x] `source` URL = `github.com/nananek/nekonopaw/archive/refs/tags/v0.1.2.tar.gz`
   - 自家 upstream、typosquat 検討不要
 - [x] `sha256sums` 独立検証
-  - 実測: `6b94b01774f6fcdec660d03309f76185cf65d62859e91bf947128295613a5104`
+  - 実測: `3de929b8517dfc40705cc7dbc948ff506f8b282e480d3a3e00833eeca1b50788`
     (= `curl -fsSL <url> | sha256sum` で tarball から計算)
   - PKGBUILD 値と一致
-- [⚠] tag `v0.1.1` は **GPG verified: false** — annotated tag だが GPG sign
+- [⚠] tag `v0.1.2` は **GPG verified: false** — annotated tag だが GPG sign
       無し (= author の commit signing policy では tag は未 sign 運用)。
       tarball sha256 pin + GitHub release CI で integrity 確保
 - [x] `build()`: cgo で libpipewire を link する標準 Go build。
