@@ -1,6 +1,9 @@
 # Maintainer: Mark Wagie <mark dot wagie at proton dot me>
+# nekono-pacman-distribution の独自 fork: AUR 上は 0.7.4 で stuck (= rust
+# 2024 edition migration が hard error 化された Arch rust に追従できず)、
+# upstream 最新 0.8.2 (= Cargo.toml で edition = "2024" 明示済み) に bump。
 pkgname=pika-backup
-pkgver=0.7.4
+pkgver=0.8.2
 pkgrel=1
 epoch=1
 pkgdesc="Keep your data safe"
@@ -27,9 +30,10 @@ makedepends=(
 optdepends=(
   'gvfs: Network shares'
 )
-source=("git+https://gitlab.gnome.org/World/pika-backup.git#tag=v$pkgver")
+# upstream tag は v prefix 無し (= `0.8.2`、`v0.8.2` は存在しない)。
+source=("git+https://gitlab.gnome.org/World/pika-backup.git#tag=$pkgver")
 # git+ source の hash は Arch Wiki が SKIP 推奨 (= git ref で integrity 確保、
-# AUR の `4d4c0965...` 値は makepkg の動作仕様で意味を持たない可能性が高い)。
+# AUR の `4d4c0965...` 値は makepkg の動作仕様で意味を持たない)。
 sha256sums=('SKIP')
 
 prepare() {
