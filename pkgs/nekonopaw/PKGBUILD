@@ -1,0 +1,35 @@
+# Maintainer: nananek <3267314+nananek@users.noreply.github.com>
+#
+# nekonopaw は AUR fork ではなく、ansible-nekonodesk owner 自身の
+# upstream (github.com/nananek/nekonopaw) を pacman で配布するための
+# PKGBUILD。systemd-user service の deploy + tailscale IP の bind は
+# ansible 側 (roles/nekonopaw) の責務なので、本 PKGBUILD は binary のみ
+# /usr/bin/ に install する。
+
+pkgname=nekonopaw
+pkgver=0.1.0
+pkgrel=1
+pkgdesc="PipeWire output mixer Web UI (per-stream / per-sink volume control)"
+arch=('x86_64')
+url="https://github.com/nananek/nekonopaw"
+license=('unknown')        # upstream に LICENSE 無し、追加され次第更新する
+depends=('pipewire')       # cgo で libpipewire-0.3.so を link、headers も同 package
+makedepends=('go')
+source=("$pkgname-$pkgver.tar.gz::$url/archive/refs/tags/v$pkgver.tar.gz")
+sha256sums=('b51c3e48f23dbefd544a638a2f70d080261a0f62b1eba882286f5a3644b366a4')
+
+build() {
+  cd "$pkgname-$pkgver"
+  export CGO_CPPFLAGS="${CPPFLAGS}"
+  export CGO_CFLAGS="${CFLAGS}"
+  export CGO_CXXFLAGS="${CXXFLAGS}"
+  export CGO_LDFLAGS="${LDFLAGS}"
+  export GOFLAGS="-buildmode=pie -trimpath -ldflags=-linkmode=external -mod=readonly -modcacherw"
+  go build -o "$pkgname" .
+}
+
+package() {
+  cd "$pkgname-$pkgver"
+  install -Dm755 "$pkgname" "$pkgdir/usr/bin/$pkgname"
+  install -Dm644 README.md "$pkgdir/usr/share/doc/$pkgname/README.md"
+}
