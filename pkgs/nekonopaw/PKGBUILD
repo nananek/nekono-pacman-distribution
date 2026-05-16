@@ -24,6 +24,14 @@ build() {
   export CGO_CFLAGS="${CFLAGS}"
   export CGO_CXXFLAGS="${CXXFLAGS}"
   export CGO_LDFLAGS="${LDFLAGS}"
+  # Go cgo の "invalid flag" security check が Arch hardening flags
+  # (-fno-strict-overflow / -Wformat 等) を reject するので、自家 source
+  # の build では full permissive にする (= 我々の cgo 部分は pipewire
+  # binding 限定で、外部入力に依存する unsafe flag 経路は無い)。
+  export CGO_CFLAGS_ALLOW='.*'
+  export CGO_CPPFLAGS_ALLOW='.*'
+  export CGO_CXXFLAGS_ALLOW='.*'
+  export CGO_LDFLAGS_ALLOW='.*'
   export GOFLAGS="-buildmode=pie -trimpath -ldflags=-linkmode=external -mod=readonly -modcacherw"
   go build -o "$pkgname" .
 }

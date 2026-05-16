@@ -2,11 +2,37 @@
 
 ## 状態
 
-**review 済み、approve** (2026-05-16、v0.1.1: LICENSE 追加 + license=MIT に bump)
+**review 済み、approve** (2026-05-16、v0.1.1 cgo flag fix、本 repo PKGBUILD SHA `7d0202de007c11c4f686444962b2f1b00068f258`)
 
 直前の review:
+- 2026-05-16, v0.1.1: LICENSE 追加 + license=MIT に bump
 - 2026-05-16, v0.1.0 (本 repo PKGBUILD SHA `2a09fb89252b8acf1d95ae53f6296de37658e7cf`)
   — initial release、license=unknown で approve (Claude bot 軽微指摘あり)
+
+## 2026-05-16 cgo flag fix (v0.1.1 pkgrel 据置)
+
+build host で v0.1.1 build を回したら以下で fail:
+
+```
+github.com/nananek/nekonopaw/internal/pw: invalid flag in pkg-config --cflags: -fno-strict-overflow
+```
+
+Go cgo は CGO_CFLAGS 経由で渡された flag を security policy (allowlist)
+で validate し、Arch makepkg.conf default の `-fno-strict-overflow` を
+unsafe と判定して reject していた。PKGBUILD の build() に
+`CGO_{CFLAGS,CPPFLAGS,CXXFLAGS,LDFLAGS}_ALLOW='.*'` を追加して全許可。
+
+評価:
+- 本 package は自家 upstream (= 第三者 AUR fork ではない)
+- CGO_* は makepkg.conf 由来の信頼できるシステム変数のみ、外部入力由来の
+  unsafe flag 注入経路なし
+- cgo 部分は `libpipewire-0.3.so` binding 限定、攻撃面が狭い
+- `GOFLAGS` の `buildmode=pie -trimpath -ldflags=-linkmode=external
+  -mod=readonly` は維持、hardened build に影響なし
+
+source / sha256 / pkgver は変わらないので `pkgrel` は据置 (= まだ一度も
+build 成功 / artifact 配布されていないため `pkgrel=1` のまま、初配布
+artifact が `0.1.1-1` になる)。
 
 ansible-nekonodesk owner (= nananek) 自身の upstream を pacman で配布する
 ための PKGBUILD。AUR fork ではなく self-authored package。
