@@ -7,16 +7,16 @@
 # /usr/bin/ に install する。
 
 pkgname=nekonopaw
-pkgver=0.1.0
+pkgver=0.1.1
 pkgrel=1
 pkgdesc="PipeWire output mixer Web UI (per-stream / per-sink volume control)"
 arch=('x86_64')
 url="https://github.com/nananek/nekonopaw"
-license=('unknown')        # upstream に LICENSE 無し、追加され次第更新する
+license=('MIT')            # v0.1.1 で LICENSE 追加、SPDX `MIT`
 depends=('pipewire')       # cgo で libpipewire-0.3.so を link、headers も同 package
 makedepends=('go')
 source=("$pkgname-$pkgver.tar.gz::$url/archive/refs/tags/v$pkgver.tar.gz")
-sha256sums=('b51c3e48f23dbefd544a638a2f70d080261a0f62b1eba882286f5a3644b366a4')
+sha256sums=('6b94b01774f6fcdec660d03309f76185cf65d62859e91bf947128295613a5104')
 
 build() {
   cd "$pkgname-$pkgver"
@@ -32,4 +32,5 @@ package() {
   cd "$pkgname-$pkgver"
   install -Dm755 "$pkgname" "$pkgdir/usr/bin/$pkgname"
   install -Dm644 README.md "$pkgdir/usr/share/doc/$pkgname/README.md"
+  install -Dm644 LICENSE "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
 }
