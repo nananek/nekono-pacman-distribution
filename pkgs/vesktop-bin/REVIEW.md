@@ -23,10 +23,12 @@ fork。改変なし。
   - 実測: `6fd5669fe2d5b1ad9bec10a8af1cf859bd911226528eae923ba70e6ef032c134`
   - PKGBUILD 値: `6fd5669fe2d5b1ad9bec10a8af1cf859bd911226528eae923ba70e6ef032c134`
   - 一致
-- [x] `vesktop.sh` の sha256sums が現物と一致
-  - 実測: `31ad33b633744f5361abd964be306cea53ae1050e760c787115f7eca60045ae6`
-  - PKGBUILD 値: `31ad33b633744f5361abd964be306cea53ae1050e760c787115f7eca60045ae6`
+- [x] `vesktop.sh` の sha256sums が現物と一致 (PR #5 review で末尾改行を
+      追加した版、AUR original から sha 変化)
+  - 実測: `4497d4c2cfb24ca0665cbeabf377a6bc850a8cfd6dd17469b0dc937a9ed6bf65`
+  - PKGBUILD 値: `4497d4c2cfb24ca0665cbeabf377a6bc850a8cfd6dd17469b0dc937a9ed6bf65`
   - 一致
+  - AUR original (末尾改行なし) の sha は `31ad33b6...` だった
 - [x] Tag `v1.6.5` の git commit (`1f17c18362b12a9e8af21e571e844d05bda87ff5`) は
       **GPG verified** (= Vendicated = 主開発者署名)、tampering なし
 - [x] `vesktop.sh` の内容 review:

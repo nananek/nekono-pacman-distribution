@@ -32,7 +32,9 @@ optdepends=(
 source_aarch64=("${pkgname%-bin}-${pkgver}-aarch64.rpm::${url}/releases/download/v${pkgver}/${pkgname%-bin}-${pkgver}.aarch64.rpm")
 source_x86_64=("${pkgname%-bin}-${pkgver}-x86_64.rpm::${url}/releases/download/v${pkgver}/${pkgname%-bin}-${pkgver}.x86_64.rpm")
 source=("${pkgname%-bin}.sh")
-sha256sums=('31ad33b633744f5361abd964be306cea53ae1050e760c787115f7eca60045ae6')
+# vesktop.sh の sha は AUR original (= 末尾改行なし) から我々の側で末尾
+# 改行追加 (POSIX 準拠、PR #5 review で指摘) したため、再計算した値。
+sha256sums=('4497d4c2cfb24ca0665cbeabf377a6bc850a8cfd6dd17469b0dc937a9ed6bf65')
 sha256sums_aarch64=('a6314a88debfe370c690cc7549d921c8e08fd79af1bdc40b2b8ef463d057387d')
 sha256sums_x86_64=('6fd5669fe2d5b1ad9bec10a8af1cf859bd911226528eae923ba70e6ef032c134')
 _get_electron_version() {
