@@ -13,9 +13,14 @@
 # 使い方:
 #   bin/build-all                 # 全 pkgs を build + sign + db に追加
 #   bin/build-all vesktop-bin     # 個別指定 (1 つだけ build)
+#   bin/build-all --pending       # PKGBUILD の pkgver-pkgrel に対応する
+#                                 # repo/x86_64/<name>-<full-ver>-*.pkg.tar.zst
+#                                 # が存在しない pkg だけを build (= デイリー
+#                                 # 運用: git pull --ff-only && bin/build-all
+#                                 # --pending && bin/update-repo)
 #
 # Exit code:
-#   0 = 全部成功
+#   0 = 全部成功 (--pending 時、未 build が 0 件でも 0)
 #   1 = 1 つでも fail (途中で止まる、--keep-going 派生は将来必要なら検討)
 
 set -euo pipefail
@@ -27,7 +32,29 @@ DB_NAME="nekono"
 
 mkdir -p "$REPO_DIR"
 
-# 引数で個別 package が指定されたらそれだけ、なければ pkgs/* 全て。
+# 引数 parse: --pending を吸って、残りは pos args (= 個別 pkg 指定)。
+PENDING_ONLY=false
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        --pending)
+            PENDING_ONLY=true
+            shift
+            ;;
+        --)
+            shift
+            break
+            ;;
+        -*)
+            echo "[ERROR] unknown option: $1" >&2
+            exit 1
+            ;;
+        *)
+            break
+            ;;
+    esac
+done
+
+# pos args = 個別 package 指定、なければ pkgs/* 全て。
 if [[ $# -gt 0 ]]; then
     packages=("$@")
 else
@@ -40,6 +67,45 @@ fi
 if [[ ${#packages[@]} -eq 0 ]]; then
     echo "[ERROR] no packages found under $REPO_ROOT/pkgs/" >&2
     exit 1
+fi
+
+# --pending: PKGBUILD の pkgver / pkgrel / epoch から組む期待 artifact
+# filename (<name>-[<epoch>:]<pkgver>-<pkgrel>-<arch>.pkg.tar.zst) が
+# $REPO_DIR に存在しない pkg だけを残す。完全一致の文字列比較ではなく
+# glob (= <arch> 部分は any) を使うことで any アーキの artifact 1 つでも
+# あれば「built」扱いとする (= x86_64 ホストで aarch64 cross build まで
+# 期待しない運用のため)。
+if $PENDING_ONLY; then
+    filtered=()
+    for pkg in "${packages[@]}"; do
+        pkgbuild="$REPO_ROOT/pkgs/$pkg/PKGBUILD"
+        if [[ ! -f "$pkgbuild" ]]; then
+            echo "[WARN] skip $pkg (no PKGBUILD)" >&2
+            continue
+        fi
+        pkgver=$(grep -m1 '^pkgver=' "$pkgbuild" | sed -e 's/^pkgver=//' -e 's/^["'\'']//' -e 's/["'\'']$//')
+        pkgrel=$(grep -m1 '^pkgrel=' "$pkgbuild" | sed -e 's/^pkgrel=//' -e 's/^["'\'']//' -e 's/["'\'']$//')
+        epoch=$(grep -m1 '^epoch=' "$pkgbuild" | sed -e 's/^epoch=//' -e 's/^["'\'']//' -e 's/["'\'']$//')
+        if [[ -n "$epoch" ]]; then
+            full_ver="${epoch}:${pkgver}-${pkgrel}"
+        else
+            full_ver="${pkgver}-${pkgrel}"
+        fi
+        if compgen -G "$REPO_DIR/${pkg}-${full_ver}-"'*'".pkg.tar.zst" >/dev/null; then
+            echo "[skip] $pkg ${full_ver} already built"
+        else
+            echo "[pending] $pkg ${full_ver}"
+            filtered+=("$pkg")
+        fi
+    done
+    packages=("${filtered[@]}")
+    if [[ ${#packages[@]} -eq 0 ]]; then
+        echo ""
+        echo "[OK] nothing to build (all packages up to date in $REPO_DIR)"
+        exit 0
+    fi
+    echo ""
+    echo "[*] Will build ${#packages[@]} pending package(s): ${packages[*]}"
 fi
 
 echo "[*] Warming up gpg-agent (YubiKey PIN cache)"

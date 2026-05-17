@@ -213,15 +213,24 @@ merge 前のチェックリスト:
 
 ### 朝 routine (推奨)
 
-毎朝 1 度、以下のリンクを順に踏む:
+毎朝 1 度、以下を順に踏む:
 
-- https://github.com/nananek/nekono-pacman-distribution/issues
-  (open Issue を verdict で並べて消化)
-- https://github.com/nananek/nekono-pacman-distribution/pulls
-  (open PR を 1 個ずつ処理 — close か merge)
+1. **Issues タブ消化** — https://github.com/nananek/nekono-pacman-distribution/issues
+   (open Issue を verdict で並べて消化、必要なら手動 PR を立てる)
+2. **PRs タブ消化** — https://github.com/nananek/nekono-pacman-distribution/pulls
+   (open PR を 1 個ずつ処理 — close か merge、merge 時は GPG `-S` 署名し直し)
+3. **build host で merge 済み bump を消化**:
+   ```sh
+   cd ~/nekono-pacman-distribution
+   git pull --ff-only
+   bin/build-all --pending     # PKGBUILD の pkgver-pkgrel に対応する artifact が
+                               # repo/x86_64/ に無い pkg だけ build + sign。
+                               # "nothing to build" が出れば消化完了。
+   bin/update-repo             # publish (= repo db + nginx 経由で配信開始)
+   ```
 
-両方ともゼロにする日が「平常運用日」、何か残ったら気になる症状として
-記憶しておく。
+3 ステップ全部がゼロアクションで終わる日が「平常運用日」、何か残ったら
+気になる症状として記憶しておく。
 
 ## ansible-nekonodesk との分担
 
