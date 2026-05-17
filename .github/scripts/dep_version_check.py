@@ -154,8 +154,17 @@ def process_pkg(pkg_dir: Path) -> None:
         print(f"[{pkg}] no dep changes")
         return
 
-    old_rel, new_rel = bump_pkgrel(pkgbuild)
-    write_lock(lock, pkg, new)
+    # Compute new_rel without mutating the file yet. The previous design
+    # called bump_pkgrel() here and then did `git checkout master`, but git
+    # checkout preserves dirty working-tree changes, so a second bump_pkgrel()
+    # after the checkout would land on the *already bumped* file and produce
+    # pkgrel=N+2 (observed once in PR #21 going 1→3).
+    text = pkgbuild.read_text()
+    m = PKGREL_RE.search(text)
+    if not m:
+        raise RuntimeError(f"pkgrel= not found in {pkgbuild}")
+    old_rel = int(m.group(1))
+    new_rel = old_rel + 1
 
     branch = f"deps/{pkg}-pkgrel-{new_rel}"
 
@@ -164,18 +173,13 @@ def process_pkg(pkg_dir: Path) -> None:
 
     if existing_pr_for_branch(branch) or remote_branch_exists(branch):
         print(f"[{pkg}] branch or PR {branch} already exists, skipping")
-        # Roll back the working-tree change so subsequent packages see a clean
-        # tree (we never committed it).
-        run("git", "checkout", "--", str(pkgbuild), str(lock))
         return
 
-    # Local branch may already exist from a prior partial run; reset to
-    # current master before branching.
-    run("git", "checkout", "master")
-    # Re-apply our edits on top of master.
+    # Branch off the current ref (master is assumed) before any working-tree
+    # mutation, so the bump is applied exactly once on top of master.
+    run("git", "checkout", "-B", branch)
     bump_pkgrel(pkgbuild)
     write_lock(lock, pkg, new)
-    run("git", "checkout", "-B", branch)
     run("git", "add", str(pkgbuild), str(lock))
 
     body_lines = [
