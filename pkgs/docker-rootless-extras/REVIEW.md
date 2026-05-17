@@ -2,12 +2,14 @@
 
 ## 状態
 
-**review 済み、approve** (2026-05-16、純 fork、改変なし)
+**review 済み、approve** (最新: 2026-05-17 / 29.5.0)
 
-AUR の `docker-rootless-extras` PKGBUILD (pkgver=29.4.3, pkgrel=1) を
-**純 fork**。唯一の diff は `# Maintainer:` → `# Contributor:` の置換 +
-fork 説明コメント追加のみ (= 関数本体・依存・ハッシュ・install hook は
-無改変)。
+AUR の `docker-rootless-extras` PKGBUILD を **純 fork**。diff は
+`# Maintainer:` → `# Contributor:` の置換 + fork 説明コメント追加、および
+v29.5.0 bump 時に `optdepends` に `gvisor-tap-vsock` を追加 (upstream で
+slirp4netns の代替 driver として導入されたため)。関数本体・install hook
+は無改変。各 release の review 履歴は本ファイル末尾の「更新履歴」 section
+参照。
 
 ## 用途
 
@@ -29,26 +31,20 @@ maintainer の意図的設計)。Debian apt の同名 package とは flow が異
   - maintainer: Ľubomír 'the-k' Kučera
   - contributors: Hugo Osvaldo Barrera / PastLeo / koba1t
 - Upstream: https://github.com/moby/moby (= Docker / Moby project)
-  - 2 つの shell script を `docker-v29.4.3` annotated tag から取得
-  - tag commit: `05b03cea61ee67d3787a27910c37681d04f2cbb0`
+  - 2 つの shell script を `docker-v29.5.0` annotated tag から取得
+  - tag commit: `9cfd86615a90644b86d33978ee0df3702e5021b0`
+  - release author: `vvoland` (既知 moby maintainer)、prerelease: false
 
 ## 検証結果
 
-- [x] `source` URL = `raw.githubusercontent.com/moby/moby/docker-v29.4.3/...`
+- [x] `source` URL = `raw.githubusercontent.com/moby/moby/docker-v29.5.0/...`
   - Docker 公式 upstream repo、typosquat / なりすましリスクなし
-- [x] `sha256sums` 4 件すべて独立検証 (= curl + sha256sum / sha256sum)
-  - `dockerd-rootless.sh`
-    - 実測: `5cdcd9512da29704c8615de33390cfe950b7b720f8b52b215fbbaa7646d693d3`
-    - PKGBUILD 値と一致
-  - `dockerd-rootless-setuptool.sh`
-    - 実測: `e2d0b86f145323f9597dd1d587bbc8a5b0524dd92f34d03b49fb455768ab65e6`
-    - PKGBUILD 値と一致
-  - `docker.socket` (ローカル AUR snapshot)
-    - 実測: `d8695293e5d4a814763f13e1d36ed37273040666b4b91363d6c33171df8934c7`
-    - PKGBUILD 値と一致
-  - `99-docker-rootless.conf` (ローカル AUR snapshot)
-    - 実測: `d0d790d4c3d887b10b2b155b83a58a44980b9fa638f8c0f1faec0739dc0ef473`
-    - PKGBUILD 値と一致
+- [x] `sha256sums` 4 件すべて独立検証 (Issue #24 事前調査 + PR #33 の
+      claude-review.yml で再計算済み、両者一致)
+  - `dockerd-rootless.sh` (29.5.0): `904c9b9e35f6927c0a5e65afb4d35b6bc9eb1278c878044501281fc728c9be46`
+  - `dockerd-rootless-setuptool.sh` (29.5.0): `1c9f0dc93ebb3d75255254ec760d26a912affba7f329ab8abffe8e25eb0b3f94`
+  - `docker.socket` (ローカル AUR snapshot、変更なし): `d8695293e5d4a814763f13e1d36ed37273040666b4b91363d6c33171df8934c7`
+  - `99-docker-rootless.conf` (ローカル AUR snapshot、変更なし): `d0d790d4c3d887b10b2b155b83a58a44980b9fa638f8c0f1faec0739dc0ef473`
 - [x] `package()`:
   - `install -Dm755 dockerd-rootless.sh → /usr/bin/dockerd-rootless.sh`
   - `install -Dm644 docker.socket → /usr/lib/systemd/user/docker.socket`
@@ -59,8 +55,13 @@ maintainer の意図的設計)。Debian apt の同名 package とは flow が異
   - `awk` / `sed` / `head` は coreutils + base 同梱、makedepends 不要
 - [x] `depends`: `bash docker rootlesskit slirp4netns` — rootless 動作に
       必須の依存すべて揃っている
-- [x] `optdepends`: `fuse-overlayfs: overlayfs support` — overlayfs
-      バックエンド利用時のみ。妥当
+- [x] `optdepends`:
+  - `fuse-overlayfs: overlayfs support` — overlayfs バックエンド利用時のみ
+  - `gvisor-tap-vsock: alternative network driver (used when slirp4netns
+    is unavailable)` — upstream v29.5.0 で追加。**Arch 公式 repo に無く
+    AUR のみ存在、現状 orphaned (maintainer: None) なので、optdepends として
+    install したいユーザは AUR / foreign repo 対応が必要**。本 pkg の機能
+    上は optdepends なので非必須、build / 配布には影響なし。
 - [x] `install` hook (`docker-rootless-extras.install`):
   - `sysctl --system` で `99-docker-rootless.conf` の `kernel.
     unprivileged_userns_clone=1` を即時反映
@@ -103,4 +104,26 @@ upstream の新 release (docker 29.5.x 等) が出たら:
 3. 4 sources の sha256 を独立再計算 (= curl + sha256sum で照合)
 4. setuptool.sh の `awk '/Unit/,/EOT/'` 抽出が依然成立するか確認 (= 抽出
    結果の docker.service 内容を目視確認)
-5. REVIEW.md に確認日 + 結論 update
+5. REVIEW.md の「検証結果」 section を新 sha256 で上書き + 「更新履歴」に
+   1 行追記 (review 日付 + PKGBUILD repo SHA + upstream tag commit SHA)
+
+## 更新履歴
+
+- **2026-05-17 / 29.5.0** — approve。Docker Engine v29.5.0 (release
+  2026-05-14, by `vvoland`) への sync。upstream tag commit:
+  `9cfd86615a90644b86d33978ee0df3702e5021b0`、本 repo PKGBUILD SHA:
+  `2cdf394535847cca50deb63b42ff849ac2f62996`。
+  主な upstream 変更:
+  - rootlesskit `--detach-netns` モードのデフォルト有効化
+  - `gvisor-tap-vsock` を新 network driver fallback として追加 (= 本
+    PKGBUILD の optdepends にも追記、ただし AUR orphan なので注意)
+  - sysctl 呼び出しが netns 内で実行されるよう変更 (detach-netns 有効時)
+
+  PKGBUILD の `package()` 内 `awk '/Unit/,/EOT/'` 抽出範囲は setuptool.sh
+  の変更箇所 (Unit セクション外) に非該当、引き続き動作する想定。**build
+  host で makepkg 実行時に生成 `docker.service` の内容を目視確認推奨**。
+- **2026-05-16 / 29.4.3** — approve (初回 fork + review、純 fork で改変
+  なし)。upstream tag commit: `05b03cea61ee67d3787a27910c37681d04f2cbb0`。
+  当時の sha256 実測値:
+  - `dockerd-rootless.sh`: `5cdcd9512da29704c8615de33390cfe950b7b720f8b52b215fbbaa7646d693d3`
+  - `dockerd-rootless-setuptool.sh`: `e2d0b86f145323f9597dd1d587bbc8a5b0524dd92f34d03b49fb455768ab65e6`
