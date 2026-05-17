@@ -133,6 +133,23 @@ Arch host で .SRCINFO の depends + makedepends について `pacman -Si <dep>`
 - secrets: `CLAUDE_CODE_OAUTH_TOKEN` (workflow A の Claude 起動)、`GITHUB_TOKEN`
   (default 付与、Issue / PR / git push 用)
 
+### PR review 時の個別事情 (人間判断要)
+
+`dep-version-pr` は機械的に **「depends.X の version が変わった → pkgrel
++1 で rebuild」** を仮定する。しかし PKGBUILD によっては「depends の
+特定 pkg と pkgver が sync しているので、本当は pkgver も上げる必要
+がある」というケースがある。bot ロジック側に特例を入れず、PR review
+時に人間がここの一覧と照らし合わせて読み替える運用とする。
+
+| pkg | sync 対象 dep | 来た PR をどう処理するか |
+|---|---|---|
+| `docker-rootless-extras` | `docker` | source URL が `docker-v${pkgver}` で moby/moby tag に pinned。`depends.docker` が動いたら本来 `pkgver` も同 version に上げて sha256sums 再計算が必要。来た pkgrel bump PR は **close**、`upstream-version-issue.yml` が moby/moby の release を nvchecker で拾って Issue を立てる経路で対応する。Issue が立つまでに時差があれば手動で `workflow_dispatch` で trigger。 |
+
+新規 pkg を足すとき、`pkgver` が depends のどれかと version sync する
+構造なら **必ずこの表に追記** すること。書かないと将来「来た pkgrel
+bump PR をうっかり merge → 旧 pkgver のまま rebuild されて配布パッケージ
+が更新されない」事故を踏む。
+
 ## ansible-nekonodesk との分担
 
 | 領域 | 置き場所 |
