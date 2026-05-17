@@ -11,7 +11,7 @@
 
 pkgname=docker-rootless-extras
 pkgver=29.4.3
-pkgrel=1
+pkgrel=3
 pkgdesc="Extras to run docker as non-root."
 arch=('any')
 url="https://docs.docker.com/engine/security/rootless/"
