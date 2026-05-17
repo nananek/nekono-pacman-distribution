@@ -1,0 +1,52 @@
+name: Dependency version check (PR)
+
+# 各 pkgs/<pkg>/.deps.lock を Arch 公式 repo (pacman -Si) の現 version と
+# 比較し、差分があれば:
+#   - PKGBUILD の pkgrel を +1
+#   - .deps.lock を更新
+#   - branch を切って commit + push + PR (base = master)
+# する。commit は unsigned で、merge 前に人間が build host で sign し直す
+# 運用 (CLAUDE.md 「commit は必ず -S 署名」と GitHub Actions に Nekono GPG
+# 秘密鍵を持ち込まない方針の妥協)。
+#
+# 冪等性: branch 名 `deps/<pkg>-pkgrel-<N+1>` を fingerprint、`gh pr list
+# --head <branch> --state all` で既存 PR (open + closed) を check して
+# 重複時 skip。同一 pkgrel target が再度走っても 1 PR だけになる。
+
+on:
+  schedule:
+    - cron: '15 6 * * *'  # daily 06:15 UTC (upstream check の直後に流す)
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  bump:
+    name: Bump pkgrel on dep changes
+    runs-on: ubuntu-latest
+    container:
+      image: archlinux:latest
+    steps:
+      - name: Install runtime deps
+        run: |
+          pacman -Syu --noconfirm --needed git python jq github-cli
+
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          # default の GITHUB_TOKEN credentials を残す (git push に必要)
+          persist-credentials: true
+
+      - name: Configure git
+        run: |
+          git config --global --add safe.directory "$GITHUB_WORKSPACE"
+          git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git config --global user.name "github-actions[bot]"
+
+      - name: Run dep version check
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          python3 .github/scripts/dep_version_check.py

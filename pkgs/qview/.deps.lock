@@ -1,0 +1,8 @@
+# Snapshot of Arch official repo versions for depends + makedepends of qview.
+# Auto-generated and updated by .github/workflows/dep-version-pr.yml.
+# Source: pkgs/qview/.SRCINFO (depends + makedepends entries).
+# Format: 1 line per package: <name>=<full-version>
+
+hicolor-icon-theme=0.18-1
+qt6-base=6.11.1-1
+qt6-tools=6.11.1-1

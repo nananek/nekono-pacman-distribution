@@ -1,0 +1,8 @@
+# Snapshot of Arch official repo versions for depends + makedepends of localsend-bin.
+# Auto-generated and updated by .github/workflows/dep-version-pr.yml.
+# Source: pkgs/localsend-bin/.SRCINFO (depends + makedepends entries).
+# Format: 1 line per package: <name>=<full-version>
+
+fuse2=2.9.9-5
+libayatana-appindicator=0.5.94-1
+xdg-user-dirs=0.20-1

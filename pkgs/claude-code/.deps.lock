@@ -1,0 +1,6 @@
+# Snapshot of Arch official repo versions for depends + makedepends of claude-code.
+# Auto-generated and updated by .github/workflows/dep-version-pr.yml.
+# Source: pkgs/claude-code/.SRCINFO (depends + makedepends entries).
+# Format: 1 line per package: <name>=<full-version>
+
+bash=5.3.9-1

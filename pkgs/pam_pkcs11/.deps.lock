@@ -1,0 +1,11 @@
+# Snapshot of Arch official repo versions for depends + makedepends of pam_pkcs11.
+# Auto-generated and updated by .github/workflows/dep-version-pr.yml.
+# Source: pkgs/pam_pkcs11/.SRCINFO (depends + makedepends entries).
+# Format: 1 line per package: <name>=<full-version>
+
+autoconf=2.73-1
+automake=1.18.1-1
+libtool=2.6.0+r23+gb08cb0a0-1
+openssl=3.6.2-2
+pcsclite=2.4.1-1
+pkgconf=2.5.1-1

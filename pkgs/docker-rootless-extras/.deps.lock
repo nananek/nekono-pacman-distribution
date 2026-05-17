@@ -1,0 +1,9 @@
+# Snapshot of Arch official repo versions for depends + makedepends of docker-rootless-extras.
+# Auto-generated and updated by .github/workflows/dep-version-pr.yml.
+# Source: pkgs/docker-rootless-extras/.SRCINFO (depends + makedepends entries).
+# Format: 1 line per package: <name>=<full-version>
+
+bash=5.3.9-1
+docker=1:29.4.3-1
+rootlesskit=3.0.0-1
+slirp4netns=1.3.3-1

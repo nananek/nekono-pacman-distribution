@@ -1,0 +1,14 @@
+# Snapshot of Arch official repo versions for depends + makedepends of pika-backup.
+# Auto-generated and updated by .github/workflows/dep-version-pr.yml.
+# Source: pkgs/pika-backup/.SRCINFO (depends + makedepends entries).
+# Format: 1 line per package: <name>=<full-version>
+
+borg=1.4.4-1
+# MISSING (not in Arch official repo, likely AUR-only or virtual): cargo
+fuse3=3.18.2-1
+git=2.54.0-1
+itstool=1:2.0.7-3
+libadwaita=1:1.9.0-1
+libsecret=0.21.7-1
+meson=1.11.1-1
+python-pyfuse3=3.4.2-1
