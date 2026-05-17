@@ -2,11 +2,22 @@
 # daily cron (.github/workflows/upstream-version-issue.yml) で nvchecker を
 # 実行 → PKGBUILD の現 pkgver と差分があれば Claude 事前調査 + Issue を立てる。
 #
+# 主要な flag (各 section で個別指定):
+#   - use_latest_release = true : GitHub Releases (or GitLab Releases) の
+#                                  最新 release tag_name を見る。安定運用。
+#                                  release を切らない repo では使えない。
+#   - use_max_tag = true        : 全 tag から semver 最大を取る。release が
+#                                  無い repo / pre-release も含めたい場合に。
+#                                  どちらも指定しない default は "chronological
+#                                  latest tag" で、moby のように cron job が
+#                                  毎日 master HEAD に YYYYMMDD.HHMMSS tag を
+#                                  打つ repo では誤検知の温床になるので避ける。
+#   - prefix = "..."            : tag_name から strip して PKGBUILD pkgver と
+#                                  比較できる形にする。
+#
 # source 種別:
-#   - github  : GitHub Releases の最新を見る (default = latest release)。
-#               pre-release を含めたい場合は use_max_tag = true
-#   - gitlab  : GitLab git tag (host で別 instance 指定可)
-#   - npm     : npm registry の latest dist-tag
+#   - github / gitlab : git host の tag / release を見る
+#   - npm             : npm registry の latest dist-tag
 #
 # section 名 = pkgs/<name> ディレクトリ名と一致させる (workflow 側で照合)。
 # 新規 package を追加した時はここに section を足す。
@@ -26,46 +37,67 @@ source = "npm"
 npm = "@anthropic-ai/claude-code"
 
 [docker-rootless-extras]
-# Docker Engine と version sync (rootless extras は moby/moby tree の
-# subset)。moby/moby の latest stable release を見る。
+# Docker Engine と version sync (rootless extras は moby/moby tree の subset)。
+# release tag は "docker-vX.Y.Z" 形式なので prefix を strip。use_latest_release
+# を付けないと default の chronological latest tag が moby cron job 由来の
+# "YYYYMMDD.HHMMSS" を返してしまう (= Issue #24 で踏んだ事故の根本原因)。
 source = "github"
 github = "moby/moby"
+use_latest_release = true
+prefix = "docker-v"
 
 [localsend-bin]
+# release tag "vX.Y.Z" 形式。
 source = "github"
 github = "localsend/localsend"
+use_latest_release = true
+prefix = "v"
 
 [moonlight-qt]
+# release tag "vX.Y.Z" 形式。
 source = "github"
 github = "moonlight-stream/moonlight-qt"
+use_latest_release = true
+prefix = "v"
 
 [nekonopaw]
-# 自作 package (nananek/nekonopaw)。自分で push した tag を見る形。
+# 自作 package (nananek/nekonopaw)。GitHub Release は未運用で tag のみ
+# (vX.Y.Z 形式) push しているので use_max_tag で semver 最大 tag を取る。
 source = "github"
 github = "nananek/nekonopaw"
+use_max_tag = true
+prefix = "v"
 
 [pam_pkcs11]
+# OpenSC は release tag に "pam_pkcs11-X.Y.Z" の prefix を付ける。
 source = "github"
 github = "OpenSC/pam_pkcs11"
-# OpenSC は release tag に "pam_pkcs11-X.Y.Z" の prefix を付けるので
-# prefix を strip して比較できるよう正規化。
+use_latest_release = true
 prefix = "pam_pkcs11-"
 
 [pika-backup]
-# GNOME 系は gitlab.gnome.org でホスト。
+# GNOME 系は gitlab.gnome.org でホスト。tag は素の X.Y.Z 形式 (v prefix 無し)、
+# pre-release を含む全 tag から semver 最大を取りたいので use_max_tag。
 source = "gitlab"
 gitlab = "World/pika-backup"
 host = "gitlab.gnome.org"
+use_max_tag = true
 
 [pwvucontrol]
+# release tag は素の X.Y.Z 形式 (prefix 無し)。
 source = "github"
 github = "saivert/pwvucontrol"
+use_latest_release = true
 
 [qview]
+# release tag は素の X.Y.Z 形式 (prefix 無し)。
 source = "github"
 github = "jurplel/qView"
+use_latest_release = true
 
 [vesktop-bin]
-# upstream は Vesktop (Vencord 系)。Vesktop は v prefix 付き tag。
+# upstream は Vesktop (Vencord 系)。Release tag は "vX.Y.Z" 形式。
 source = "github"
 github = "Vencord/Vesktop"
+use_latest_release = true
+prefix = "v"
