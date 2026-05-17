@@ -54,15 +54,16 @@ jobs:
           github = "${GITHUB_TOKEN}"
           EOF
           chmod 600 nvchecker-keys.toml
-          # state file は workflow 単発実行なので oldver は空で start。
-          # 比較対象は PKGBUILD の pkgver なので oldver は使わない。
+          # nvchecker は CLI に --newver/--oldver を持たず、state file path は
+          # config 内 [__config__] で指定する (nvchecker.toml 参照)。
+          # oldver は workflow 単発実行なので空 file を用意 (比較対象は
+          # PKGBUILD の pkgver、 detect_upstream_updates.py が後段で実施)。
           : > oldver.json
           nvchecker \
             --file nvchecker.toml \
             --keyfile nvchecker-keys.toml \
             --logger json \
-            --newver newver.json \
-            oldver.json || true
+            || true
           echo "--- nvchecker newver.json ---"
           cat newver.json || true
 

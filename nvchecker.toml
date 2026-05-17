@@ -11,6 +11,13 @@
 # section 名 = pkgs/<name> ディレクトリ名と一致させる (workflow 側で照合)。
 # 新規 package を追加した時はここに section を足す。
 
+# nvchecker の state file path 指定 (CLI に --newver/--oldver は無く、こちらで
+# 静的に指定する仕様)。oldver は workflow 内で空ファイルとして用意し、newver
+# を出力 → detect_upstream_updates.py が PKGBUILD と比較する。
+[__config__]
+oldver = "oldver.json"
+newver = "newver.json"
+
 [claude-code]
 # Anthropic Claude Code CLI。downloads.claude.ai 経由配布だが npm registry
 # にも同 version で publish される (@anthropic-ai/claude-code)。npm の方が
