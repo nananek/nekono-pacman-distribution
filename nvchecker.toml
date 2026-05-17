@@ -1,0 +1,64 @@
+# 各 pkg の upstream latest version を監視する nvchecker 設定。
+# daily cron (.github/workflows/upstream-version-issue.yml) で nvchecker を
+# 実行 → PKGBUILD の現 pkgver と差分があれば Claude 事前調査 + Issue を立てる。
+#
+# source 種別:
+#   - github  : GitHub Releases の最新を見る (default = latest release)。
+#               pre-release を含めたい場合は use_max_tag = true
+#   - gitlab  : GitLab git tag (host で別 instance 指定可)
+#   - npm     : npm registry の latest dist-tag
+#
+# section 名 = pkgs/<name> ディレクトリ名と一致させる (workflow 側で照合)。
+# 新規 package を追加した時はここに section を足す。
+
+[claude-code]
+# Anthropic Claude Code CLI。downloads.claude.ai 経由配布だが npm registry
+# にも同 version で publish される (@anthropic-ai/claude-code)。npm の方が
+# version 取得が安定。
+source = "npm"
+npm = "@anthropic-ai/claude-code"
+
+[docker-rootless-extras]
+# Docker Engine と version sync (rootless extras は moby/moby tree の
+# subset)。moby/moby の latest stable release を見る。
+source = "github"
+github = "moby/moby"
+
+[localsend-bin]
+source = "github"
+github = "localsend/localsend"
+
+[moonlight-qt]
+source = "github"
+github = "moonlight-stream/moonlight-qt"
+
+[nekonopaw]
+# 自作 package (nananek/nekonopaw)。自分で push した tag を見る形。
+source = "github"
+github = "nananek/nekonopaw"
+
+[pam_pkcs11]
+source = "github"
+github = "OpenSC/pam_pkcs11"
+# OpenSC は release tag に "pam_pkcs11-X.Y.Z" の prefix を付けるので
+# prefix を strip して比較できるよう正規化。
+prefix = "pam_pkcs11-"
+
+[pika-backup]
+# GNOME 系は gitlab.gnome.org でホスト。
+source = "gitlab"
+gitlab = "World/pika-backup"
+host = "gitlab.gnome.org"
+
+[pwvucontrol]
+source = "github"
+github = "saivert/pwvucontrol"
+
+[qview]
+source = "github"
+github = "jurplel/qView"
+
+[vesktop-bin]
+# upstream は Vesktop (Vencord 系)。Vesktop は v prefix 付き tag。
+source = "github"
+github = "Vencord/Vesktop"

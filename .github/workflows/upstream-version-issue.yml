@@ -1,0 +1,238 @@
+name: Upstream version check (Issue)
+
+# 各 pkg の upstream latest version を nvchecker で監視し、PKGBUILD の現
+# pkgver と差分があれば Claude code action で:
+#   - upstream の release notes / build script / dependency 変化を事前調査
+#   - supply-chain 監査 (source URL 改変 / 新 install script / typosquat 等)
+# を行った上で **GitHub Issue を 1 件立てる** (PR ではない、人間が手作業で
+# PKGBUILD 更新するため事前調査だけ済ませる方針)。
+#
+# 冪等性: Issue title `[<pkg>] upstream version: <new_pkgver>` を fingerprint
+# とし、`gh issue list --state all` (open + closed) を search して重複は skip。
+# 同一 new_pkgver が再検知されても Issue は 1 つだけ立つ。new_pkgver が更に
+# 上がれば新しい Issue。
+
+on:
+  schedule:
+    - cron: '0 6 * * *'  # daily 06:00 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+  id-token: write
+
+jobs:
+  detect:
+    name: Detect upstream updates (nvchecker)
+    runs-on: ubuntu-latest
+    container:
+      image: archlinux:latest
+    outputs:
+      updates: ${{ steps.diff.outputs.updates }}
+    steps:
+      - name: Install runtime deps
+        run: |
+          pacman -Syu --noconfirm --needed git nvchecker python jq github-cli
+
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Configure git safe.directory
+        # container ↔ host UID 不一致で git が dubious ownership を弾くため
+        run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
+
+      - name: Run nvchecker
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -e
+          # nvchecker keyfile (GitHub API rate limit 回避用 token を渡す)
+          cat > nvchecker-keys.toml <<EOF
+          [keys]
+          github = "${GITHUB_TOKEN}"
+          EOF
+          chmod 600 nvchecker-keys.toml
+          # state file は workflow 単発実行なので oldver は空で start。
+          # 比較対象は PKGBUILD の pkgver なので oldver は使わない。
+          : > oldver.json
+          nvchecker \
+            --file nvchecker.toml \
+            --keyfile nvchecker-keys.toml \
+            --logger json \
+            --newver newver.json \
+            oldver.json || true
+          echo "--- nvchecker newver.json ---"
+          cat newver.json || true
+
+      - name: Compute updates vs PKGBUILD
+        id: diff
+        run: |
+          updates=$(python3 .github/scripts/detect_upstream_updates.py)
+          echo "updates=${updates}" >> "$GITHUB_OUTPUT"
+          echo "Detected updates: ${updates}"
+
+  investigate:
+    name: Pre-investigate and open Issue
+    needs: detect
+    if: ${{ needs.detect.outputs.updates != '[]' && needs.detect.outputs.updates != '' }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      max-parallel: 3
+      matrix:
+        update: ${{ fromJson(needs.detect.outputs.updates) }}
+    permissions:
+      contents: read
+      issues: write
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Idempotency check (dedupe by Issue title)
+        id: dedup
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          title="[${{ matrix.update.pkg }}] upstream version: ${{ matrix.update.new_pkgver }}"
+          echo "Looking for existing issue with title: ${title}"
+          # open + closed を全件 search (title 完全一致)
+          count=$(gh issue list --state all --limit 200 \
+                    --search "in:title \"${title}\"" \
+                    --json title \
+                    --jq "[.[] | select(.title == \"${title}\")] | length")
+          echo "Found ${count} matching issue(s)"
+          if [ "${count}" -gt 0 ]; then
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "skip=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Claude pre-investigation + create Issue
+        if: steps.dedup.outputs.skip != 'true'
+        uses: anthropics/claude-code-action@v1
+        with:
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          # Issue 作成 / upstream fetch / diff / sha256 計算に必要な最小限
+          # の bash サブセットを許可する。
+          claude_args: |
+            --allowed-tools
+            Bash(gh issue create:*),Bash(gh api:*),Bash(gh release:*),
+            Bash(curl:*),Bash(wget:*),Bash(git:*),Bash(tar:*),Bash(unzip:*),
+            Bash(jq:*),Bash(diff:*),Bash(sha256sum:*),Bash(b2sum:*),
+            Bash(ls:*),Bash(find:*),Bash(grep:*),Bash(cat:*),Bash(head:*),
+            Bash(tail:*),Bash(wc:*),Bash(awk:*),Bash(sed:*),Bash(mkdir:*),
+            Read,Write,Grep
+          prompt: |
+            このリポジトリ `nekono-pacman-distribution` は self-hosted な
+            Arch Linux pacman repository。cron で upstream の新 version を
+            検知した:
+
+            - **package**: `${{ matrix.update.pkg }}`
+            - **旧 pkgver**: `${{ matrix.update.old_pkgver }}`
+            - **新 pkgver**: `${{ matrix.update.new_pkgver }}`
+
+            あなたの仕事は **PKGBUILD を更新する PR を作ることではない**。
+            人間が build host で PKGBUILD を手作業更新するときに **必要な
+            情報を pre-investigate して GitHub Issue にまとめる** のが今回
+            の task。
+
+            ## 調査項目
+
+            1. **build script の変更検出**
+               - 旧 (`${{ matrix.update.old_pkgver }}`) と新
+                 (`${{ matrix.update.new_pkgver }}`) の upstream tarball
+                 (or git tag) を取得し、build に直接関わる以下のファイル群
+                 の diff を確認:
+                 - `Makefile`, `CMakeLists.txt`, `meson.build`
+                 - `Cargo.toml`, `package.json`, `go.mod`,
+                   `setup.py`, `pyproject.toml`
+                 - `configure.ac`, `configure.in`, `autogen.sh`
+                 - `*.spec` / `debian/rules` / その他 build hook
+               - PKGBUILD の `build()` / `package()` を改変する必要があるか
+                 判定。
+
+            2. **依存関係の変更検出**
+               - 上記 build script から `dependencies` (Cargo deps / npm
+                 deps / system libs link 指定) を抽出し、旧版と diff
+               - 結果として **PKGBUILD の `depends` / `makedepends` に
+                 追加 / 削除すべき項目** を列挙
+
+            3. **CHANGELOG / Release notes**
+               - upstream の CHANGELOG.md or GitHub Release notes (or
+                 git tag annotation) を取得して要約
+               - 特に "breaking changes" / "removed" / "deprecated" /
+                 "security fix" を強調
+
+            4. **サプライチェーン監査 (必須)**
+               - source URL の変更 (新 release で download path が変わった
+                 か、typosquat / domain spoof の兆候は無いか)
+               - 新 tarball の **sha256sums を実際に計算** して提示
+                 (sha256sum コマンドが使える、PKGBUILD の sha256sums を
+                 そのまま埋められる)
+               - 新規 install scripts (.install / post_install hook の追加)、
+                 `curl|sh` 等の opaque network fetch の追加
+               - upstream の Release 担当 / commit author に怪しい変化が
+                 無いか (GitHub Release 経路なら `gh api repos/<o>/<r>/
+                 releases/tags/<tag>` で author を確認)
+               - new optional features に telemetry / phone-home / 隠れた
+                 network outbound が含まれていないか
+               - upstream dependency (Cargo deps / npm deps) に新規の
+                 supply-chain 攻撃 / typosquat の報告がないか
+                 (= 増えた dependency 名を 1 つずつ目視確認)
+
+            ## Issue 作成
+
+            調査結果を markdown でまとめ、以下の title で Issue を作成:
+
+            ```
+            [${{ matrix.update.pkg }}] upstream version: ${{ matrix.update.new_pkgver }}
+            ```
+
+            **この title は冪等性 key として workflow が使う**。書式を
+            変えないこと (変えると重複 Issue が立つ)。
+
+            Issue 本文は以下のセクション構成で markdown を書く:
+
+            ```markdown
+            ## Verdict
+            (1 行目に必ず以下のいずれか)
+            - `safe-to-bump`: pkgver + sha256sums の機械的更新のみで OK
+            - `needs-attention`: build / depends の手当が必要、要レビュー
+            - `block`: supply-chain 上の懸念あり、上げない方が良い
+
+            ## Summary
+            - 旧 pkgver: `${{ matrix.update.old_pkgver }}`
+            - 新 pkgver: `${{ matrix.update.new_pkgver }}`
+            - upstream: <release URL>
+
+            ## Build script changes
+            (1. の結果。`build()` / `package()` を直す必要があれば具体的に)
+
+            ## Dependency changes
+            (2. の結果。`depends` / `makedepends` の add / remove を列挙)
+
+            ## Release notes summary
+            (3. の結果)
+
+            ## Supply-chain audit
+            (4. の結果。新 sha256sums を必ず含める)
+
+            ## Suggested PKGBUILD changes
+            (人間が手作業更新するときに踏むべき具体的 diff 案。
+            pkgver 更新は自明なので省略可、sha256sums 新値・depends 追加削除・
+            build() 改変等が必要なら明示)
+            ```
+
+            投稿コマンドは:
+
+            ```
+            gh issue create \
+              --title "[${{ matrix.update.pkg }}] upstream version: ${{ matrix.update.new_pkgver }}" \
+              --body-file body.md
+            ```
+
+            日本語で書くこと。
