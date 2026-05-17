@@ -150,6 +150,79 @@ Arch host で .SRCINFO の depends + makedepends について `pacman -Si <dep>`
 bump PR をうっかり merge → 旧 pkgver のまま rebuild されて配布パッケージ
 が更新されない」事故を踏む。
 
+## デイリー運用 (Issue / PR 消化)
+
+`upstream-version-issue` / `dep-version-pr` の 2 本の cron workflow が毎日
+06:00 UTC 前後に新規 Issue / PR を生成する。**放置すると溜まる**ので、
+**毎日 1 度 GitHub の Issues / Pull Requests タブを開いて消化する** ことを
+ルーチンにする。所要時間は変化ない日で 1〜2 分、bump が来ている日でも
+1 pkg 10〜30 分程度。
+
+### Issues タブ (upstream-version-issue 経由)
+
+新規 Issue title は `[<pkg>] upstream version: <new_pkgver>`。本文の 1 行目
+に Claude が付ける **verdict**:
+
+| verdict | 対応 |
+|---|---|
+| `safe-to-bump` | build host で PKGBUILD の pkgver / sha256sums を本文の Suggested PKGBUILD changes に従って差し替え → `.SRCINFO` 同期 → `git commit -S` → PR open。`claude-review.yml` の review pass を待って merge → `bin/build-all <pkg>` → `bin/update-repo` → publish → Issue close。 |
+| `needs-attention` | build script / depends 変化あり。Claude の事前調査 (Build script changes / Dependency changes section) を踏まえて手作業更新。場合により `package()` の改変や `optdepends` 追加が要る。あとは safe-to-bump と同じ流れ。 |
+| `block` | supply-chain 上の懸念あり。理由を読み、本当に止めるべきか判断。ユーザコミュニティに新 release で報告されたインシデントを upstream で確認するなど、追加調査してから判断。 |
+
+verdict 判定に疑義がある場合 (例: nvchecker の誤検知で立った Issue) は、
+内容を読んで close する。冪等性 key は title なので、close されていても
+同 title の再検知は skip される (= 二重立て防止)。
+
+### Pull Requests タブ
+
+#### bot 自動 PR (`dep-version-pr` 経由)
+
+branch 名 `deps/<pkg>-pkgrel-<N+1>`、title `<pkg>: pkgrel bump to <N+1>
+(deps changed)`。
+
+1. **「PR review 時の個別事情」 表 (上記) で該当 pkg を確認**。該当する
+   なら close して別経路 (upstream-version-issue) で対応 — bot PR の中身
+   は捨てる。
+2. 該当しないなら、`claude-review.yml` の review pass を待つ。
+3. build host で local pull → `git commit --amend -S --no-edit` で Nekono
+   GPG 署名し直し → `git push --force-with-lease`。
+4. GitHub UI から merge。
+5. build host で `bin/build-all <pkg>` → `bin/update-repo`。
+
+#### 手動 bump PR (= 自分が立てる upstream-version-issue 由来の PR)
+
+`pkgs/<pkg>` ディレクトリの PKGBUILD / .SRCINFO / .deps.lock を更新して
+立てる PR。CLAUDE.md 規約「1 PKGBUILD update = 1 commit」「`-S` 署名」を
+守る。
+
+merge 前のチェックリスト:
+
+- [ ] `claude-review.yml` の verdict が `approve` であること (or 軽微指摘
+      のみ)
+- [ ] `REVIEW.md` の「更新履歴」 section に当該 release の 1 行を追記済み
+      (review 日付、PKGBUILD repo SHA、upstream tag commit SHA、findings)。
+      これを忘れると claude-review.yml が `request-changes` を出すので
+      ループする
+- [ ] AUR との意図的 diff (例: `slirp4netns` を depends に維持) があれば
+      REVIEW.md の「依存方針」 section に理由を書く。書かないと
+      claude-review.yml が次の bump でも同じ指摘を繰り返す
+- [ ] build host で `makepkg --verifysource` で sha256 検証、build 出力に
+      新規 install path / 警告がないか目視確認
+- [ ] PR title / body で `Closes #N` を入れ、merge で対応 Issue が auto
+      close されること
+
+### 朝 routine (推奨)
+
+毎朝 1 度、以下のリンクを順に踏む:
+
+- https://github.com/nananek/nekono-pacman-distribution/issues
+  (open Issue を verdict で並べて消化)
+- https://github.com/nananek/nekono-pacman-distribution/pulls
+  (open PR を 1 個ずつ処理 — close か merge)
+
+両方ともゼロにする日が「平常運用日」、何か残ったら気になる症状として
+記憶しておく。
+
 ## ansible-nekonodesk との分担
 
 | 領域 | 置き場所 |
