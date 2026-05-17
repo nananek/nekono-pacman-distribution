@@ -110,6 +110,22 @@ def existing_pr_for_branch(branch: str) -> bool:
         return False
 
 
+def remote_branch_exists(branch: str) -> bool:
+    """Return True if the branch already exists on the origin remote.
+
+    Needed because a prior workflow run can have pushed the branch but
+    failed to open the PR (e.g. the repo's Actions permission was missing
+    "create pull requests" at the time). Treating a leftover branch as
+    "already in flight" prevents re-bumping pkgrel and producing an
+    out-of-sync N+2 commit on top of master.
+    """
+    res = run(
+        "git", "ls-remote", "--heads", "origin", branch,
+        capture=True, check=False,
+    )
+    return bool(res.stdout.strip())
+
+
 def process_pkg(pkg_dir: Path) -> None:
     pkg = pkg_dir.name
     lock = pkg_dir / ".deps.lock"
@@ -146,8 +162,8 @@ def process_pkg(pkg_dir: Path) -> None:
     # Fetch to ensure remote refs are visible (for the duplicate check below).
     run("git", "fetch", "origin", check=False)
 
-    if existing_pr_for_branch(branch):
-        print(f"[{pkg}] PR for branch {branch} already exists, skipping")
+    if existing_pr_for_branch(branch) or remote_branch_exists(branch):
+        print(f"[{pkg}] branch or PR {branch} already exists, skipping")
         # Roll back the working-tree change so subsequent packages see a clean
         # tree (we never committed it).
         run("git", "checkout", "--", str(pkgbuild), str(lock))
@@ -188,13 +204,27 @@ def process_pkg(pkg_dir: Path) -> None:
     )
     run("git", "push", "-u", "origin", branch)
 
-    run(
-        "gh", "pr", "create",
-        "--title", f"{pkg}: pkgrel bump to {new_rel} (deps changed)",
-        "--body", body,
-        "--base", "master",
-        "--head", branch,
-    )
+    try:
+        run(
+            "gh", "pr", "create",
+            "--title", f"{pkg}: pkgrel bump to {new_rel} (deps changed)",
+            "--body", body,
+            "--base", "master",
+            "--head", branch,
+        )
+    except subprocess.CalledProcessError:
+        # PR creation failed (typically a repo permission issue, e.g. "Allow
+        # GitHub Actions to create and approve pull requests" not enabled).
+        # Roll back the remote branch so the next workflow run can re-attempt
+        # cleanly. Without this cleanup, remote_branch_exists() would short-
+        # circuit on the leftover branch and the PR would never be created.
+        print(
+            f"[{pkg}] PR creation failed, removing remote branch {branch}",
+            file=sys.stderr,
+        )
+        run("git", "push", "origin", "--delete", branch, check=False)
+        run("git", "checkout", "master", check=False)
+        raise
     print(f"[{pkg}] opened PR for branch {branch}")
 
     # Return to master for the next package iteration.
