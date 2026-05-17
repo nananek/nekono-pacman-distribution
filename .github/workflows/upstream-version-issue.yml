@@ -35,7 +35,7 @@ jobs:
         run: |
           pacman -Syu --noconfirm --needed git nvchecker python jq github-cli
 
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           fetch-depth: 1
 
@@ -89,7 +89,7 @@ jobs:
       issues: write
       id-token: write
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           fetch-depth: 0
 

@@ -33,7 +33,7 @@ jobs:
         run: |
           pacman -Syu --noconfirm --needed git python jq github-cli
 
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           fetch-depth: 0
           # default の GITHUB_TOKEN credentials を残す (git push に必要)
