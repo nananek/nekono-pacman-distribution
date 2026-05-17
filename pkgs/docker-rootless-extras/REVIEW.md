@@ -84,6 +84,34 @@ maintainer の意図的設計)。Debian apt の同名 package とは flow が異
 - `kernel.unprivileged_userns_clone=1` sysctl は rootless Docker 必須。
   Linux ≥5.11 default 有効のため実質的に変化なし。意図した設定、問題なし。
 
+## 依存方針 (AUR との意図的 diff)
+
+AUR の現行 PKGBUILD (v29.5.0) と本 repo の PKGBUILD で `depends` /
+`optdepends` の振り方に意図的な差異がある:
+
+| | AUR v29.5.0 | 本 repo |
+|---|---|---|
+| `slirp4netns` | `optdepends` (recommended) | **`depends` (必須)** |
+| `gvisor-tap-vsock` | (記載なし) | `optdepends` |
+
+**本 repo が `slirp4netns` を depends に keep する理由**:
+
+AUR は v29.5.0 で `gvisor-tap-vsock` を主推奨 network driver に切替え、
+`slirp4netns` を optional に降格した。しかし `gvisor-tap-vsock` は
+**Arch 公式 repo に無く、AUR でも現状 orphaned (maintainer: None)**
+であり、安定供給が保証されていない。本 repo はビルド成果物を Tailscale
+経由で配信する self-host 運用なので、依存先の安定性が AUR より重要。
+
+そこで、本 repo は:
+- `slirp4netns` を **`depends` のまま維持** (= 既存 ayaka 環境で動作保証)
+- `gvisor-tap-vsock` を **新規 `optdepends` として追加** (= 使いたい
+  ユーザは AUR / foreign repo で対応)
+
+将来 `gvisor-tap-vsock` が Arch 公式 repo に入った時点で再評価する。
+
+(claude-review.yml で「AUR との差異」として指摘された際は、本 section を
+参照すること。)
+
 ## 結論
 
 **approve** — そのまま build host で `bin/build-all docker-rootless-extras`
@@ -122,6 +150,10 @@ upstream の新 release (docker 29.5.x 等) が出たら:
   PKGBUILD の `package()` 内 `awk '/Unit/,/EOT/'` 抽出範囲は setuptool.sh
   の変更箇所 (Unit セクション外) に非該当、引き続き動作する想定。**build
   host で makepkg 実行時に生成 `docker.service` の内容を目視確認推奨**。
+
+  AUR v29.5.0 との意図的 diff (`slirp4netns` を depends に維持、
+  `gvisor-tap-vsock` は新規 optdepends に追加) は「依存方針」 section
+  参照。
 - **2026-05-16 / 29.4.3** — approve (初回 fork + review、純 fork で改変
   なし)。upstream tag commit: `05b03cea61ee67d3787a27910c37681d04f2cbb0`。
   当時の sha256 実測値:
