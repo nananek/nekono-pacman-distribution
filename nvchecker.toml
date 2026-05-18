@@ -94,10 +94,3 @@ use_latest_release = true
 source = "github"
 github = "jurplel/qView"
 use_latest_release = true
-
-[vesktop-bin]
-# upstream は Vesktop (Vencord 系)。Release tag は "vX.Y.Z" 形式。
-source = "github"
-github = "Vencord/Vesktop"
-use_latest_release = true
-prefix = "v"

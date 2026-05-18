@@ -1,7 +1,0 @@
-# Snapshot of Arch official repo versions for depends + makedepends of vesktop-bin.
-# Auto-generated and updated by .github/workflows/dep-version-pr.yml.
-# Source: pkgs/vesktop-bin/.SRCINFO (depends + makedepends entries).
-# Format: 1 line per package: <name>=<full-version>
-
-debugedit=5.3-1
-electron40=40.10.0-1
