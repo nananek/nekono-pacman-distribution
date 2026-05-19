@@ -1,0 +1,18 @@
+post_install() {
+  cat <<EOF
+
+=== voicevox-engine-cuda installed ===
+- Default bind: 127.0.0.1:50021 (localhost のみ)
+- Tailscale など外部 interface に bind したい場合:
+    /etc/systemd/system/voicevox-engine.service.d/override.conf
+  を作成して Environment=VV_HOST=<bind IP> を上書きすること
+  (ansible-nekonodesk の役割)
+- 起動: systemctl enable --now voicevox-engine
+- pacman 側の systemd-sysusers / systemd-tmpfiles hook が install 時に
+  voicevox-engine user 作成 + /var/lib/voicevox-engine 作成を行う
+EOF
+}
+
+post_upgrade() {
+  post_install
+}
