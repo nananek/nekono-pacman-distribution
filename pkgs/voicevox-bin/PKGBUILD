@@ -57,10 +57,11 @@ prepare() {
   rm _merged.7z
 
   # 展開後の AppImage は通常 "VOICEVOX-CPU-X64.AppImage" 名で cwd に出るはず。
-  # 7zip のバージョンによっては別名で出る可能性があるため glob で探す。
+  # 7zip のバージョンによっては別名で出る可能性があるため bash glob で探す。
   # 見つからない場合は diagnostic 出力して fail する。
-  _appimg=$(ls -1 | grep -E '^VOICEVOX.*\.AppImage$' | head -1)
-  if [[ -z "$_appimg" ]]; then
+  _appimgs=( VOICEVOX*.AppImage )
+  _appimg="${_appimgs[0]}"
+  if [[ ! -f "$_appimg" ]]; then
     echo "[FATAL] AppImage 未発見。 cwd 内容:" >&2
     ls -la >&2
     exit 1
