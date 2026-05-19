@@ -97,6 +97,14 @@ source = "github"
 github = "saivert/pwvucontrol"
 use_latest_release = true
 
+[python-sse-starlette]
+# fastmcp 依存 chain transitive (= fastmcp → mcp → sse-starlette)、 AUR
+# python-sse-starlette を fork。 release tag は v X.Y.Z 形式 (prefix "v")。
+source = "github"
+github = "sysid/sse-starlette"
+use_latest_release = true
+prefix = "v"
+
 [qview]
 # release tag は素の X.Y.Z 形式 (prefix 無し)。
 source = "github"

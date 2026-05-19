@@ -22,7 +22,7 @@ ayaka 上の自家 MCP server を pacman 経由 install できるようにする
   - Contributors: envolution / Carl Smedstad <carsme@archlinux.org> / AngrySoft - Sebastian Zwierzchowski
 - Upstream: https://github.com/sysid/sse-starlette
   - sysid、 BSD-3-Clause
-  - tag `v3.3.4`、 commit `5682373aa2f29c1e72863031e0d5dacabeff3b59`
+  - tag `v3.3.4` (= annotated tag object `5682373aa2f29c1e72863031e0d5dacabeff3b59`)、 dereferenced commit `c938db3f6ea262f5f087c75d8631c3aab9cbf0ad`
 
 ## 検証結果
 
@@ -44,6 +44,7 @@ ayaka 上の自家 MCP server を pacman 経由 install できるようにする
 |---|---|
 | `# Maintainer:` 行を Nekono に書換 + AUR Maintainer / Contributors は `# Upstream AUR ...` として comment 保持 | 当 PKGBUILD は Nekono が責任を持つため。 上流情報は信頼の起点として残す |
 | `check()` 関数 + 8 個の `checkdepends` を削除 | checkdepends に `python-portend` 等の AUR 限定 pkg や `python-asgi-lifespan` 等の少量 install pkg を引きたくない、 [nekono] は AUR helper 前提を取らない方針。 build host は `bin/build-all` が `--check` なし default 運用 |
+| `uvicorn` を hard depends に置く (= upstream pyproject.toml では optional-dependencies 分類) | AUR PKGBUILD 踏襲。 sse-starlette は実質 uvicorn 前提 (= ASGI server なし では起動しない)、 optional とは名ばかり。 ayaka 上の MCP 利用では fastmcp 経由で必ず uvicorn が呼ばれる |
 
 ## 結論
 
@@ -62,4 +63,4 @@ upstream で新 release (= 3.3.5 等) が出たら:
 
 | 日付 | release | review した PKGBUILD repo SHA | upstream tag commit | findings |
 |---|---|---|---|---|
-| 2026-05-19 | 3.3.4 | `31116c43b87e9f3524fa9295e206397cde846878` | `5682373aa2f29c1e72863031e0d5dacabeff3b59` | 初回 add、 純 fork (= check() 削除のみ) |
+| 2026-05-19 | 3.3.4 | `31116c43b87e9f3524fa9295e206397cde846878` | `c938db3f6ea262f5f087c75d8631c3aab9cbf0ad` | 初回 add、 純 fork (= check() 削除 + Maintainer 書換) |
