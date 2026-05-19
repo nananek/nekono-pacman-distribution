@@ -1,0 +1,69 @@
+# Maintainer: Nekono Nana KAKKO KARI <3267314+nananek@users.noreply.github.com>
+# Upstream AUR Maintainer: Vitalii Kuzhdin <vitaliikuzhdin@gmail.com>
+#
+# AUR python-openapi-pydantic の純 fork (= 機能変化なし)。 nekono-pacman-distribution
+# の改変:
+#   - Maintainer 行を Nekono に、 AUR Maintainer は Upstream AUR として保持
+#   - check() / checkdepends を削除 (= [nekono] は AUR helper 前提を取らない、
+#     bin/build-all は --check なし default 運用)
+#
+# 注意 (= AUR と同じ snapshot pin 方針):
+#   - upstream 0.5.1 release は Python 3.14 サポートを含まない (= 当時の
+#     latest release)
+#   - 0.5.1 後の PR #73 (commit 0766d599、 2025-10-17) で Python 3.14 対応
+#     追加 → Arch の system Python (現状 3.14) で動作させるため、 タグ release
+#     ではなくこの commit を pin
+#   - 0.6.0 等の新タグが切られたらそちらに乗り換える (= nvchecker は use_latest_release
+#     で release tag を監視、 issue 上で気付ける)
+#
+# python-fastmcp の transitive 依存 (= fastmcp → mcp → openapi-pydantic)。
+
+_name="openapi-pydantic"
+pkgname="python-${_name}"
+_commit_rel="82fd769f2820f6ff2acf650f551a97a7b8fbe189" # 0.5.1
+_commit="0766d599bbe9bccda12b6ede069647c7bef2299f" # r37
+pkgver="0.5.1+r37+g${_commit::7}"
+pkgrel=3
+pkgdesc="Modern, type-safe OpenAPI schemas in Python using Pydantic 1.8+ and 2.x"
+arch=(
+  'any'
+)
+url="https://github.com/mike-oakley/${_name}"
+license=(
+  'MIT'
+)
+depends=(
+  'python>=3.9'
+  'python-pydantic>=1.8'
+  'python-pydantic-core'
+)
+makedepends=(
+  'python-build'
+  'python-hatchling>=1.26'
+  'python-installer'
+  'python-wheel'
+)
+
+_pkgsrc="${url##*/}-${_commit}"
+source=(
+  "${url}/archive/${_commit}/${_pkgsrc}.tar.gz"
+)
+sha256sums=('8b4091f4a2f1613a05aa88a66ad72e0b1c3da7781be1a207d0d7edff4483ffcf')
+
+build() {
+  cd "${srcdir}/${_pkgsrc}"
+  python -m build --wheel --no-isolation
+}
+
+package() {
+  local site_packages="$(python -c "import site; print(site.getsitepackages()[0])")"
+
+  cd "${srcdir}/${_pkgsrc}"
+  python -m installer --destdir="${pkgdir}" dist/*.whl
+
+  install -vDm644 "README.md" "${pkgdir}/usr/share/doc/${pkgname}/README.md"
+
+  install -vd "${pkgdir}/usr/share/licenses/${pkgname}"
+  ln -vsf "${site_packages}/${_name//-/_}-${pkgver%%+r*}.dist-info/licenses/LICENSE" \
+    "${pkgdir}/usr/share/licenses/${pkgname}/LICENSE"
+}

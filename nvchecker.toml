@@ -114,6 +114,17 @@ source = "github"
 github = "p1c2u/jsonschema-path"
 use_latest_release = true
 
+[python-openapi-pydantic]
+# fastmcp 依存 chain transitive (= fastmcp → mcp → openapi-pydantic)、 AUR
+# python-openapi-pydantic を fork。 release tag は v X.Y.Z 形式 (prefix "v")。
+# 注意: 当 PKGBUILD は AUR と同じく 0.5.1 release 後の commit (= Python 3.14
+# 対応 PR #73 merge) を snapshot pin。 nvchecker は upstream release を見るので、
+# 0.6.0 等 clean tag が出たらそちらに乗り換える判断材料を issue で提供する。
+source = "github"
+github = "mike-oakley/openapi-pydantic"
+use_latest_release = true
+prefix = "v"
+
 [python-sse-starlette]
 # fastmcp 依存 chain transitive (= fastmcp → mcp → sse-starlette)、 AUR
 # python-sse-starlette を fork。 release tag は v X.Y.Z 形式 (prefix "v")。

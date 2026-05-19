@@ -1,0 +1,12 @@
+# Snapshot of Arch official repo versions for depends + makedepends of python-openapi-pydantic.
+# Auto-generated and updated by .github/workflows/dep-version-pr.yml.
+# Source: pkgs/python-openapi-pydantic/.SRCINFO (depends + makedepends entries).
+# Format: 1 line per package: <name>=<full-version>
+
+python-build=1.4.3-1
+python-hatchling=1.29.0-1
+python-installer=1.0.0-1
+python-pydantic-core=3:2.46.4-1
+python-pydantic=2.13.4-1
+python-wheel=0.47.0-1
+python=3.14.5-1
