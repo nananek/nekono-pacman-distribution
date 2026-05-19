@@ -1,0 +1,51 @@
+# Maintainer: Nekono Nana KAKKO KARI <3267314+nananek@users.noreply.github.com>
+# Upstream AUR Maintainer: envolution
+# Upstream AUR Contributor: Carl Smedstad <carl.smedstad at protonmail dot com>
+#
+# AUR python-httpx-sse の純 fork (= 機能変化なし)。 nekono-pacman-distribution
+# の改変:
+#   - Maintainer 行を Nekono に、 AUR maintainer は Upstream AUR Maintainer/
+#     Contributor として残す
+#   - check() を削除 (= checkdepends の python-sse-starlette が AUR 限定で、
+#     [nekono] では PR #3 で別 fork 投入予定。 build host での `makepkg --check`
+#     は走らせない方針 (= bin/build-all は --nocheck 相当の default))
+#
+# python-fastmcp 依存 chain で必要 (= fastmcp → mcp → httpx-sse)。
+
+pkgname=python-httpx-sse
+_name=${pkgname#python-}
+pkgver=0.4.3
+pkgrel=1
+pkgdesc="Consume Server-Sent Event (SSE) messages with HTTPX"
+arch=(any)
+url="https://github.com/florimondmanca/httpx-sse"
+license=(MIT)
+depends=(
+  python
+  python-httpx
+)
+makedepends=(
+  python-build
+  python-installer
+  python-setuptools-scm
+  python-wheel
+)
+
+source=("$pkgname-$pkgver.tar.gz::$url/archive/refs/tags/$pkgver.tar.gz")
+sha256sums=('926e88187fa45117882f287955dbcb53c1c4ec36148893f0c514f021b7f3b000')
+
+_archive="$_name-$pkgver"
+
+build() {
+  cd "$_archive"
+
+  python -m build --wheel --no-isolation
+}
+
+package() {
+  cd "$_archive"
+
+  python -m installer --destdir="$pkgdir" dist/*.whl
+
+  install -Dm644 -t "$pkgdir/usr/share/licenses/$pkgname" LICENSE
+}
