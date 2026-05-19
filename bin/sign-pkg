@@ -21,6 +21,10 @@ if [[ ! -f "$pkg" ]]; then
     exit 1
 fi
 
+# 挿入中 YubiKey の serial で stub を再 learn (= 両 YubiKey 切替時の
+# "Please insert card with serial ..." を回避)。
+gpg --card-status >/dev/null 2>&1 || true
+
 # 既存の .sig があれば置き換え (--yes)。--detach-sign + --use-agent で
 # gpg-agent (= YubiKey) 経由で signing。
 gpg --batch --yes --detach-sign --use-agent \

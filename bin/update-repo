@@ -25,6 +25,10 @@ if [[ ! -e "${pkgs[0]}" ]]; then
 fi
 
 cd "$REPO_DIR"
+# 挿入中 YubiKey の serial で stub を再 learn (= 両 YubiKey 切替時の
+# "Please insert card with serial ..." を回避)。
+gpg --card-status >/dev/null 2>&1 || true
+
 repo-add --sign --key "$NEKONO_GPG_FP" "$DB_NAME.db.tar.gz" \
     *.pkg.tar.zst
 
