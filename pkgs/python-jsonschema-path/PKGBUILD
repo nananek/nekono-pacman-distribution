@@ -1,0 +1,43 @@
+# Maintainer: Nekono Nana KAKKO KARI <3267314+nananek@users.noreply.github.com>
+#
+# 自家 PKGBUILD (= AUR にも存在しない PyPI pkg)。 fastmcp 依存 chain
+# (= python-fastmcp → python-mcp → python-openapi-pydantic → python-jsonschema-path)
+# で必要だが、 chain の中で唯一 AUR にも無いので PyPI sdist 直 vendor で
+# 自家 PKGBUILD として投入する。 詳細は REVIEW.md 参照。
+
+pkgname=python-jsonschema-path
+pkgver=0.4.6
+pkgrel=1
+pkgdesc="JSONSchema Spec with object-oriented paths"
+arch=('any')
+url="https://github.com/p1c2u/jsonschema-path"
+license=('Apache-2.0')
+depends=(
+    'python'
+    'python-yaml'
+    'python-pathable'
+    'python-referencing'
+)
+makedepends=(
+    'python-build'
+    'python-installer'
+    'python-wheel'
+    'python-poetry-core'
+)
+
+_pypiname=jsonschema_path
+source=("https://files.pythonhosted.org/packages/source/${_pypiname:0:1}/$_pypiname/$_pypiname-$pkgver.tar.gz")
+sha256sums=('c89eb635f4d497c9ac328eeff359c489755838806a7d033510a692e9576f5c4b')
+
+build() {
+    cd "$_pypiname-$pkgver"
+    python -m build --wheel --no-isolation
+}
+
+package() {
+    cd "$_pypiname-$pkgver"
+    python -m installer --destdir="$pkgdir" dist/*.whl
+    if [[ -f LICENSE ]]; then
+        install -Dm644 LICENSE "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
+    fi
+}
