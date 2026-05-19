@@ -62,4 +62,4 @@ upstream で新 release (= 3.3.5 等) が出たら:
 
 | 日付 | release | review した PKGBUILD repo SHA | upstream tag commit | findings |
 |---|---|---|---|---|
-| 2026-05-19 | 3.3.4 | (初回 PR commit SHA、 push 後に固定) | `5682373aa2f29c1e72863031e0d5dacabeff3b59` | 初回 add、 純 fork (= check() 削除のみ) |
+| 2026-05-19 | 3.3.4 | `31116c43b87e9f3524fa9295e206397cde846878` | `5682373aa2f29c1e72863031e0d5dacabeff3b59` | 初回 add、 純 fork (= check() 削除のみ) |
