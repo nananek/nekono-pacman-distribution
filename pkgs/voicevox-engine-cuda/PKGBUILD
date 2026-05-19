@@ -25,7 +25,7 @@
 
 pkgname=voicevox-engine-cuda
 pkgver=0.24.1
-pkgrel=2
+pkgrel=3
 pkgdesc='A http server for text-to-speech (CUDA / NVIDIA GPU build)'
 arch=('x86_64')
 license=('LGPL-3.0-only+nonfree')
@@ -147,6 +147,18 @@ package() {
   #     source[] からの fresh tarball を mv で配置する。
   rm -rf "$pkgdir"/usr/lib/VOICEVOX/vv-engine/{kanalizer,pyopenjtalk,pyworld}
   rm -rf "$pkgdir"/usr/lib/VOICEVOX/vv-engine/{kanalizer,pyopenjtalk,pyworld}-*.dist-info
+
+  # 2a-bis) bundle 内 basic runtime のうち、 system 版 (= gcc-libs / glibc) で
+  #         安全に置換できるものを削除。 LD_LIBRARY_PATH=/usr/lib/VOICEVOX/vv-engine
+  #         を service unit で設定している都合上、 bundle 版が system より先に
+  #         resolve される。 bundle 同梱の libstdc++.so.6 は古く CXXABI_1.3.15 を
+  #         持たないため、 system Python の C extension (例: soxr_ext.abi3.so) の
+  #         import で `version CXXABI_1.3.15 not found` ImportError 発生 (= 観測済み)。
+  #         system の gcc-libs / glibc は ABI backward compatible なので、 bundle
+  #         同梱の CUDA stack (libcudart 等) も system libstdc++ で問題なく動く。
+  #         libgfortran / libquadmath / libscipy_openblas は scipy/numpy 依存で
+  #         system に無い可能性があるため残す。
+  rm -f "$pkgdir"/usr/lib/VOICEVOX/vv-engine/{libstdc++.so.6,libgcc_s.so.1,libmvec.so.1}
 
   # 2b) Vendored PyPI deps を offline install (= sha pin 済み)。
   #    --target で直接 bundle dir に書く。 --no-deps で再帰解決禁止。
