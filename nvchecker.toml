@@ -75,6 +75,14 @@ github = "OpenSC/pam_pkcs11"
 use_latest_release = true
 prefix = "pam_pkcs11-"
 
+[pass-secret-service]
+# pass を D-Bus org.freedesktop.secrets backend にする bridge (Rust 実装、
+# grimsteel/pass-secret-service)。release tag は "vX.Y.Z"。
+source = "github"
+github = "grimsteel/pass-secret-service"
+use_latest_release = true
+prefix = "v"
+
 [pika-backup]
 # GNOME 系は gitlab.gnome.org でホスト。tag は素の X.Y.Z 形式 (v prefix 無し)、
 # pre-release を含む全 tag から semver 最大を取りたいので use_max_tag。
