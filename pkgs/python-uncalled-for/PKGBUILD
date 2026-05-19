@@ -1,0 +1,38 @@
+# Maintainer: Nekono Nana KAKKO KARI <3267314+nananek@users.noreply.github.com>
+# Upstream AUR Maintainer: Mohamed Amine Zghal (medaminezghal) <medaminezghal at outlook dot com>
+#
+# AUR python-uncalled-for の純 fork (= 機能変化なし)。 nekono-pacman-distribution
+# の改変:
+#   - Maintainer 行を Nekono に、 AUR Maintainer は Upstream AUR として保持
+#   - prepare() / check() / checkdepends を削除 (= prepare() は check() で
+#     pytest-cov flag を sed する役目のみで、 check() 削除に伴い無用化)
+#   - bin/build-all は --check なし default 運用、 [nekono] は AUR helper
+#     前提を取らない方針
+#
+# python-fastmcp の transitive 依存。 v0.2.0 を AUR 踏襲で pin (= upstream は
+# 0.3.2 まで進んでいるが、 fastmcp 3.2.4 の要求は 0.2.0、 AUR fastmcp PKGBUILD
+# も 0.2.0 を要求するため整合)。
+
+_name=uncalled-for
+pkgname=python-$_name
+pkgver=0.2.0
+pkgrel=1
+pkgdesc="Async dependency injection for Python functions."
+arch=('any')
+license=('MIT')
+url="https://github.com/chrisguidry/uncalled-for/"
+depends=('python')
+makedepends=('python-hatchling' 'python-hatch-vcs' 'python-build' 'python-installer' 'python-wheel')
+
+source=("https://files.pythonhosted.org/packages/source/${_name::1}/$_name/${_name//-/_}-$pkgver.tar.gz")
+sha256sums=('b4f8fdbcec328c5a113807d653e041c5094473dd4afa7c34599ace69ccb7e69f')
+
+build() {
+    cd "$srcdir"/${_name//-/_}-$pkgver
+    python -m build --wheel --no-isolation
+}
+
+package() {
+    cd "$srcdir"/${_name//-/_}-$pkgver
+    python -m installer --destdir="$pkgdir" dist/*.whl
+}
