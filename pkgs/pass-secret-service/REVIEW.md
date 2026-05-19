@@ -24,8 +24,9 @@ AUR の `pass-secret-service` PKGBUILD (pkgver=0.7.0, pkgrel=1) を fork。
   - PKGBUILD 値: 同上 (一致)
   - sha256 (参考): `2647721628c48eee4cdf472d35ea341397c5720f7b5426a16ae9466e9993ab23`
 - [x] v0.7.0 tag commit SHA: `3f9e2925b5a8d9fc81a8095b01dc16b5b663edd1`
-- [x] prepare() / build() / package() にネットワーク fetch・eval・injection なし
-  - cargo fetch --locked → cargo build --frozen パターンで安全
+- [x] prepare(): `cargo fetch --locked` で Cargo.lock 固定の依存クレートを取得 (= ネットワークアクセスあり、 ただし `--locked` で pinned バージョン以外の解決を禁止、 Cargo.lock 自体は b2sums 検証済み tarball 同梱で固定)
+- [x] build(): `cargo build --frozen` でオフラインビルド (= 追加 fetch 不可)
+- [x] package(): `install` のみ、 ネットワーク操作・eval・injection なし
 - [x] depends: gcc-libs / glibc / dbus / pass — 全て妥当
 - [x] makedepends: cargo — Rust ビルドツール
 
