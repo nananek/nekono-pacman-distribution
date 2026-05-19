@@ -130,8 +130,13 @@ package() {
 
   # 2) Vendored PyPI deps を offline install (= sha pin 済み)。
   #    --target で直接 bundle dir に書く。 --no-deps で再帰解決禁止。
+  #    --no-build-isolation: PEP 517 の build isolation を切り、 makedepends の
+  #    system python-setuptools / cython / python-numpy (depends 側) を直接
+  #    build 環境として使う。 これが無いと pip が isolated venv に setuptools を
+  #    fetch しようとして --no-index と衝突し fail する。
   python -m pip install \
-    --no-index --no-deps --no-compile --no-warn-script-location \
+    --no-index --no-deps --no-build-isolation \
+    --no-compile --no-warn-script-location \
     --target "$pkgdir"/usr/lib/VOICEVOX/vv-engine \
     "$srcdir/kanalizer-0.1.1-cp39-abi3-manylinux_2_28_x86_64.whl" \
     "$srcdir/pyopenjtalk-0.4.1.tar.gz" \
