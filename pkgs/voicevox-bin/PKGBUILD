@@ -1,0 +1,86 @@
+# Maintainer: Nekono Nana KAKKO KARI <3267314+nananek@users.noreply.github.com>
+# Upstream AUR Maintainer: t1ckbase
+# nekono-pacman-distribution の改変 (= AUR voicevox-bin との diff):
+#   - split package を解消: AUR は voicevox-bin と voicevox-appimage の 2 つを
+#     1 PKGBUILD で吐くが、 [nekono] は editor 1 variant (system electron37 経由
+#     = voicevox-bin 側のみ) に絞る。 ayaka 用途で electron37 が常駐する方が
+#     AppImage 全体を抱えるより軽量。
+#   - AUR の `if [ -c /dev/nvidia0 ]; then source=(...NVIDIA AppImage...)` を
+#     完全削除。 これは build host の GPU 有無で source を動的切替する非決定
+#     PKGBUILD で、 sha も NVIDIA 版分は pin されていなかった (= 重大な
+#     supply-chain 欠陥)。 ayaka は editor だけ要り engine は remote (= nekono-pacman0
+#     上の voicevox-engine-cuda) なので、 editor の GPU 対応は不要 → CPU AppImage
+#     固定。
+#   - optdepends=(voicevox-engine) はそのまま (provides=voicevox-engine の
+#     voicevox-engine-cuda が満たす)。 ayaka では engine を install せず、 編集時
+#     に network 経由で nekono-pacman0:50021 に向ける運用。
+
+pkgname=voicevox-bin
+pkgver=0.25.2
+pkgrel=1
+pkgdesc='A text-to-speech software (Electron editor, system electron37)'
+arch=('x86_64')
+license=('LGPL-3.0-only')
+url=https://github.com/VOICEVOX/voicevox
+provides=(voicevox)
+conflicts=(voicevox voicevox-appimage)
+depends=(
+    bash
+    electron37
+)
+optdepends=(
+    'voicevox-engine: TTS HTTP API server (local もしくは remote、 EngineSettings で URL 指定)'
+)
+makedepends=(7zip)
+options=(!strip !debug)
+
+source=(
+    "${url}/releases/download/${pkgver}/VOICEVOX-CPU-X64.AppImage.7z.001"
+    "${url}/releases/download/${pkgver}/VOICEVOX-CPU-X64.AppImage.7z.002"
+)
+# AUR voicevox-bin と同じ b2sums を流用 (= upstream が公開しているのは MD5
+# のみ、 AUR メンテナが手計算した b2sum を信頼の起点として再利用)。 makepkg
+# --verifysource で再 hash → AUR 値と一致しなければ build host で気づける。
+b2sums=(
+    'e36263391b8af03da7e4e44995f5c65961fbbef7905d4cb107cb8b3fedf7bb0fbc381da261464f587126a123004b28530116170c77c2e578da182ad618ffcdc9'
+    'b0079c64ef268c207fcf870771e2436d440ad6a8465c6ae0a65d05343ae6e0e1500bd7c372e0aeef5229ab80b861776b07432ae79d8a5006824e496d28ffc41d'
+)
+
+prepare() {
+  # multi-part 7z → AppImage 結合解凍
+  7z -y x VOICEVOX-CPU-X64.AppImage.7z.001
+
+  # AppImage 自体は self-extracting ELF。 7z で内部の必要 file (desktop entry、
+  # icon、 app.asar) だけ抜き出し、 AppImage 全体は package には含めない。
+  7z x -y VOICEVOX-CPU-X64.AppImage \
+    voicevox.desktop \
+    usr/share/icons/hicolor/256x256/apps/voicevox.png \
+    resources/app.asar
+
+  # .desktop の Exec を /usr/bin/voicevox に向け直し (= sed -i.bak の .bak は
+  # 後片付け、 srcdir に置いておくと PR #40 review で minor 指摘されたため)
+  sed -i.bak 's/^Exec=.*/Exec=voicevox/' voicevox.desktop
+  rm -f voicevox.desktop.bak
+}
+
+package() {
+  _electron=electron37
+
+  install -Dm644 resources/app.asar "$pkgdir"/usr/lib/VOICEVOX/resources/app.asar
+  install -Dm644 voicevox.desktop -t "$pkgdir"/usr/share/applications
+  install -Dm644 usr/share/icons/hicolor/256x256/apps/voicevox.png -t "$pkgdir"/usr/share/pixmaps
+
+  # entrypoint: system electron37 で app.asar を起動
+  cat > run.sh <<EOF
+#!/bin/bash
+exec /usr/bin/${_electron} /usr/lib/VOICEVOX/resources/app.asar "\$@"
+EOF
+  install -Dm755 run.sh "$pkgdir"/usr/bin/voicevox
+
+  # vv-engine symlink: AUR と同じ位置で、 voicevox-engine-cuda が install されて
+  # いる場合 (= 同居 host) に editor から見えるように作る。 ayaka 単独 install
+  # 時は壊れた symlink になるが、 editor 起動時に EngineSettings で network 上
+  # の engine URL を指定する flow を取れば問題なし。
+  install -d "$pkgdir"/usr/lib/$_electron
+  ln -sf /usr/lib/VOICEVOX/vv-engine "$pkgdir"/usr/lib/$_electron/vv-engine
+}
