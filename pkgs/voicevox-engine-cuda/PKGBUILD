@@ -33,6 +33,10 @@ url=https://github.com/VOICEVOX/voicevox_engine
 provides=('voicevox-engine')
 conflicts=('voicevox-engine')
 install=$pkgname.install
+# bundle 同梱の prebuilt .so 群 (= CUDA / cuDNN / onnxruntime 系) は strip 済み
+# かつ debug symbol を持たないので、 makepkg の debug pkg 生成 + gdb-add-index
+# 試行が大量に warning を吐く。 抑止のため !strip / !debug。
+options=(!strip !debug)
 
 # NOTE: AUR は pyworld も _syspymods に入れているが、 Arch 公式 repo に
 # python-pyworld は無い (AUR のみ)。 [nekono] は AUR helper 前提を取らない
@@ -152,6 +156,12 @@ package() {
     "$srcdir/kanalizer-0.1.1-cp39-abi3-manylinux_2_28_x86_64.whl" \
     "$srcdir/pyopenjtalk-0.4.1.tar.gz" \
     "$srcdir/pyworld-0.3.5.tar.gz"
+
+  # 2c) PEP 610 の direct_url.json には pip install --target した source ファイル
+  #     の絶対 path (= $srcdir 配下) が埋まる。 published .pkg.tar.zst に
+  #     build host の path がリークするので削除 (= makepkg の
+  #     "パッケージは $srcdir へのリファレンスを含んでいます" 警告対応)。
+  rm -f "$pkgdir"/usr/lib/VOICEVOX/vv-engine/*.dist-info/direct_url.json
 
   # 3) Open JTalk dict を pyopenjtalk リソース dir 直下に配置 (= AUR と同じ位置)
   mv "$srcdir"/open_jtalk_dic_utf_8-1.11 \
