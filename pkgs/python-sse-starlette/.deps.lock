@@ -1,0 +1,13 @@
+# Snapshot of Arch official repo versions for depends + makedepends of python-sse-starlette.
+# Auto-generated and updated by .github/workflows/dep-version-pr.yml.
+# Source: pkgs/python-sse-starlette/.SRCINFO (depends + makedepends entries).
+# Format: 1 line per package: <name>=<full-version>
+
+python-anyio=4.13.0-1
+python-build=1.4.3-1
+python-installer=1.0.0-1
+python-setuptools=1:82.0.1-1
+python-starlette=1.0.0-1
+python-wheel=0.47.0-1
+python=3.14.5-1
+uvicorn=0.38.0-2
