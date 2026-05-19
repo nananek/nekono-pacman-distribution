@@ -82,4 +82,4 @@ upstream で新 release (= 0.4.7 等) が出たら:
 
 | 日付 | release | review した PKGBUILD repo SHA | upstream tag commit | findings |
 |---|---|---|---|---|
-| 2026-05-19 | 0.4.6 | (本 PR の commit SHA を merge 時に追記) | `a3de101627714f15d8d0699950f35d1f811a90a4` | 初回 add、 PyPI sdist 直接 vendor (= AUR 不在のため自家 PKGBUILD 化) |
+| 2026-05-19 | 0.4.6 | `2f527cd6e13a81deea7074384ed22a0dcc1464b6` | `a3de101627714f15d8d0699950f35d1f811a90a4` | 初回 add、 PyPI sdist 直接 vendor (= AUR 不在のため自家 PKGBUILD 化) |
