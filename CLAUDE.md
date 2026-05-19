@@ -118,6 +118,20 @@
 - **AUR との意図的 diff** は REVIEW.md 「依存方針」 等の section に
   「なぜ AUR と違うのか」 を記載。 そうしないと bump の度に同じ指摘が再発する
 
+#### 6. `pip install --target` 後の cleanup と prebuilt .so 同梱 pkg の options
+
+- **PEP 610 の `direct_url.json` を削除**: `pip install --target ... <local-file>`
+  は dist-info 配下に `direct_url.json` を生成し、 そこに $srcdir 配下の
+  絶対 path を埋め込む。 published .pkg.tar.zst に build host path がリーク
+  + makepkg lint が「パッケージは $srcdir へのリファレンスを含んでいます」 警告を出す
+  → pip install 後に `rm -f "$pkgdir"/.../<target>/*.dist-info/direct_url.json`
+- **`options=(!strip !debug)` を入れる**: bundle 同梱の prebuilt `.so` (= CUDA /
+  cuDNN / onnxruntime 系) は upstream で既に strip 済み + debug symbol 無し。
+  指定しないと makepkg の debug pkg 生成 + gdb-add-index 試行が大量に warning
+  を吐く (= `gdb-add-index: No index was created for ...`)。 voicevox-bin /
+  voicevox-engine-cuda はこの指定あり
+- 実例: voicevox-engine-cuda (PR #48)
+
 ### Commit policy
 
 - commit は **必ず `-S` 署名** (Nekono GPG)。verify-commit で trust chain
