@@ -128,7 +128,18 @@ package() {
   mv "$srcdir/_installed"/usr/lib/python*/site-packages/* \
     -t "$pkgdir"/usr/lib/VOICEVOX/vv-engine
 
-  # 2) Vendored PyPI deps を offline install (= sha pin 済み)。
+  # 2a) Bundle に同梱されている Python 3.11 ビルドの kanalizer / pyopenjtalk /
+  #     pyworld と関連 dist-info を除去。 bundle 内の libpython3.11.so.1.0 と
+  #     合わせて 3.11 で固められているが、 我々は system Python (現状 3.14) で
+  #     動かすので ABI 不一致。 さらに pip install --target は既存 dir に対し
+  #     "Target directory already exists" warning で skip するので、 fresh
+  #     install のために事前削除が必須。 pyopenjtalk/ 配下に bundle 同梱の
+  #     open_jtalk_dic_utf_8-1.11 もあるが、 これも一度消して次の手順 (4) で
+  #     source[] からの fresh tarball を mv で配置する。
+  rm -rf "$pkgdir"/usr/lib/VOICEVOX/vv-engine/{kanalizer,pyopenjtalk,pyworld}
+  rm -rf "$pkgdir"/usr/lib/VOICEVOX/vv-engine/{kanalizer,pyopenjtalk,pyworld}-*.dist-info
+
+  # 2b) Vendored PyPI deps を offline install (= sha pin 済み)。
   #    --target で直接 bundle dir に書く。 --no-deps で再帰解決禁止。
   #    --no-build-isolation: PEP 517 の build isolation を切り、 makedepends の
   #    system python-setuptools / cython / python-numpy (depends 側) を直接
