@@ -28,7 +28,8 @@ AUR の `pass-secret-service` PKGBUILD (pkgver=0.7.0, pkgrel=1) を fork。
 - [x] build(): `cargo build --frozen` でオフラインビルド (= 追加 fetch 不可)
 - [x] package(): `install` のみ、 ネットワーク操作・eval・injection なし
 - [x] depends: gcc-libs / glibc / dbus / pass — 全て妥当
-- [x] makedepends: cargo — Rust ビルドツール
+- [x] makedepends: cargo — Rust ビルドツール (= `rust` package の provides、 公式 repo に独立 package なし)
+- [x] PKGBUILD 本 repo commit SHA: `2b50d97` (= 初回 add commit、 以降 .SRCINFO / REVIEW.md / .deps.lock 追加は同 PKGBUILD 不変)
 
 ## AUR との意図的差分
 
@@ -36,6 +37,8 @@ AUR の `pass-secret-service` PKGBUILD (pkgver=0.7.0, pkgrel=1) を fork。
 |---|---|
 | `replace=` → `replaces=` | AUR 側の typo 修正 (makepkg の正しい変数名) |
 | D-Bus service ファイル perms: 744 → 644 | .service activation ファイルに execute bit 不要 |
+| `package()` 内 `${_pkgname}` → `${pkgname}` | AUR 側の未定義変数 bug 修正 (`_pkgname` は PKGBUILD 内で未定義、 空文字に展開されてインストールパスが崩れる) |
+| `package()` の `_docfiles` / `_licensefiles` ループ廃止 → 直接 `install` 1 行 | AUR 側 boilerplate の簡略化 (機能等価、 同じ install 先 + 同じ perms) |
 
 ## 結論
 
