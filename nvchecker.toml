@@ -97,6 +97,23 @@ source = "github"
 github = "saivert/pwvucontrol"
 use_latest_release = true
 
+[python-httpx-sse]
+# fastmcp 依存 chain transitive (= fastmcp → mcp → httpx-sse)、 AUR
+# python-httpx-sse を fork。 release tag は素の X.Y.Z 形式 (prefix 無し)。
+# (= PR #55 で merge し忘れた entry を本 PR の sweep として retroactive 追加)
+source = "github"
+github = "florimondmanca/httpx-sse"
+use_latest_release = true
+
+[python-jsonschema-path]
+# fastmcp 依存 chain (= fastmcp → mcp → openapi-pydantic → jsonschema-path)。
+# Arch 公式 + AUR 不在で [nekono] 自家 PyPI sdist vendor。 source = github、
+# release tag は素の X.Y.Z 形式 (prefix 無し)。
+# (= PR #54 で merge し忘れた entry を本 PR の sweep として retroactive 追加)
+source = "github"
+github = "p1c2u/jsonschema-path"
+use_latest_release = true
+
 [python-sse-starlette]
 # fastmcp 依存 chain transitive (= fastmcp → mcp → sse-starlette)、 AUR
 # python-sse-starlette を fork。 release tag は v X.Y.Z 形式 (prefix "v")。
@@ -104,6 +121,15 @@ source = "github"
 github = "sysid/sse-starlette"
 use_latest_release = true
 prefix = "v"
+
+[python-uncalled-for]
+# fastmcp の transitive 依存 (= fastmcp → uncalled-for)、 AUR
+# python-uncalled-for を fork。 release tag は素の X.Y.Z 形式 (prefix 無し)。
+# 注意: upstream は 0.3.x まで進んでいるが fastmcp 3.2.4 が 0.2.0 を要求するため
+# 当面 0.2.0 で固定 (= 検知 issue が立ったら fastmcp 側 bump と整合判断)。
+source = "github"
+github = "chrisguidry/uncalled-for"
+use_latest_release = true
 
 [qview]
 # release tag は素の X.Y.Z 形式 (prefix 無し)。
