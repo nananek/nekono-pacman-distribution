@@ -2,7 +2,7 @@
 
 ## 状態
 
-**review 済み、approve** (最新: 2026-05-17 / 2.1.143)
+**review 済み、approve** (最新: 2026-05-19 / 2.1.144)
 
 AUR の `claude-code` PKGBUILD を fork。改変なし。各 release の review 履歴は
 本ファイル末尾の「更新履歴」 section 参照。
@@ -77,6 +77,18 @@ upstream の新 release (2.1.143 等) が出たら:
    1 行追記
 
 ## 更新履歴
+
+- **2026-05-19 / 2.1.144** — approve。 upstream tag commit:
+  `69d707009ec5a9362ea3552b0580d0f658428f0a`。 主にバグ修正リリース (= breaking
+  changes / security fix なし)。 release author は `ashwin-ant` (= 2.1.143 と同一)。
+  Issue #38 (upstream-version-issue.yml) で `downloads.claude.ai` の binary を
+  GitHub Release の `SHASUMS256.txt` (= 同 author 公開) と cross-check 完全一致確認:
+  - x86_64: `147480774472e5720fd5e83617b3e9299344e7213efa84c326b25bd5a0f20b4e`
+  - aarch64: `c8ccccbfce12d684588bd3af366394132f614dcf3c86beb2066f86bde2704513`
+
+  PKGBUILD 改変は `pkgver` + 2 sha256 の 3 値のみ、 `package()` / wrapper script
+  / depends は無変更。 `/extra-usage` → `/usage-credits` のリネームと
+  `--bg` バックグラウンドセッション関連の改善が主。
 
 - **2026-05-17 / 2.1.143** — approve。upstream diff は CHANGELOG.md 追記 1
   commit のみ、build script / depends / install script 変化なし。Issue #23
