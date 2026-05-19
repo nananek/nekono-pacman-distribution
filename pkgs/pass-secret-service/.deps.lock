@@ -1,0 +1,10 @@
+# Snapshot of Arch official repo versions for depends + makedepends of pass-secret-service.
+# Auto-generated and updated by .github/workflows/dep-version-pr.yml.
+# Source: pkgs/pass-secret-service/.SRCINFO (depends + makedepends entries).
+# Format: 1 line per package: <name>=<full-version>
+
+# MISSING (not in Arch official repo, likely AUR-only or virtual): cargo
+dbus=1.16.2-1
+gcc-libs=16.1.1+r12+g301eb08fa2c5-1
+glibc=2.43+r22+g8362e8ce10b2-2
+pass=1.7.4-7
