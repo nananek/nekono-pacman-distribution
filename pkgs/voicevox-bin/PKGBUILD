@@ -47,8 +47,17 @@ b2sums=(
 )
 
 prepare() {
-  # multi-part 7z → AppImage 結合解凍
+  # upstream の prebuilt artifact は "AppImage を 7z 圧縮 → split 2 volume"
+  # 構造 (= .7z.001 + .7z.002 の中に 1 つの .7z があり、 その中に AppImage が
+  # 1 つ)。 7zip 26.01 では `7z x .7z.001` が split を merge して中間 .7z を
+  # 出すだけで、 古い 7z のように内側 .7z まで自動で降りない (= AUR PKGBUILD
+  # の 1-step 想定が build host (nekono-pacman0) で fail した実例あり)。
+  # 2-step で明示的に展開する:
+  #   1) split を merge → VOICEVOX-CPU-X64.AppImage.7z (中間 archive)
+  #   2) 中間 archive を展開 → VOICEVOX-CPU-X64.AppImage (self-extracting ELF)
   7z -y x VOICEVOX-CPU-X64.AppImage.7z.001
+  7z -y x VOICEVOX-CPU-X64.AppImage.7z
+  rm VOICEVOX-CPU-X64.AppImage.7z
 
   # AppImage 自体は self-extracting ELF。 7z で内部の必要 file (desktop entry、
   # icon、 app.asar) だけ抜き出し、 AppImage 全体は package には含めない。
