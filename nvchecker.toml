@@ -102,3 +102,12 @@ use_latest_release = true
 source = "github"
 github = "jurplel/qView"
 use_latest_release = true
+
+[voicevox-engine-cuda]
+# VOICEVOX engine (= TTS HTTP API server)。 release tag は素の X.Y.Z 形式
+# (prefix 無し)。 pkgname を voicevox-engine-cuda にして CUDA variant 化して
+# いるが、 upstream の release は CPU/NVIDIA/macOS など全 variant が同 tag に
+# 紐づくので、 monitoring は asset 種別と独立に tag 名のみで十分。
+source = "github"
+github = "VOICEVOX/voicevox_engine"
+use_latest_release = true

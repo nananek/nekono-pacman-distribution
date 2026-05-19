@@ -1,0 +1,153 @@
+# Maintainer: Nekono Nana KAKKO KARI <3267314+nananek@users.noreply.github.com>
+# Upstream AUR Maintainer (voicevox-engine, CPU 版): t1ckbase
+# nekono-pacman-distribution の改変 (= AUR voicevox-engine との diff):
+#   - pkgname を voicevox-engine → voicevox-engine-cuda に変更し、 CUDA 専用
+#     variant を表明 (provides=voicevox-engine で editor の optdepends を満たす)。
+#   - source の prebuilt bundle を CPU x64 7z から NVIDIA 7z (2 part) に切替。
+#     upstream 公開の sha256 が無いので makepkg --verifysource で実 DL 後に確定。
+#   - build() の `pip install kanalizer pyopenjtalk` (PyPI 動的取得、 sha 検証なし)
+#     を、 source[] に vendor 投入した PyPI 配布物 (sha256 pin 済み) からの
+#     offline install に置換 (--no-index --no-deps)。
+#   - depends に cuda / cudnn / nvidia-utils を追加 (CUDA EP の onnxruntime 動作に必要)。
+#   - makedepends に C build tool 群を追加 (pyopenjtalk sdist が C extension build)。
+#   - /usr/lib/systemd/system/voicevox-engine.service と sysusers.d, tmpfiles.d を
+#     同梱 (ansible-nekonodesk の override.conf で bind IP を tailscale0 に振る運用)。
+#
+# 既知の divergence:
+#   - upstream pyproject.toml 0.24.1 は pyopenjtalk を VOICEVOX/pyopenjtalk @
+#     74703b034dd90a1f199f49bb70bf3b66b1728a86 (git fork pin) で要求しているが、
+#     当 PKGBUILD は AUR と同じく PyPI の pyopenjtalk 0.4.1 を使う (AUR の動作実績
+#     を踏襲)。 issue 発生時は VOICEVOX fork commit を vendoring に切替えること。
+#   - upstream pyproject.toml の requires-python = "==3.11.9" を強制していない
+#     (Arch system python 3.13/3.14 で AUR が動いている実績に依拠)。
+
+pkgname=voicevox-engine-cuda
+pkgver=0.24.1
+pkgrel=1
+pkgdesc='A http server for text-to-speech (CUDA / NVIDIA GPU build)'
+arch=('x86_64')
+license=('LGPL-3.0-only+nonfree')
+url=https://github.com/VOICEVOX/voicevox_engine
+provides=('voicevox-engine')
+conflicts=('voicevox-engine')
+install=$pkgname.install
+
+# NOTE: AUR は pyworld も _syspymods に入れているが、 Arch 公式 repo に
+# python-pyworld は無い (AUR のみ)。 [nekono] は AUR helper 前提を取らない
+# 方針なので、 pyworld は kanalizer / pyopenjtalk と同じく source[] に PyPI
+# sdist を vendor 投入してオフライン build する。
+_syspymods=(fastapi importlib-metadata jaraco.text jinja markupsafe numpy platformdirs pydantic pydantic-core python-multipart semver soxr soundfile yaml)
+
+depends=(
+    python
+    "${_syspymods[@]/#/python-}"
+    # CUDA 11 + cuDNN 8 stack は bundle (linux-nvidia/lib*.so*) に完全同梱されて
+    # いるので Arch の cuda (13.x) / cudnn (9.x) は不要、 むしろ install すると
+    # LD path 競合のリスクあり。 systemd service 側で
+    # LD_LIBRARY_PATH=/usr/lib/VOICEVOX/vv-engine を指定して bundle 経路で resolve。
+    # nvidia-utils (= libcuda.so.1, driver userspace) のみ要る (= kernel driver は
+    # 別 source、 host の nvidia-open or nvidia パッケージで入っている前提)。
+    nvidia-utils
+)
+makedepends=(
+    python-build
+    python-setuptools
+    python-installer
+    python-wheel
+    python-pip
+    cython
+    gcc
+    make
+    autoconf
+    automake
+    7zip  # multi-volume 7z (= nvidia bundle .7z.001 + .002) は libarchive 未対応
+)
+
+# TODO: 7z 内 dir prefix を makepkg --verifysource 後の中身確認で実値に合わせる。
+# AUR CPU 版は "linux-cpu-x64"。 nvidia 版は "linux-nvidia" or "linux-nvidia-x64"
+# の可能性。 build() / package() の参照を _bundle_dir 経由で一元化。
+_bundle_dir=linux-nvidia
+
+source=(
+    "${url}/archive/refs/tags/${pkgver}.tar.gz"
+    https://github.com/r9y9/open_jtalk/releases/download/v1.11.1/open_jtalk_dic_utf_8-1.11.tar.gz
+    "${url}/releases/download/${pkgver}/voicevox_engine-linux-nvidia-${pkgver}.7z.001"
+    "${url}/releases/download/${pkgver}/voicevox_engine-linux-nvidia-${pkgver}.7z.002"
+    # PyPI vendor (sha256 pin):
+    "https://files.pythonhosted.org/packages/a9/82/5c93ae789fa44f3615ee465e36ce39ea4c3973d597a93dfa4c8ba4ff6edf/kanalizer-0.1.1-cp39-abi3-manylinux_2_28_x86_64.whl"
+    "https://files.pythonhosted.org/packages/58/74/ccd31c696f047ba381f9b11a504bf1199756c3f30f3de64e3eeb83e10b4a/pyopenjtalk-0.4.1.tar.gz"
+    "https://files.pythonhosted.org/packages/a5/0f/c78d631ffbb4c1aaebf80ff2bf9e791213b381dbe404f9ce1a3eb3672931/pyworld-0.3.5.tar.gz"
+    # local files:
+    "voicevox-engine.service"
+    "voicevox-engine.sysusers"
+    "voicevox-engine.tmpfiles"
+)
+noextract=(
+    "voicevox_engine-linux-nvidia-${pkgver}.7z.001"
+    "voicevox_engine-linux-nvidia-${pkgver}.7z.002"
+    "kanalizer-0.1.1-cp39-abi3-manylinux_2_28_x86_64.whl"
+    "pyopenjtalk-0.4.1.tar.gz"
+    "pyworld-0.3.5.tar.gz"
+)
+sha256sums=(
+    '0488d3b98b4e2876c3070c2287347df92cacf724f0e986c60cad7aabffb6cf7e'
+    'fe6ba0e43542cef98339abdffd903e062008ea170b04e7e2a35da805902f382a'
+    'e5ff4bc3af152eda0e086820eeaf985f2cb4cb504fe66b839cff35e38b3628a7'  # voicevox_engine-linux-nvidia-0.24.1.7z.001 (DL + sha256 確定済み 2026-05-19)
+    '07cd32e093a30c210b931e04cb7a18b1585b0b720a9014c322c4d2783496a7df'  # voicevox_engine-linux-nvidia-0.24.1.7z.002
+    'bb86f3fa2cfe4034fa68f3035e3235bb6ee314e1957aac9c0426d651e473709a'
+    'd5ada46f7fc2b52c1c79c273eb9668ff6ad7ab276a8db9d8be119ef93440f0dc'
+    '1b93e53cddb67a0e4faa34d6cf919ac6c662feb1c8c0ed901d71b595ab396aa3'
+    '229235cbdf9bbe8e9347d0da2af178430ccce96ea80d6763a7b487925df11e88'  # voicevox-engine.service
+    '580d6feb690711adf929b8054a57b269606d03e042c2fdd7ef4ca3fc0033f119'  # voicevox-engine.sysusers
+    '8eef6d4a0c5e795c49920607a627f7372c8b96fb422cff6956b516c7f2fc9fec'  # voicevox-engine.tmpfiles
+)
+
+build() {
+  cd "$srcdir"
+  # NVIDIA bundle (multi-volume 7z) は 7z で結合解凍。 part1 指定で同 dir の
+  # part2 も自動で読まれる。 不要 file の filter は package() で mv 時に行う。
+  7z x -y "voicevox_engine-linux-nvidia-${pkgver}.7z.001"
+
+  # engine の Python wheel を source から build (= AUR 踏襲)
+  cd "$srcdir/voicevox_engine-${pkgver}"
+  rm -rf resources  # avoid build err. non-production assets
+  python -m build --wheel --no-isolation
+}
+
+package() {
+  cd "$srcdir"
+
+  # 1) engine wheel を一時 dir に installer → site-packages を bundle dir に放り込む
+  python -m installer --destdir="$srcdir/_installed" \
+    "voicevox_engine-${pkgver}/dist/"*.whl
+
+  install -d "$pkgdir"/usr/lib/VOICEVOX
+  mv "${_bundle_dir}" "$pkgdir"/usr/lib/VOICEVOX/vv-engine
+  mv "$srcdir/_installed"/usr/lib/python*/site-packages/* \
+    -t "$pkgdir"/usr/lib/VOICEVOX/vv-engine
+
+  # 2) Vendored PyPI deps を offline install (= sha pin 済み)。
+  #    --target で直接 bundle dir に書く。 --no-deps で再帰解決禁止。
+  python -m pip install \
+    --no-index --no-deps --no-compile --no-warn-script-location \
+    --target "$pkgdir"/usr/lib/VOICEVOX/vv-engine \
+    "$srcdir/kanalizer-0.1.1-cp39-abi3-manylinux_2_28_x86_64.whl" \
+    "$srcdir/pyopenjtalk-0.4.1.tar.gz" \
+    "$srcdir/pyworld-0.3.5.tar.gz"
+
+  # 3) Open JTalk dict を pyopenjtalk リソース dir 直下に配置 (= AUR と同じ位置)
+  mv "$srcdir"/open_jtalk_dic_utf_8-1.11 \
+    "$pkgdir"/usr/lib/VOICEVOX/vv-engine/pyopenjtalk/
+
+  # 4) entrypoint
+  sed '1c#!/usr/bin/python' "$srcdir/voicevox_engine-${pkgver}/run.py" | \
+    install -Dm755 /dev/stdin "$pkgdir"/usr/lib/VOICEVOX/vv-engine/run
+
+  # 5) systemd unit + sysusers + tmpfiles (pacman の systemd-* hook が install 時に走る)
+  install -Dm644 "$srcdir/voicevox-engine.service" \
+    "$pkgdir"/usr/lib/systemd/system/voicevox-engine.service
+  install -Dm644 "$srcdir/voicevox-engine.sysusers" \
+    "$pkgdir"/usr/lib/sysusers.d/voicevox-engine.conf
+  install -Dm644 "$srcdir/voicevox-engine.tmpfiles" \
+    "$pkgdir"/usr/lib/tmpfiles.d/voicevox-engine.conf
+}
