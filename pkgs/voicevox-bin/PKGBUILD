@@ -49,19 +49,26 @@ b2sums=(
 prepare() {
   # upstream の prebuilt artifact は "AppImage を 7z 圧縮 → split 2 volume"
   # 構造 (= .7z.001 + .7z.002 の中に 1 つの .7z があり、 その中に AppImage が
-  # 1 つ)。 7zip 26.01 では `7z x .7z.001` が split を merge して中間 .7z を
-  # 出すだけで、 古い 7z のように内側 .7z まで自動で降りない (= AUR PKGBUILD
-  # の 1-step 想定が build host (nekono-pacman0) で fail した実例あり)。
-  # 2-step で明示的に展開する:
-  #   1) split を merge → VOICEVOX-CPU-X64.AppImage.7z (中間 archive)
-  #   2) 中間 archive を展開 → VOICEVOX-CPU-X64.AppImage (self-extracting ELF)
-  7z -y x VOICEVOX-CPU-X64.AppImage.7z.001
-  7z -y x VOICEVOX-CPU-X64.AppImage.7z
-  rm VOICEVOX-CPU-X64.AppImage.7z
+  # 1 つ)。 7zip 26.01 で `7z x .7z.001` の自動再帰挙動が安定しなかったため
+  # (= 1-step も 2-step も出力 filename が期待と合わない)、 split を cat で
+  # 物理結合 → 単一 .7z として 7z 展開する確実な手順に変更。
+  cat VOICEVOX-CPU-X64.AppImage.7z.001 VOICEVOX-CPU-X64.AppImage.7z.002 > _merged.7z
+  7z -y x _merged.7z
+  rm _merged.7z
+
+  # 展開後の AppImage は通常 "VOICEVOX-CPU-X64.AppImage" 名で cwd に出るはず。
+  # 7zip のバージョンによっては別名で出る可能性があるため glob で探す。
+  # 見つからない場合は diagnostic 出力して fail する。
+  _appimg=$(ls -1 | grep -E '^VOICEVOX.*\.AppImage$' | head -1)
+  if [[ -z "$_appimg" ]]; then
+    echo "[FATAL] AppImage 未発見。 cwd 内容:" >&2
+    ls -la >&2
+    exit 1
+  fi
 
   # AppImage 自体は self-extracting ELF。 7z で内部の必要 file (desktop entry、
   # icon、 app.asar) だけ抜き出し、 AppImage 全体は package には含めない。
-  7z x -y VOICEVOX-CPU-X64.AppImage \
+  7z x -y "$_appimg" \
     voicevox.desktop \
     usr/share/icons/hicolor/256x256/apps/voicevox.png \
     resources/app.asar
