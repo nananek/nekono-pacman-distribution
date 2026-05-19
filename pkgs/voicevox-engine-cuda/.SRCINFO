@@ -1,7 +1,7 @@
 pkgbase = voicevox-engine-cuda
 	pkgdesc = A http server for text-to-speech (CUDA / NVIDIA GPU build)
 	pkgver = 0.24.1
-	pkgrel = 1
+	pkgrel = 2
 	url = https://github.com/VOICEVOX/voicevox_engine
 	install = voicevox-engine-cuda.install
 	arch = x86_64
