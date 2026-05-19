@@ -1,0 +1,52 @@
+# Maintainer: Nekono Nana KAKKO KARI <3267314+nananek@users.noreply.github.com>
+# Upstream AUR Maintainer: Dawei Yang <yangdawei.home+archlinux.org@gmail.com>
+# Upstream AUR Contributors:
+#   envolution
+#   Carl Smedstad <carsme@archlinux.org>
+#   AngrySoft - Sebastian Zwierzchowski
+#
+# AUR python-sse-starlette の純 fork (= 機能変化なし)。 nekono-pacman-distribution
+# の改変:
+#   - Maintainer 行を Nekono に、 AUR は Upstream AUR Maintainer/Contributors として保持
+#   - check() を削除 (= checkdepends に 8 個の test pkg を引きたくない、
+#     [nekono] は AUR helper 前提を取らない方針、 build host も bin/build-all
+#     で --check なし default 運用)
+#
+# python-fastmcp 依存 chain で必要 (= fastmcp → mcp → sse-starlette)。
+
+pkgname=python-sse-starlette
+_pkgname=${pkgname#python-}
+pkgver=3.3.4
+pkgrel=1
+pkgdesc="Server Sent Events (SSE) for Starlette and FastAPI"
+arch=(any)
+url="https://github.com/sysid/sse-starlette"
+license=(BSD-3-Clause)
+depends=(
+  python
+  uvicorn         # Arch 命名例外で prefix なし (= extra/uvicorn)
+  python-anyio
+  python-starlette
+)
+makedepends=(
+  python-build
+  python-installer
+  python-setuptools
+  python-wheel
+)
+
+source=("$pkgname-$pkgver.tar.gz::$url/archive/v$pkgver.tar.gz")
+sha256sums=('0c8200c30dcda56f2bc7e3d116815257073a6ad6674bc1745a11ca1004211345')
+
+build() {
+  cd "$_pkgname-$pkgver"
+  python -m build --wheel --no-isolation
+}
+
+package() {
+  cd "$_pkgname-$pkgver"
+
+  python -m installer --destdir="$pkgdir" dist/*.whl
+
+  install -Dm644 -t "$pkgdir/usr/share/licenses/$pkgname" LICENSE
+}
