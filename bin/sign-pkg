@@ -28,7 +28,7 @@ gpg --card-status >/dev/null 2>&1 || true
 # 既存の .sig があれば置き換え (--yes)。--detach-sign + --use-agent で
 # gpg-agent (= YubiKey) 経由で signing。
 gpg --batch --yes --detach-sign --use-agent \
-    --local-user "$NEKONO_GPG_FP" \
+    --local-user "${NEKONO_GPG_FP}!" \
     "$pkg"
 
 echo "[OK] $pkg.sig created"

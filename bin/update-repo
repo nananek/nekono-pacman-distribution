@@ -29,7 +29,10 @@ cd "$REPO_DIR"
 # "Please insert card with serial ..." を回避)。
 gpg --card-status >/dev/null 2>&1 || true
 
-repo-add --sign --key "$NEKONO_GPG_FP" "$DB_NAME.db.tar.gz" \
+# --key の末尾 `!` で primary key (3EC4 keygrip) に強制固定。`!` 無しだと
+# GPG が signing-capable な subkey を勝手に選び、card に load されていない
+# [SA] subkey が選ばれて "wrong card" / "key not available" になる事案あり。
+repo-add --sign --key "${NEKONO_GPG_FP}!" "$DB_NAME.db.tar.gz" \
     *.pkg.tar.zst
 
 echo "[OK] $DB_NAME.db.tar.gz updated ($(ls -1 *.pkg.tar.zst | wc -l) packages)"

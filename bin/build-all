@@ -134,7 +134,9 @@ for pkg in "${packages[@]}"; do
     # makepkg: deps install + tarball verify + build + package。
     # -s で deps を pacman -S、-c で build 後 src/pkg を clean。
     # --sign は makepkg が builtin GPG 署名する flag、Nekono GPG fp を指定。
-    makepkg -sc --noconfirm --sign --key "$NEKONO_GPG_FP"
+    # `!` 末尾で primary key 強制固定 (= card に load されていない subkey に
+    # 流れて "wrong card" になる事故防止、詳細は bin/update-repo コメント参照)。
+    makepkg -sc --noconfirm --sign --key "${NEKONO_GPG_FP}!"
 
     # 生成物 (.pkg.tar.zst + .sig) を repo/x86_64/ に移動
     mv -- *.pkg.tar.zst *.pkg.tar.zst.sig "$REPO_DIR/"
@@ -149,7 +151,7 @@ pushd "$REPO_DIR" >/dev/null
 # repo-add: 既存 db に新 pkg を追加 (or 上書き)。--sign で db 自体も
 # Nekono GPG で署名 (= /etc/pacman.conf の SigLevel = Required DatabaseRequired
 # を満たす)。
-repo-add --sign --key "$NEKONO_GPG_FP" "$DB_NAME.db.tar.gz" \
+repo-add --sign --key "${NEKONO_GPG_FP}!" "$DB_NAME.db.tar.gz" \
     *.pkg.tar.zst
 
 popd >/dev/null
