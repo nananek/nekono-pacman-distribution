@@ -80,4 +80,4 @@ upstream の状況次第で 2 パターン:
 
 | 日付 | release | review した PKGBUILD repo SHA | upstream commit (pinned) | findings |
 |---|---|---|---|---|
-| 2026-05-19 | 0.5.1+r37+g0766d59 | (初回 PR commit SHA、 push 後に固定) | `0766d599bbe9bccda12b6ede069647c7bef2299f` (= 0.5.1 後 PR #73 merge、 Python 3.14 対応) | 初回 add、 純 fork (= check() 削除のみ)。 AUR の snapshot pin 戦略 (= release tag 0.5.1 に Python 3.14 対応が無いため commit pin) を踏襲 |
+| 2026-05-19 | 0.5.1+r37+g0766d59 | `f7ab982b98becf14be0afba058610f0d86b5cc0d` | `0766d599bbe9bccda12b6ede069647c7bef2299f` (= 0.5.1 後 PR #73 merge、 Python 3.14 対応) | 初回 add、 純 fork (= check() 削除のみ)。 AUR の snapshot pin 戦略 (= release tag 0.5.1 に Python 3.14 対応が無いため commit pin) を踏襲 |
