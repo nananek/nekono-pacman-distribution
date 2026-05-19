@@ -1,0 +1,48 @@
+# Maintainer: Nekono Nana KAKKO KARI <3267314+nananek@users.noreply.github.com>
+# Upstream AUR Maintainer: Butui Hu <hot123tea123@gmail.com>
+#
+# AUR python-uv-dynamic-versioning の純 fork (= 機能変化なし)。 改変:
+#   - Maintainer 行を Nekono に、 AUR Maintainer は Upstream AUR として保持
+#   - sha512sums → sha256sums に統一 ([nekono] convention)
+#
+# python-mcp の makedepends (= hatchling 動的 versioning plugin、 mcp の
+# pyproject.toml が git tag から version を解決するため)。 fastmcp chain で
+# 必要な leaf 補強。
+
+_pkgname=uv-dynamic-versioning
+pkgname=python-uv-dynamic-versioning
+pkgver=0.14.0
+pkgrel=1
+pkgdesc='Dynamic versioning based on VCS tags for uv/hatch project'
+arch=(any)
+url='https://github.com/ninoseki/uv-dynamic-versioning'
+license=(MIT)
+depends=(
+  python-tomlkit
+  python-pydantic
+  python-jinja
+  python-hatchling
+  python-dunamai
+)
+
+makedepends=(
+  python-build
+  python-installer
+  python-wheel
+)
+
+source=(
+  "${_pkgname}-${pkgver}.tar.gz::https://github.com/ninoseki/uv-dynamic-versioning/archive/refs/tags/v${pkgver}.tar.gz"
+)
+sha256sums=('b31e00f9a4ec58b751c470d4f6608fd645b35a6161b65675b6dd08ff874f4dd0')
+
+build() {
+  cd "${_pkgname}-${pkgver}"
+  python -m build --wheel --no-isolation
+}
+
+package() {
+  cd "${_pkgname}-${pkgver}"
+  python -m installer --destdir="${pkgdir}" dist/*.whl
+  install -Dm644 LICENSE -t "${pkgdir}/usr/share/licenses/${pkgname}"
+}
