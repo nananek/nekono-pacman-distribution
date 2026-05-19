@@ -15,7 +15,7 @@ name: Dependency version check (PR)
 
 on:
   schedule:
-    - cron: '15 6 * * *'  # daily 06:15 UTC (upstream check の直後に流す)
+    - cron: '55 2 * * *'  # daily 02:55 UTC = JST 11:55 (upstream check の 5 min 後、 両方 12:00 JST までに完了)
   workflow_dispatch:
 
 permissions:

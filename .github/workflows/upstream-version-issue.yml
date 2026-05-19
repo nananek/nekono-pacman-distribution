@@ -14,7 +14,7 @@ name: Upstream version check (Issue)
 
 on:
   schedule:
-    - cron: '0 6 * * *'  # daily 06:00 UTC
+    - cron: '50 2 * * *'  # daily 02:50 UTC = JST 11:50 (= 朝 routine 12:00 JST までに結果が出る)
   workflow_dispatch:
 
 permissions:
