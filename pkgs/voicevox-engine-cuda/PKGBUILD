@@ -42,11 +42,16 @@ options=(!strip !debug)
 # python-pyworld は無い (AUR のみ)。 [nekono] は AUR helper 前提を取らない
 # 方針なので、 pyworld は kanalizer / pyopenjtalk と同じく source[] に PyPI
 # sdist を vendor 投入してオフライン build する。
-_syspymods=(fastapi importlib-metadata jaraco.text jinja markupsafe numpy platformdirs pydantic pydantic-core python-multipart semver soxr soundfile yaml)
+_syspymods=(fastapi importlib-metadata jaraco.text jinja markupsafe numpy platformdirs pydantic pydantic-core python-multipart semver setuptools soxr soundfile starlette yaml)
 
 depends=(
     python
     "${_syspymods[@]/#/python-}"
+    # uvicorn は Arch 命名例外で `python-` prefix が付かず `uvicorn` のまま
+    # (extra/uvicorn)。 _syspymods 経由で prefix を付けると `python-uvicorn` に
+    # なって不在 → 直接 list に追加する。 run.py が `import uvicorn` するため
+    # 必須 (= 抜けると systemd restart loop に直結)。
+    uvicorn
     # CUDA 11 + cuDNN 8 stack は bundle (linux-nvidia/lib*.so*) に完全同梱されて
     # いるので Arch の cuda (13.x) / cudnn (9.x) は不要、 むしろ install すると
     # LD path 競合のリスクあり。 systemd service 側で
