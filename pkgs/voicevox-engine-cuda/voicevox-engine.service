@@ -16,6 +16,10 @@ Environment=VV_PORT=50021
 # bundle 同梱の CUDA 11 + cuDNN 8 + libpython3.11 stack を ld.so に見せる。
 # 詳細は PKGBUILD の depends comment 参照。
 Environment=LD_LIBRARY_PATH=/usr/lib/VOICEVOX/vv-engine
+# bundle dir 直下に pip install --target した kanalizer / pyopenjtalk / pyworld を
+# system Python から import 可能にする。 run.py が sys.path を拡張しなくても
+# import が通るための保険 (= PR #39 review 指摘対応)。
+Environment=PYTHONPATH=/usr/lib/VOICEVOX/vv-engine
 ExecStart=/usr/lib/VOICEVOX/vv-engine/run \
     --host=${VV_HOST} \
     --port=${VV_PORT} \
