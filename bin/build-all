@@ -110,6 +110,9 @@ fi
 
 echo "[*] Warming up gpg-agent (YubiKey PIN cache)"
 gpg-connect-agent "SCD SERIALNO" /bye >/dev/null
+# 挿入中 YubiKey の serial で stub を再 learn (= 両 YubiKey 切替時の
+# "Please insert card with serial ..." を回避)。
+gpg --card-status >/dev/null 2>&1 || true
 
 for pkg in "${packages[@]}"; do
     pkg_dir="$REPO_ROOT/pkgs/$pkg"
