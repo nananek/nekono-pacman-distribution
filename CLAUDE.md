@@ -43,6 +43,81 @@
    - findings: 受入 / 改変要 / 却下
 4. 受入 or 改変版を commit (Nekono GPG `-S` 署名必須)
 
+### PKGBUILD でよく踏む落とし穴 (review で繰り返し指摘される項目)
+
+過去 PR の build 失敗 / claude-review.yml 指摘から得た学習。 同種 PKGBUILD
+を fork する時は最初から下記を踏まえる:
+
+#### 1. `pip install` を build/package() 内で動的取得しない (supply-chain)
+
+- AUR には `pip install foo bar` (= sha 検証なし) でビルド時 PyPI 取得する
+  PKGBUILD がある (= voicevox-engine 等)。 [nekono] は **不可**
+- 対処: PyPI distfile (sdist / wheel) を **source[] に vendor + sha256 pin**
+  → `pip install --no-index --no-deps --no-build-isolation --target ...` で
+  オフライン install
+- `--no-build-isolation` を入れないと、 PEP 517 が isolated venv に
+  `setuptools>=64` 等を fetch しようとして `--no-index` と衝突して fail
+  (= 実例: voicevox-engine-cuda PR #43)
+- makedepends に build dep を明示的に列挙 (= `python-setuptools` `python-wheel`
+  `python-build` `cython` `gcc` 等)。 sdist が C extension を含むなら gcc / make /
+  autoconf / automake も
+- Arch 公式 repo に無い Python module (= AUR-only。 例: `python-pyworld` 等) は
+  vendor 投入する (= AUR helper 前提を取らない方針)
+
+#### 2. prebuilt bundle 同梱の Python モジュールと system Python ABI 不一致
+
+- upstream の prebuilt bundle (`*.7z`、 `*.AppImage` 等) に `libpythonX.Y.so`
+  + 同 X.Y で build した site-packages が同梱されている場合あり (= voicevox-engine の NVIDIA bundle は Python 3.11 build を抱えている)
+- Arch の system Python は rolling、 bundle と minor version が違うと
+  extension module (`*.so`) の import で ABI 不一致
+- 対処: bundle move 後、 PyPI vendor を pip install --target する **前に**
+  bundle 由来の Python module dir + `*.dist-info` を `rm -rf` で除去
+- `pip install --target` は既存 dir に対し **warn + skip** (= 何もしない)。
+  上書きしたいなら事前削除 or `--upgrade` フラグ必須
+- 実例: voicevox-engine-cuda PR #46
+
+#### 3. multi-volume 7z (`.7z.001` + `.7z.002`) と 7zip 26.01 の挙動差異
+
+- 古い 7z は `7z x archive.7z.001` で split merge + nested .7z 再帰展開を
+  1-step で行ったが、 **7zip 26.01 は split を merge して中間 .7z を出すだけ**
+  だったり、 出力 filename が予測不能だったりする (= voicevox-bin PR #44 / #45)
+- 確実な方法:
+  ```sh
+  cat foo.7z.001 foo.7z.002 > _merged.7z
+  7z -y x _merged.7z
+  rm _merged.7z
+  ```
+- 出力 filename も bash glob で対応:
+  ```sh
+  _arr=( PATTERN* ); _file="${_arr[0]}"
+  [[ -f "$_file" ]] || { echo "[FATAL] not found"; ls -la >&2; exit 1; }
+  ```
+- makedepends に `7zip` (= `7z` binary)。 libarchive (`bsdtar`) は
+  multi-volume 7z を扱えない
+
+#### 4. 環境依存で source[] を分岐させる PKGBUILD は禁止 (非決定 build)
+
+- `if [ -c /dev/nvidia0 ]; then source=(...NVIDIA AppImage...)` のように
+  build host の GPU 有無で source を動的切替する PKGBUILD は禁止 (= sha256
+  pin が片方しか定義されない supply-chain 欠陥)
+- 必要なら **variant pkg を別 pkgname で分ける** (= `<name>-cuda` 等)。
+  `provides=<name>` / `conflicts=<name>` で AUR ベース pkg を満たす
+- 実例: voicevox-engine-cuda (PR #39)、 voicevox-bin (PR #40 で if 削除)
+
+#### 5. 細かい lint (claude-review.yml で頻繁に指摘)
+
+- **prepare-only tool は makedepends のみ**、 depends に重複させない (= 例:
+  `7zip` を AppImage 展開のために `prepare()` で使うだけなら makedepends 専用)
+- **`sed -i.bak`** で生成される `*.bak` ファイルを `rm -f` で後片付け (=
+  srcdir 残骸の review 指摘回避)
+- **自前 file (service unit / sysusers.d / tmpfiles.d 等) の sha256** を
+  source[] と sha256sums に必ず pin。 ファイル内容変更時は再計算を忘れない
+- **REVIEW.md 更新履歴 section に当該 release の 1 行を必ず追記** (= PR で
+  PKGBUILD 触ったら追記、 build fix 系も "X.Y.Z (build fix)" 行を入れる)。
+  忘れると claude-review.yml が request-changes でループする
+- **AUR との意図的 diff** は REVIEW.md 「依存方針」 等の section に
+  「なぜ AUR と違うのか」 を記載。 そうしないと bump の度に同じ指摘が再発する
+
 ### Commit policy
 
 - commit は **必ず `-S` 署名** (Nekono GPG)。verify-commit で trust chain
