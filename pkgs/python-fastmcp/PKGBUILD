@@ -18,7 +18,7 @@ _pypi_package='fastmcp'
 
 pkgname="python-${_pypi_package}"
 pkgver="${_upstreamver}"
-pkgrel=1
+pkgrel=2
 pkgdesc="The fast, Pythonic way to build MCP servers and clients."
 arch=('any')
 url='https://github.com/jlowin/fastmcp'
@@ -45,6 +45,19 @@ depends=(
   'python-mcp'                  # [nekono] PR #60
   'python-jsonschema-path'       # [nekono] PR #54
   'python-uncalled-for'         # [nekono] PR #57
+  # ↓ pkgrel 2 で追加 (= fastmcp dep audit で upstream pyproject.toml と
+  # diff 取って漏れていた 10 個。 ayaka 上で ModuleNotFoundError 'jsonref'
+  # が出た事案の根本原因)
+  'python-jsonref'              # [nekono] PR #68 (= 直接依存、 jsonref>=1.1.0)
+  'python-cyclopts'             # [nekono] PR #79 (= 直接依存、 cyclopts>=4.0.0)
+  'python-py-key-value-aio'     # [nekono] PR #80 (= 直接依存、 py-key-value-aio[filetree,keyring,memory]>=0.4.4)
+  'python-opentelemetry-api'    # Arch 公式 (= opentelemetry-api>=1.20.0)
+  'python-packaging'            # Arch 公式 (= packaging>=24.0)
+  'python-platformdirs'         # Arch 公式 (= platformdirs>=4.0.0)
+  'python-yaml'                 # Arch 公式 (= pyyaml>=6.0,<7.0)
+  'python-websockets'           # Arch 公式 (= websockets>=15.0.1)
+  'python-watchfiles'           # Arch 公式 (= watchfiles>=1.0.0)
+  'python-griffelib'            # Arch 公式 (= griffelib>=2.0.0)
 )
 makedepends=(
   'python-setuptools'

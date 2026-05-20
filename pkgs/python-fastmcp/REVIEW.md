@@ -56,9 +56,7 @@ sse-starlette / openapi-pydantic / uncalled-for / mcp / uv-dynamic-versioning)
 | 変更 | 理由 |
 |---|---|
 | `# Maintainer:` 行を Nekono に書換 + AUR Maintainer は `# Upstream AUR Maintainer:` として comment 保持 | 当 PKGBUILD は Nekono が責任を持つ |
-
-(= 他は AUR と完全同一。 check() / checkdepends / optdepends が元から空で minimal、
-[nekono] convention 適用余地なし。)
+| `pkgrel` を 1 → 2 にバンプ、 `depends` に **10 個追加** (= jsonref / cyclopts / py-key-value-aio + opentelemetry-api / packaging / platformdirs / yaml / websockets / watchfiles / griffelib) | **fastmcp dep audit で AUR + 当初の [nekono] fork が漏らしていた 10 個を補完**。 ayaka で `ModuleNotFoundError: No module named 'jsonref'` が出た事案を契機に upstream `pyproject.toml` の dependencies と diff を取って洗い出した。 AUR 側にも修正 PR を別途送るのが筋だが [nekono] では先に正しい状態を反映 |
 
 ## 結論
 
@@ -84,3 +82,4 @@ upstream で新 release (= v3.2.5 等) が出たら:
 | 日付 | release | review した PKGBUILD repo SHA | upstream tag commit | findings |
 |---|---|---|---|---|
 | 2026-05-20 | 3.2.4 | `a5d709ad36d834b5e5a42d30eae67c37cd0d821f` | `7d7607473d7713d9937cbbbe0bfc635976c511d3` | 初回 add、 純 fork (= Maintainer 行のみ改変)。 fastmcp chain 頂点 |
+| 2026-05-20 | 3.2.4 (pkgrel +1 → 2) | `7196acd19e029061f28f4c2dfd6bab4fc7af121b` | (同上) | dep audit で漏れていた 10 個を depends に追加 (= jsonref / cyclopts / py-key-value-aio [nekono] + opentelemetry-api / packaging / platformdirs / yaml / websockets / watchfiles / griffelib Arch 公式)。 ayaka 上の ModuleNotFoundError 'jsonref' 事案が契機 |
