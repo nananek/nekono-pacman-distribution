@@ -114,6 +114,15 @@ source = "github"
 github = "saivert/pwvucontrol"
 use_latest_release = true
 
+[python-cyclopts]
+# fastmcp の直接依存 (= fastmcp の dep audit で発覚)、 AUR python-cyclopts
+# を fork。 release tag は v X.Y.Z 形式 (prefix "v")、 upstream は
+# BrianPugh/cyclopts。
+source = "github"
+github = "BrianPugh/cyclopts"
+use_latest_release = true
+prefix = "v"
+
 [python-fastmcp]
 # fastmcp chain の頂点、 ayaka 上の MCP server runtime を支える。
 # AUR python-fastmcp を fork。 release tag は v X.Y.Z 形式 (prefix "v")。
