@@ -178,6 +178,15 @@ source = "github"
 github = "pdm-project/pdm-pep517"
 use_max_tag = true
 
+[python-py-key-value-aio]
+# fastmcp の直接依存 (= upstream pyproject.toml の
+# 'py-key-value-aio[filetree,keyring,memory]>=0.4.4')、 AUR
+# python-py-key-value-aio を fork。 release tag は v X.Y.Z 形式 (prefix "v")。
+source = "github"
+github = "chrisguidry/py-key-value-aio"
+use_latest_release = true
+prefix = "v"
+
 [python-sse-starlette]
 # fastmcp 依存 chain transitive (= fastmcp → mcp → sse-starlette)、 AUR
 # python-sse-starlette を fork。 release tag は v X.Y.Z 形式 (prefix "v")。

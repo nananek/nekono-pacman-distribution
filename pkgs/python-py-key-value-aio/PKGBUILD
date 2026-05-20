@@ -1,0 +1,50 @@
+# Maintainer: Nekono Nana KAKKO KARI <3267314+nananek@users.noreply.github.com>
+# Contributor: LY <ly-niko@qq.com>
+
+pkgname=python-py-key-value-aio
+_name=py_key_value_aio
+pkgver=0.4.4
+pkgrel=1
+pkgdesc="Async key-value store with pluggable backends (memory backend hard, keyring/filetree/redis optional)"
+arch=('any')
+url="https://github.com/chrisguidry/py-key-value-aio"
+license=('Apache')
+depends=(
+  'python>=3.10'
+  'python-beartype'
+  'python-typing_extensions'
+  # 'memory' extra (= fastmcp の server.py が key_value.aio.stores.memory を
+  # トップレベル import するため必須、 cachetools backend)
+  'python-cachetools'
+)
+optdepends=(
+  # 'keyring' extra (= fastmcp の oauth_proxy 等で使用、 lazy import)
+  'python-keyring: keyring backend support'
+  # 'filetree' extra (= fastmcp の oauth_proxy で使用、 lazy import)。 aiofile は
+  # AUR にしか無いため optdepends に留める (= 必要時に手動 install)
+  'python-aiofile: filetree backend support (AUR-only on Arch)'
+  # 'redis' extra (= fastmcp の event_store で使用、 RedisStore は lazy import)
+  'python-redis: redis backend support'
+)
+makedepends=('python-build' 'python-installer' 'python-wheel' 'python-uv-build')
+source=("https://files.pythonhosted.org/packages/source/p/py-key-value-aio/${_name}-${pkgver}.tar.gz")
+sha256sums=('e3012e6243ed7cc09bb05457bd4d03b1ba5c2b1ca8700096b3927db79ffbbe55')
+
+prepare() {
+  cd "${_name}-${pkgver}"
+  # Arch の python-uv-build は 0.11.x で、 upstream の '<0.9.0' 制約と衝突する
+  # ため build_system.requires を緩和。 backend (uv_build) の API は 0.9 ~ 1.x
+  # で互換性ある (= 我々の build は単発の wheel 生成のみで影響なし)。
+  sed -i 's/uv_build>=0.8.2,<0.9.0/uv_build>=0.8.2,<2.0.0/' pyproject.toml
+}
+
+build() {
+  cd "${_name}-${pkgver}"
+  python -m build --wheel --no-isolation
+}
+
+package() {
+  cd "${_name}-${pkgver}"
+  python -m installer --destdir="$pkgdir" dist/*.whl
+  install -Dm644 README.md "$pkgdir/usr/share/doc/$pkgname/README.md"
+}
