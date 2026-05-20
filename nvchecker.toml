@@ -114,6 +114,14 @@ source = "github"
 github = "saivert/pwvucontrol"
 use_latest_release = true
 
+[python-beartype]
+# python-py-key-value-aio の dep (= fastmcp の dep audit で発覚)、 AUR
+# python-beartype を fork。 release tag は v X.Y.Z 形式 (prefix "v")。
+source = "github"
+github = "beartype/beartype"
+use_latest_release = true
+prefix = "v"
+
 [python-cyclopts]
 # fastmcp の直接依存 (= fastmcp の dep audit で発覚)、 AUR python-cyclopts
 # を fork。 release tag は v X.Y.Z 形式 (prefix "v")、 upstream は
