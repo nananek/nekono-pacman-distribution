@@ -213,6 +213,15 @@ github = "chrisguidry/py-key-value-aio"
 use_latest_release = true
 prefix = "v"
 
+[python-rich-rst]
+# python-cyclopts の dep (= fastmcp の dep audit で発覚)、 AUR
+# python-rich-rst を fork。 release tag は v X.Y.Z 形式 (prefix "v")、
+# upstream は wasi-master/rich-rst。
+source = "github"
+github = "wasi-master/rich-rst"
+use_latest_release = true
+prefix = "v"
+
 [python-sse-starlette]
 # fastmcp 依存 chain transitive (= fastmcp → mcp → sse-starlette)、 AUR
 # python-sse-starlette を fork。 release tag は v X.Y.Z 形式 (prefix "v")。
