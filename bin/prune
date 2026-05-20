@@ -1,0 +1,76 @@
+#!/usr/bin/env bash
+# prune: repo/x86_64/ 配下の .pkg.tar.zst のうち、 nekono.db.tar.gz に
+# 登録されていないもの (= 古い version の累積) を .sig と一緒に削除する。
+# build-all / update-repo の末尾から自動で呼ばれる。 手動でも実行可。
+#
+# 基準: db に listed されている FILENAME と一致する file 以外を「db で参照
+# されていない孤児」 とみなして削除。 db の選定 (= repo-add の version 最大
+# logic) を真実として尊重する方針 (= ロールバック余地は git の PKGBUILD 履歴
+# で確保される)。
+#
+# 使い方:
+#   bin/prune                     # 静かに削除
+#   bin/prune --dry-run           # 削除候補を list するだけ
+#
+# Exit code:
+#   0 = 全部成功 (0 件 prune でも 0)
+#   1 = db file 不在 / db 空 等の error
+
+set -euo pipefail
+
+REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+REPO_DIR="$REPO_ROOT/repo/x86_64"
+DB_NAME="nekono"
+DB_FILE="$REPO_DIR/$DB_NAME.db.tar.gz"
+
+DRY_RUN=false
+if [[ "${1:-}" == "--dry-run" ]]; then
+    DRY_RUN=true
+fi
+
+if [[ ! -f "$DB_FILE" ]]; then
+    echo "[ERROR] $DB_FILE not found (build-all 1 回も走らせていない?)" >&2
+    exit 1
+fi
+
+cd "$REPO_DIR"
+
+# db に listed されている FILENAME を抽出。
+# pacman db format: 各 pkg は <pkg>-<ver>-<rel>/desc という entry を持ち、
+# desc 内に %FILENAME% header があり次行が .pkg.tar.zst の filename。
+mapfile -t listed < <(
+    tar -xzO -f "$DB_FILE" --wildcards '*/desc' 2>/dev/null \
+        | awk '/^%FILENAME%$/{getline f; print f}'
+)
+
+if [[ ${#listed[@]} -eq 0 ]]; then
+    echo "[WARN] no FILENAME entries in $DB_FILE (db 空?)、 prune skip" >&2
+    exit 0
+fi
+
+removed=0
+for f in *.pkg.tar.zst; do
+    [[ -e "$f" ]] || continue   # glob match 無しで literal の場合 skip
+    keep=false
+    for l in "${listed[@]}"; do
+        if [[ "$f" == "$l" ]]; then
+            keep=true
+            break
+        fi
+    done
+    if ! $keep; then
+        if $DRY_RUN; then
+            echo "[prune-dry-run] $f"
+        else
+            echo "[prune] $f"
+            rm -f -- "$f" "$f.sig"
+        fi
+        removed=$((removed + 1))
+    fi
+done
+
+if $DRY_RUN; then
+    echo "[OK] would remove $removed orphan package(s) from $REPO_DIR"
+else
+    echo "[OK] removed $removed orphan package(s) from $REPO_DIR"
+fi

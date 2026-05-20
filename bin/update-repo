@@ -35,4 +35,9 @@ gpg --card-status >/dev/null 2>&1 || true
 repo-add --sign --key "${NEKONO_GPG_FP}!" "$DB_NAME.db.tar.gz" \
     *.pkg.tar.zst
 
+echo ""
+echo "[*] Pruning orphan packages from $REPO_DIR"
+"$REPO_ROOT/bin/prune"
+
+echo ""
 echo "[OK] $DB_NAME.db.tar.gz updated ($(ls -1 *.pkg.tar.zst | wc -l) packages)"
