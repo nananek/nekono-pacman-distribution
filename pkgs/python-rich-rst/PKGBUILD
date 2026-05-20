@@ -1,6 +1,6 @@
 # Maintainer: Nekono Nana KAKKO KARI <3267314+nananek@users.noreply.github.com>
 # Contributor: Jesus Alvarez <jesusalv@rez.codes>
-# Maintainer: Rafael Baboni Dominiquini <rafaeldominiquini AT gmail DOT com>
+# Contributor: Rafael Baboni Dominiquini <rafaeldominiquini AT gmail DOT com>
 pkgname=python-rich-rst
 _name=rich_rst
 pkgver=1.3.2
