@@ -157,4 +157,8 @@ repo-add --sign --key "${NEKONO_GPG_FP}!" "$DB_NAME.db.tar.gz" \
 popd >/dev/null
 
 echo ""
+echo "[*] Pruning orphan packages from $REPO_DIR"
+"$REPO_ROOT/bin/prune"
+
+echo ""
 echo "[OK] build-all completed. $(ls -1 "$REPO_DIR"/*.pkg.tar.zst | wc -l) signed packages in $REPO_DIR"
