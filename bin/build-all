@@ -2,6 +2,16 @@
 # build-all: pkgs/* の PKGBUILD を順番に makepkg + gpg --detach-sign +
 # repo-add する pipeline。
 #
+# build 順は **[nekono] 内部 cross-dep の topological sort** (= dep が先、
+# 依存先が後)。 alphabetical ではないので、 例えば python-fastmcp は
+# python-mcp の後ろに来る。
+#
+# --pending mode では「自 pkg の pkgver-pkgrel に対応する artifact が
+# 無い pkg」 だけを build する。 加えて、 build される pkg を [nekono]
+# cross-dep に持つ下流 pkg について **cascade-warn** を出力する (= 「dep が
+# 今 rebuild されたので pkgrel +1 PR を立てるべし」 という人間向け警告、
+# auto-rebuild はしない方針 = 1 PKGBUILD = 1 PR = GPG 署名規約を守るため)。
+#
 # 前提:
 #   - Arch build host で実行
 #   - YubiKey (Nekono GPG) が NFC リーダー上に乗ってる、gpg-agent / scdaemon
@@ -9,15 +19,18 @@
 #   - PIN cache が build 全体を覆える長さで効いてる (gpg-agent.conf の
 #     default-cache-ttl は 3600+ 推奨。最初の sign で 1 度入力)
 #   - repo-add の base path = repo/x86_64/ (.gitignore で git 管理外)
+#   - tsort (coreutils) が PATH 上にある
 #
 # 使い方:
-#   bin/build-all                 # 全 pkgs を build + sign + db に追加
+#   bin/build-all                 # 全 pkgs を topo 順で build + sign + db に追加
 #   bin/build-all vesktop-bin     # 個別指定 (1 つだけ build)
 #   bin/build-all --pending       # PKGBUILD の pkgver-pkgrel に対応する
 #                                 # repo/x86_64/<name>-<full-ver>-*.pkg.tar.zst
-#                                 # が存在しない pkg だけを build (= デイリー
-#                                 # 運用: git pull --ff-only && bin/build-all
-#                                 # --pending && bin/update-repo)
+#                                 # が存在しない pkg だけを topo 順で build
+#                                 # (= デイリー運用: git pull --ff-only &&
+#                                 # bin/build-all --pending)
+#   bin/build-all --dry-run       # build せず計画 + cascade-warn だけ表示
+#                                 # (--pending と組み合わせ可)
 #
 # Exit code:
 #   0 = 全部成功 (--pending 時、未 build が 0 件でも 0)
@@ -32,12 +45,17 @@ DB_NAME="nekono"
 
 mkdir -p "$REPO_DIR"
 
-# 引数 parse: --pending を吸って、残りは pos args (= 個別 pkg 指定)。
+# 引数 parse: --pending / --dry-run を吸って、残りは pos args (= 個別 pkg 指定)。
 PENDING_ONLY=false
+DRY_RUN=false
 while [[ $# -gt 0 ]]; do
     case "$1" in
         --pending)
             PENDING_ONLY=true
+            shift
+            ;;
+        --dry-run)
+            DRY_RUN=true
             shift
             ;;
         --)
@@ -56,58 +74,195 @@ done
 
 # pos args = 個別 package 指定、なければ pkgs/* 全て。
 if [[ $# -gt 0 ]]; then
-    packages=("$@")
+    requested=("$@")
 else
-    packages=()
+    requested=()
     for d in "$REPO_ROOT"/pkgs/*/; do
-        packages+=("$(basename "$d")")
+        requested+=("$(basename "$d")")
     done
 fi
 
-if [[ ${#packages[@]} -eq 0 ]]; then
+if [[ ${#requested[@]} -eq 0 ]]; then
     echo "[ERROR] no packages found under $REPO_ROOT/pkgs/" >&2
     exit 1
 fi
 
-# --pending: PKGBUILD の pkgver / pkgrel / epoch から組む期待 artifact
-# filename (<name>-[<epoch>:]<pkgver>-<pkgrel>-<arch>.pkg.tar.zst) が
-# $REPO_DIR に存在しない pkg だけを残す。完全一致の文字列比較ではなく
-# glob (= <arch> 部分は any) を使うことで any アーキの artifact 1 つでも
-# あれば「built」扱いとする (= x86_64 ホストで aarch64 cross build まで
-# 期待しない運用のため)。
-if $PENDING_ONLY; then
-    filtered=()
-    for pkg in "${packages[@]}"; do
-        pkgbuild="$REPO_ROOT/pkgs/$pkg/PKGBUILD"
-        if [[ ! -f "$pkgbuild" ]]; then
-            echo "[WARN] skip $pkg (no PKGBUILD)" >&2
-            continue
-        fi
-        pkgver=$(grep -m1 '^pkgver=' "$pkgbuild" | sed -e 's/^pkgver=//' -e 's/^["'\'']//' -e 's/["'\'']$//')
-        pkgrel=$(grep -m1 '^pkgrel=' "$pkgbuild" | sed -e 's/^pkgrel=//' -e 's/^["'\'']//' -e 's/["'\'']$//')
-        epoch=$(grep -m1 '^epoch=' "$pkgbuild" | sed -e 's/^epoch=//' -e 's/^["'\'']//' -e 's/["'\'']$//')
-        if [[ -n "$epoch" ]]; then
-            full_ver="${epoch}:${pkgver}-${pkgrel}"
-        else
-            full_ver="${pkgver}-${pkgrel}"
-        fi
-        if compgen -G "$REPO_DIR/${pkg}-${full_ver}-"'*'".pkg.tar.zst" >/dev/null; then
-            echo "[skip] $pkg ${full_ver} already built"
-        else
-            echo "[pending] $pkg ${full_ver}"
-            filtered+=("$pkg")
+# [nekono] pkg universe = pkgs/*/ 配下で PKGBUILD を持つ全 dir。 cross-dep
+# graph を構築するために、 requested 以外も含めて全件 enumerate する必要が
+# ある (= 例えば user が 'build-all python-fastmcp' と指定しても、 cross-dep
+# 計算には python-mcp 等が必要)。
+nekono_universe=()
+for d in "$REPO_ROOT"/pkgs/*/; do
+    p=$(basename "$d")
+    if [[ -f "$d/PKGBUILD" ]]; then
+        nekono_universe+=("$p")
+    fi
+done
+
+# 各 pkg の [nekono] cross-dep を .SRCINFO から抽出 (depends + makedepends)。
+# version 制約 (>=, <, =) は strip して plain pkgname にしてから universe と
+# 照合する。
+declare -A nekono_cross_deps
+for p in "${nekono_universe[@]}"; do
+    srcinfo="$REPO_ROOT/pkgs/$p/.SRCINFO"
+    if [[ ! -f "$srcinfo" ]]; then
+        nekono_cross_deps[$p]=""
+        continue
+    fi
+    cross=""
+    while IFS= read -r dep; do
+        [[ -z "$dep" ]] && continue
+        for np in "${nekono_universe[@]}"; do
+            if [[ "$np" == "$dep" ]]; then
+                cross+="$dep "
+                break
+            fi
+        done
+    done < <(awk '
+        /^[[:space:]]*(depends|makedepends) = /{
+            sub(/^[[:space:]]*(depends|makedepends) = /, "")
+            sub(/[<>=].*$/, "")
+            print
+        }
+    ' "$srcinfo" | sort -u)
+    nekono_cross_deps[$p]="${cross% }"
+done
+
+# tsort で全 universe を topo 順に並べる。 __root__ という phantom node を
+# 全 pkg の前に置くことで、 cross-dep を 1 つも持たない pkg も output に
+# 含まれるようにする (= tsort は edge を持たない node を print しない仕様)。
+tsort_input=""
+for p in "${nekono_universe[@]}"; do
+    tsort_input+="__root__ $p"$'\n'
+    for dep in ${nekono_cross_deps[$p]}; do
+        tsort_input+="$dep $p"$'\n'
+    done
+done
+mapfile -t topo_all < <(printf '%s' "$tsort_input" | tsort 2>/dev/null | grep -v '^__root__$')
+
+# 要 build の pkg を requested から topo 順に並べ替え。
+topo_ordered=()
+for p in "${topo_all[@]}"; do
+    for r in "${requested[@]}"; do
+        if [[ "$p" == "$r" ]]; then
+            topo_ordered+=("$p")
+            break
         fi
     done
-    packages=("${filtered[@]}")
-    if [[ ${#packages[@]} -eq 0 ]]; then
-        echo ""
-        echo "[OK] nothing to build (all packages up to date in $REPO_DIR)"
-        exit 0
+done
+
+# requested に入っていたが universe に居なかった pkg (= PKGBUILD 不在) は
+# WARN を出して final list には入れない。
+for r in "${requested[@]}"; do
+    found=false
+    for p in "${topo_ordered[@]}"; do
+        if [[ "$p" == "$r" ]]; then
+            found=true
+            break
+        fi
+    done
+    if ! $found; then
+        echo "[WARN] skip $r (no PKGBUILD or not in topo)" >&2
     fi
-    echo ""
-    echo "[*] Will build ${#packages[@]} pending package(s): ${packages[*]}"
+done
+
+# PKGBUILD から pkgver / pkgrel / epoch を抽出して full_ver を作る関数。
+# bash 変数展開 (= '${_commit::7}' '${_upstreamver}' 等) を解決するため、
+# subshell で PKGBUILD を source する。 PKGBUILD は convention 上 toplevel
+# 代入 + 関数定義のみ (= build() / package() は呼ばれない) なので副作用なし。
+extract_full_ver() {
+    local pkgbuild="$1"
+    (
+        unset pkgver pkgrel epoch
+        # shellcheck disable=SC1090
+        source "$pkgbuild" 2>/dev/null || true
+        if [[ -n "${epoch:-}" ]]; then
+            echo "${epoch}:${pkgver}-${pkgrel}"
+        else
+            echo "${pkgver}-${pkgrel}"
+        fi
+    )
+}
+
+# 各 pkg の full_ver と「artifact が repo/x86_64/ に存在するか」 を計算。
+# universe 全体について計算する (= cascade 検出は universe scope)。
+declare -A pkg_full_ver
+declare -A initial_pending
+for p in "${nekono_universe[@]}"; do
+    pkgbuild="$REPO_ROOT/pkgs/$p/PKGBUILD"
+    full_ver=$(extract_full_ver "$pkgbuild")
+    pkg_full_ver[$p]="$full_ver"
+    if compgen -G "$REPO_DIR/${p}-${full_ver}-"'*'".pkg.tar.zst" >/dev/null; then
+        initial_pending[$p]=false
+    else
+        initial_pending[$p]=true
+    fi
+done
+
+# cascade-warn 計算: topo 順に走査し、 自 pkg の [nekono] cross-dep の中で
+# 「initial_pending == true (= 今 rebuild される) もしくは cascade_warn 済み
+# (= 上流が rebuild されたので本来 rebuild すべき)」 が 1 つでもあれば warn。
+# transitive 対応のため topo 順走査 + 既 mark を伝播する設計。
+# 自 pkg 自体が initial_pending の場合は warn 不要 (= どの道 build される)。
+declare -A cascade_deps
+for p in "${topo_all[@]}"; do
+    cascade_deps[$p]=""
+    ${initial_pending[$p]:-false} && continue
+    for dep in ${nekono_cross_deps[$p]}; do
+        if [[ "${initial_pending[$dep]:-false}" == "true" ]] || [[ -n "${cascade_deps[$dep]:-}" ]]; then
+            cascade_deps[$p]+="$dep "
+        fi
+    done
+done
+
+# Build target list を決定。 --pending: initial_pending のみ topo 順で。
+if $PENDING_ONLY; then
+    packages=()
+    for p in "${topo_ordered[@]}"; do
+        if ${initial_pending[$p]}; then
+            packages+=("$p")
+            echo "[pending] $p ${pkg_full_ver[$p]}"
+        else
+            echo "[skip] $p ${pkg_full_ver[$p]} already built"
+        fi
+    done
+else
+    packages=("${topo_ordered[@]}")
 fi
 
+# cascade-warn を出力 (= build target に居ない / build されない pkg のうち、
+# [nekono] dep が今 rebuild されるもの)。 universe scope で見るので、
+# 'build-all foo' で foo の dep が触られない場合は何も出ない。
+cascade_pkgs=()
+for p in "${topo_all[@]}"; do
+    if [[ -n "${cascade_deps[$p]}" ]] && ! ${initial_pending[$p]:-false}; then
+        cascade_pkgs+=("$p")
+        echo "[cascade-warn] $p ${pkg_full_ver[$p]} should bump pkgrel via PR (= [nekono] dep ${cascade_deps[$p]% } was rebuilt in this run)"
+    fi
+done
+
+if [[ ${#packages[@]} -eq 0 ]]; then
+    echo ""
+    echo "[OK] nothing to build (all packages up to date in $REPO_DIR)"
+    if [[ ${#cascade_pkgs[@]} -gt 0 ]]; then
+        echo "[!] ${#cascade_pkgs[@]} pkg(s) flagged for cascade-warn above — review and PR pkgrel bumps"
+    fi
+    exit 0
+fi
+
+echo ""
+echo "[*] Will build ${#packages[@]} package(s) in dep order: ${packages[*]}"
+if [[ ${#cascade_pkgs[@]} -gt 0 ]]; then
+    echo "[!] ${#cascade_pkgs[@]} pkg(s) flagged for cascade-warn — review and PR pkgrel bumps after this run: ${cascade_pkgs[*]}"
+fi
+
+if $DRY_RUN; then
+    echo ""
+    echo "[OK] --dry-run, exiting before makepkg / gpg / repo-add"
+    exit 0
+fi
+
+echo ""
 echo "[*] Warming up gpg-agent (YubiKey PIN cache)"
 gpg-connect-agent "SCD SERIALNO" /bye >/dev/null
 # 挿入中 YubiKey の serial で stub を再 learn (= 両 YubiKey 切替時の
@@ -162,3 +317,8 @@ echo "[*] Pruning orphan packages from $REPO_DIR"
 
 echo ""
 echo "[OK] build-all completed. $(ls -1 "$REPO_DIR"/*.pkg.tar.zst | wc -l) signed packages in $REPO_DIR"
+
+if [[ ${#cascade_pkgs[@]} -gt 0 ]]; then
+    echo ""
+    echo "[!] REMINDER: ${#cascade_pkgs[@]} pkg(s) need pkgrel bump PR (cascade-warn above): ${cascade_pkgs[*]}"
+fi
