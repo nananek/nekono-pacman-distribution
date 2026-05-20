@@ -83,4 +83,4 @@ upstream で新 release (= v3.2.5 等) が出たら:
 
 | 日付 | release | review した PKGBUILD repo SHA | upstream tag commit | findings |
 |---|---|---|---|---|
-| 2026-05-20 | 3.2.4 | (初回 PR commit SHA、 push 後に固定) | `7d7607473d7713d9937cbbbe0bfc635976c511d3` | 初回 add、 純 fork (= Maintainer 行のみ改変)。 fastmcp chain 頂点 |
+| 2026-05-20 | 3.2.4 | `a5d709ad36d834b5e5a42d30eae67c37cd0d821f` | `7d7607473d7713d9937cbbbe0bfc635976c511d3` | 初回 add、 純 fork (= Maintainer 行のみ改変)。 fastmcp chain 頂点 |
