@@ -78,4 +78,4 @@ upstream で新 release (= 1.27.2 or 1.28.x 等) が出たら:
 
 | 日付 | release | review した PKGBUILD repo SHA | upstream tag commit | findings |
 |---|---|---|---|---|
-| 2026-05-20 | 1.27.1-2 | (初回 PR commit SHA、 push 後に固定) | `77431ebe7dda9ed0c61451b22d3e7f8d981bc092` | 初回 add、 純 fork ベース (= check() / optdepends 削除) + upstream 準拠で `python-opentelemetry-api` を depends 追加 (= AUR 省略 fix)。 1834.patch 同梱 (= Python 3.14 対応、 upstream 未 merge) |
+| 2026-05-20 | 1.27.1-2 | `c3370e73e2fe9588b3a6a4f0df8ecd8437ac9924` | `77431ebe7dda9ed0c61451b22d3e7f8d981bc092` | 初回 add、 純 fork ベース (= check() / optdepends 削除) + upstream 準拠で `python-opentelemetry-api` を depends 追加 (= AUR 省略 fix)。 1834.patch 同梱 (= Python 3.14 対応、 upstream 未 merge) |
