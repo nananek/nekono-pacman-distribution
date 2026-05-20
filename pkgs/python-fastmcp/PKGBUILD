@@ -1,0 +1,79 @@
+# Maintainer: Nekono Nana KAKKO KARI <3267314+nananek@users.noreply.github.com>
+# Upstream AUR Maintainer: Rafael Dominiquini <rafaeldominiquini at gmail dot com>
+#
+# AUR python-fastmcp の純 fork (= 機能変化なし、 改変は Maintainer 行 +
+# nekono 説明コメントのみ)。 AUR 元 PKGBUILD は既に check() / checkdepends
+# が空で minimal なので、 [nekono] convention の追加削除は不要。
+#
+# nekono-pipewire-mcp / nekono-voicevox-mcp の直接依存。 fastmcp chain の頂点、
+# このまでに投入した 7 個の [nekono] fork (= jsonschema-path / httpx-sse /
+# sse-starlette / openapi-pydantic / uncalled-for / mcp / uv-dynamic-versioning)
+# が全て resolve できることが本 PKGBUILD build の前提。
+
+_upstreamver='3.2.4'
+_upstreamver_regex='^[0-9]+\.[0-9]+\.[0-9]+$'
+_source_type='pypi-releases'
+_pypi_package='fastmcp'
+
+
+pkgname="python-${_pypi_package}"
+pkgver="${_upstreamver}"
+pkgrel=1
+pkgdesc="The fast, Pythonic way to build MCP servers and clients."
+arch=('any')
+url='https://github.com/jlowin/fastmcp'
+license=('MIT')
+
+depends=(
+  'python'
+  'uvicorn'                     # Arch 命名例外 (= prefix なし extra/uvicorn)
+  'python-dotenv'
+  'python-pydantic-settings'
+  'python-pydantic'
+  'python-authlib'
+  'python-cryptography'
+  'python-rich'
+  'python-openai'
+  'python-httpx'
+  'python-pydantic-core'
+  'python-starlette'
+  'python-typing_extensions'
+  'python-anyio'
+  'python-pyperclip'
+  'python-exceptiongroup'
+  'python-openapi-pydantic'      # [nekono] PR #58
+  'python-mcp'                  # [nekono] PR #60
+  'python-jsonschema-path'       # [nekono] PR #54
+  'python-uncalled-for'         # [nekono] PR #57
+)
+makedepends=(
+  'python-setuptools'
+  'python-wheel'
+  'python-build'
+  'python-installer'
+  'python-hatchling'
+  'python-uv-dynamic-versioning' # [nekono] PR #59
+)
+
+source=("https://files.pythonhosted.org/packages/source/${_pypi_package::1}/${_pypi_package//-/_}/${_pypi_package//-/_}-${pkgver}.tar.gz")
+sha256sums=('083ecb75b44a4169e7fc0f632f94b781bdb0ff877c6b35b9877cbb566fd4d4d1')
+
+
+build() {
+    cd "${srcdir}/${_pypi_package//-/_}-${pkgver}/"
+
+    python -m build --wheel --no-isolation
+}
+
+package() {
+    cd "${srcdir}/${_pypi_package//-/_}-${pkgver}/"
+
+    python -m installer --destdir="$pkgdir" dist/*.whl
+
+    install -Dm644 "LICENSE" "${pkgdir}/usr/share/licenses/${pkgname}/LICENSE"
+
+    install -Dm644 "README.md" "${pkgdir}/usr/share/doc/${pkgname}/README.md"
+    install -Dm644 "AGENTS.md" "${pkgdir}/usr/share/doc/${pkgname}/AGENTS.md"
+    install -Dm644 "SECURITY.md" "${pkgdir}/usr/share/doc/${pkgname}/SECURITY.md"
+    install -Dm644 "CODE_OF_CONDUCT.md" "${pkgdir}/usr/share/doc/${pkgname}/CODE_OF_CONDUCT.md"
+}

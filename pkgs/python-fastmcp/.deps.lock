@@ -1,0 +1,31 @@
+# Snapshot of Arch official repo versions for depends + makedepends of python-fastmcp.
+# Auto-generated and updated by .github/workflows/dep-version-pr.yml.
+# Source: pkgs/python-fastmcp/.SRCINFO (depends + makedepends entries).
+# Format: 1 line per package: <name>=<full-version>
+
+python-anyio=4.13.0-1
+python-authlib=1.7.2-1
+python-build=1.4.3-1
+python-cryptography=48.0.0-1
+python-dotenv=1.2.2-1
+python-exceptiongroup=1.3.1-2
+python-hatchling=1.29.0-1
+python-httpx=0.28.1-7
+python-installer=1.0.0-1
+python-jsonschema-path=0.4.6-1
+python-mcp=1.27.1-2
+python-openai=2.29.0-1
+python-openapi-pydantic=0.5.1+r37+g0766d59-3
+python-pydantic-core=3:2.46.4-1
+python-pydantic-settings=2.14.1-1
+python-pydantic=2.13.4-1
+python-pyperclip=1.11.0-2
+python-rich=15.0.0-1
+python-setuptools=1:82.0.1-1
+python-starlette=1.0.0-1
+python-typing_extensions=4.15.0-3
+python-uncalled-for=0.2.0-1
+python-uv-dynamic-versioning=0.14.0-1
+python-wheel=0.47.0-1
+python=3.14.5-1
+uvicorn=0.38.0-2
