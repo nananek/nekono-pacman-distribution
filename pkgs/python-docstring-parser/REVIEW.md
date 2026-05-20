@@ -58,4 +58,4 @@ upstream で新 release が出たら nvchecker (= `[python-docstring-parser]` se
 
 | 日付 | release | review した PKGBUILD repo SHA | upstream tag commit | findings |
 |---|---|---|---|---|
-| 2026-05-20 | 0.18.0-1 | (初回 PR commit SHA、 push 後に固定) | PyPI sdist `docstring_parser-0.18.0.tar.gz` | 初回 add、 AUR fork + depends typo bug fix、 cyclopts dep 経由で fastmcp chain 完成のため必要 |
+| 2026-05-20 | 0.18.0-1 | `28fbf82` | PyPI sdist `docstring_parser-0.18.0.tar.gz` | 初回 add、 AUR fork + depends typo bug fix、 cyclopts dep 経由で fastmcp chain 完成のため必要 (= 当初 SHA `f54af1e`、 master rebase で `28fbf82` に再付番) |
