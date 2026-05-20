@@ -68,6 +68,15 @@ github = "nananek/nekono-pipewire-mcp"
 use_latest_release = true
 prefix = "v"
 
+[nekono-voicevox-mcp]
+# 自家 package。 GitHub Release を切る運用、 v0.1.0 から開始。
+# voicevox-engine-cuda (= nekono-pacman0 で daemon 化) の HTTP API client を
+# stdio MCP server として ayaka 上の claude-code に exposing する。
+source = "github"
+github = "nananek/nekono-voicevox-mcp"
+use_latest_release = true
+prefix = "v"
+
 [nekonopaw]
 # 自作 package (nananek/nekonopaw)。GitHub Release は未運用で tag のみ
 # (vX.Y.Z 形式) push しているので use_max_tag で semver 最大 tag を取る。
