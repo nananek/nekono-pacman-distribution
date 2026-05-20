@@ -1,0 +1,19 @@
+pkgbase = nekono-voicevox-mcp
+	pkgdesc = MCP server bridging VOICEVOX engine HTTP API + pw-cat for TTS playback
+	pkgver = 0.1.0
+	pkgrel = 1
+	url = https://github.com/nananek/nekono-voicevox-mcp
+	arch = any
+	license = MIT
+	makedepends = python-build
+	makedepends = python-installer
+	makedepends = python-wheel
+	makedepends = python-hatchling
+	depends = python
+	depends = python-fastmcp
+	depends = python-httpx
+	depends = pipewire
+	source = nekono-voicevox-mcp-0.1.0.tar.gz::https://github.com/nananek/nekono-voicevox-mcp/archive/refs/tags/v0.1.0.tar.gz
+	sha256sums = 14a447d896a79cf97c5c8166055da946298095f6477e8cb6e19248b9ac0929af
+
+pkgname = nekono-voicevox-mcp
