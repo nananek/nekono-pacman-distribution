@@ -71,4 +71,4 @@ upstream で新 release が出たら:
 
 | 日付 | release | review した PKGBUILD repo SHA | upstream tag commit | findings |
 |---|---|---|---|---|
-| 2026-05-20 | 1.1.0-1 | (初回 PR commit SHA、 push 後に固定) | PyPI sdist `jsonref-1.1.0.tar.gz` | 初回 add、 AUR 純 fork、 fastmcp 直接依存 |
+| 2026-05-20 | 1.1.0-1 | `b5896503a6339ab5fc42f2b1ecc119f90261ade4` | PyPI sdist `jsonref-1.1.0.tar.gz` | 初回 add、 AUR 純 fork、 fastmcp 直接依存 |
