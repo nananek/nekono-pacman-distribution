@@ -79,4 +79,4 @@ upstream で新 release (= v0.2.0 等) が出たら:
 
 | 日付 | release | review した PKGBUILD repo SHA | upstream tag commit | findings |
 |---|---|---|---|---|
-| 2026-05-20 | 0.1.0 | (初回 PR commit SHA、 push 後に固定) | `b2e5548d7c68a5c16d4e32abaf71ce1c6ae6a455` | 初回 add、 自家 source v0.1.0 |
+| 2026-05-20 | 0.1.0 | `7c4606a3c8da4796e64aae67078862b58bc12037` | `b2e5548d7c68a5c16d4e32abaf71ce1c6ae6a455` | 初回 add、 自家 source v0.1.0 |
