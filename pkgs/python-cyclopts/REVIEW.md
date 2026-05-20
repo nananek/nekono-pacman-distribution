@@ -58,4 +58,4 @@ upstream で新 release が出たら nvchecker (= `[python-cyclopts]` section) �
 
 | 日付 | release | review した PKGBUILD repo SHA | upstream tag commit | findings |
 |---|---|---|---|---|
-| 2026-05-20 | 4.12.0-1 | (初回 PR commit SHA、 push 後に固定) | upstream tag `v4.12.0` | 初回 add、 AUR fork + sha256 SKIP fix、 fastmcp 直接依存 |
+| 2026-05-20 | 4.12.0-1 | `0cced1785b136180286916e6e0225cc709cb9de7` | upstream tag `v4.12.0` | 初回 add、 AUR fork + sha256 SKIP fix、 fastmcp 直接依存 |
