@@ -131,6 +131,14 @@ github = "BrianPugh/cyclopts"
 use_latest_release = true
 prefix = "v"
 
+[python-docstring-parser]
+# python-cyclopts の dep (= fastmcp の dep audit で発覚)、 AUR
+# python-docstring-parser を fork。 release tag は素の X.Y.Z 形式
+# (prefix 無し)、 upstream は rr-/docstring_parser。
+source = "github"
+github = "rr-/docstring_parser"
+use_latest_release = true
+
 [python-fastmcp]
 # fastmcp chain の頂点、 ayaka 上の MCP server runtime を支える。
 # AUR python-fastmcp を fork。 release tag は v X.Y.Z 形式 (prefix "v")。
