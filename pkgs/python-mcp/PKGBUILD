@@ -1,0 +1,76 @@
+# Maintainer: Nekono Nana KAKKO KARI <3267314+nananek@users.noreply.github.com>
+# Upstream AUR Maintainer: Mohamed Amine Zghal (medaminezghal) <medaminezghal at outlook dot com>
+#
+# AUR python-mcp の純 fork (= 機能変化なし)。 nekono-pacman-distribution の改変:
+#   - Maintainer 行を Nekono に、 AUR Maintainer は Upstream AUR として保持
+#   - check() / checkdepends / optdepends を削除 (= [nekono] は AUR helper 前提を取らない、
+#     bin/build-all は --check なし default 運用、 optdepends の python-rich / typer /
+#     dotenv / websockets は CLI / 補助機能用で MCP server 起動には不要)
+#   - depends に `python-opentelemetry-api` を追加 (= upstream pyproject.toml で hard dep
+#     宣言、 AUR は省略していたが upstream 準拠で組み込む。 Arch 公式 extra/python-opentelemetry-api
+#     1.41.1 で resolve OK)
+#
+# patch file (1834.patch) は AUR repo 同梱の upstream PR 1834 ("Support Python 3.14")
+# を pkg dir 内に local file として保持、 source[] で local 参照。
+#
+# python-fastmcp の直接依存。 fastmcp → mcp の transitive chain の核心。
+
+_name=mcp
+pkgname=python-$_name
+pkgver=1.27.1
+pkgrel=2
+pkgdesc='Model Context Protocol SDK.'
+arch=('any')
+url='https://github.com/modelcontextprotocol/python-sdk'
+license=('MIT')
+depends=(
+    'python'
+    'python-anyio'
+    'python-httpx'
+    'python-httpx-sse'           # [nekono] PR #55
+    'python-pydantic'
+    'python-starlette'
+    'python-python-multipart'    # Arch 命名: PyPI python-multipart → python-python-multipart
+    'python-sse-starlette'        # [nekono] PR #56
+    'python-pydantic-settings'
+    'uvicorn'                    # Arch 命名例外 (= prefix なし extra/uvicorn)
+    'python-jsonschema'
+    'python-pyjwt'
+    'python-cryptography'         # pyjwt[crypto] extras 用
+    'python-typing_extensions'    # Arch 命名: typing-extensions → typing_extensions (= 一部 underscore)
+    'python-typing-inspection'
+    'python-opentelemetry-api'    # = AUR は省略だが upstream pyproject hard dep
+)
+makedepends=(
+    'python-hatchling'
+    'python-uv-dynamic-versioning'
+    'python-build'
+    'python-installer'
+    'python-wheel'
+    'git'                        # source は git+url の git clone のため
+)
+source=("$_name::git+$url.git#tag=v$pkgver"
+        "1834.patch")
+sha256sums=('65ef8600938fbf3b1e5b96712c56f58cd5029783143e88e3aa4f4badb74d00d9'
+            'b0447596b4e75375c4a37759c088a867b2d7d3e64cb05b78d71762a90bceba0c')
+
+prepare(){
+  cd "$srcdir"/$_name
+  git clean -fdx
+  # Fix compatibility with Python 3.14 (= upstream PR #1834、 未 merge / 未 release のため適用)
+  patch -Np1 -i ../1834.patch
+  sed -i 's/timeout=20/timeout=None/' tests/client/test_config.py
+}
+
+build() {
+  cd "$srcdir"/$_name
+  python -m build --wheel --no-isolation
+}
+
+package() {
+  cd "$srcdir"/$_name
+  python -m installer --destdir="$pkgdir" dist/*.whl
+  local site_packages=$(python -c "import site; print(site.getsitepackages()[0])")
+  install -d "$pkgdir"/usr/share/licenses/$pkgname
+  ln -s $site_packages/$_name-$pkgver.dist-info/licenses/LICENSE "$pkgdir"/usr/share/licenses/$pkgname/LICENSE
+}

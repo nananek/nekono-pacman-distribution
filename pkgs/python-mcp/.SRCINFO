@@ -1,0 +1,35 @@
+pkgbase = python-mcp
+	pkgdesc = Model Context Protocol SDK.
+	pkgver = 1.27.1
+	pkgrel = 2
+	url = https://github.com/modelcontextprotocol/python-sdk
+	arch = any
+	license = MIT
+	makedepends = python-hatchling
+	makedepends = python-uv-dynamic-versioning
+	makedepends = python-build
+	makedepends = python-installer
+	makedepends = python-wheel
+	makedepends = git
+	depends = python
+	depends = python-anyio
+	depends = python-httpx
+	depends = python-httpx-sse
+	depends = python-pydantic
+	depends = python-starlette
+	depends = python-python-multipart
+	depends = python-sse-starlette
+	depends = python-pydantic-settings
+	depends = uvicorn
+	depends = python-jsonschema
+	depends = python-pyjwt
+	depends = python-cryptography
+	depends = python-typing_extensions
+	depends = python-typing-inspection
+	depends = python-opentelemetry-api
+	source = mcp::git+https://github.com/modelcontextprotocol/python-sdk.git#tag=v1.27.1
+	source = 1834.patch
+	sha256sums = 65ef8600938fbf3b1e5b96712c56f58cd5029783143e88e3aa4f4badb74d00d9
+	sha256sums = b0447596b4e75375c4a37759c088a867b2d7d3e64cb05b78d71762a90bceba0c
+
+pkgname = python-mcp
