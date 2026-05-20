@@ -1,0 +1,41 @@
+# Maintainer: Nekono Nana KAKKO KARI <3267314+nananek@users.noreply.github.com>
+#
+# 自家 source PKGBUILD (= AUR fork ではない、 nananek upstream を直接 vendor)。
+# claude-code から stdio で起動される MCP server (= console_script)。
+# daemon ではないので systemd unit / sysusers / tmpfiles は同梱しない。
+#
+# fastmcp chain (PR #54〜#62 + #59 投入済み) の上に立つ MCP server。
+# wpctl (= wireplumber) を subprocess で叩いて PipeWire の状態取得 / 制御。
+
+pkgname=nekono-pipewire-mcp
+pkgver=0.1.0
+pkgrel=1
+pkgdesc="MCP server exposing PipeWire / wireplumber controls (wpctl wrapper) to Claude"
+arch=('any')
+url="https://github.com/nananek/nekono-pipewire-mcp"
+license=('MIT')
+depends=(
+    'python'
+    'python-fastmcp'    # [nekono] PR #62
+    'wireplumber'       # wpctl を subprocess.run で呼ぶ runtime 依存
+)
+makedepends=(
+    'python-build'
+    'python-installer'
+    'python-wheel'
+    'python-hatchling'
+)
+source=("$pkgname-$pkgver.tar.gz::$url/archive/refs/tags/v$pkgver.tar.gz")
+sha256sums=('ffcc216a7f32328ba03fcf69ecd8719d0c717c7e087756016edb5286d0ab30f7')
+
+build() {
+    cd "$pkgname-$pkgver"
+    python -m build --wheel --no-isolation
+}
+
+package() {
+    cd "$pkgname-$pkgver"
+    python -m installer --destdir="$pkgdir" dist/*.whl
+    install -Dm644 LICENSE "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
+    install -Dm644 README.md "$pkgdir/usr/share/doc/$pkgname/README.md"
+}

@@ -1,0 +1,18 @@
+pkgbase = nekono-pipewire-mcp
+	pkgdesc = MCP server exposing PipeWire / wireplumber controls (wpctl wrapper) to Claude
+	pkgver = 0.1.0
+	pkgrel = 1
+	url = https://github.com/nananek/nekono-pipewire-mcp
+	arch = any
+	license = MIT
+	makedepends = python-build
+	makedepends = python-installer
+	makedepends = python-wheel
+	makedepends = python-hatchling
+	depends = python
+	depends = python-fastmcp
+	depends = wireplumber
+	source = nekono-pipewire-mcp-0.1.0.tar.gz::https://github.com/nananek/nekono-pipewire-mcp/archive/refs/tags/v0.1.0.tar.gz
+	sha256sums = ffcc216a7f32328ba03fcf69ecd8719d0c717c7e087756016edb5286d0ab30f7
+
+pkgname = nekono-pipewire-mcp
