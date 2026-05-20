@@ -6,7 +6,7 @@
 pkgname=python-beartype
 _pkgname=${pkgname#python-}
 pkgver=0.22.9
-pkgrel=1
+pkgrel=2
 pkgdesc="Unbearably fast near-real-time hybrid runtime-static type-checking in pure Python"
 arch=('any')
 url="https://github.com/beartype/beartype"
@@ -26,6 +26,11 @@ checkdepends=(
   python-rich-click
   python-pygments
   python-typing_extensions
+  # AUR PKGBUILD では明示されていないが、
+  # beartype_test/a90_func/a50_external/test_poetry.py が `python -m poetry
+  # install` を実行するため checkdepends に追加しないと build fail する
+  # (= 2026-05-20 PR #69 直後の再 build で実測)
+  python-poetry
 )
 source=("$pkgname-$pkgver.tar.gz::$url/archive/v$pkgver.tar.gz")
 sha256sums=('ecc0518c0c9102637e711c8f46ce0ba561c3138c89aea522d4b28b84a5f47b2d')
