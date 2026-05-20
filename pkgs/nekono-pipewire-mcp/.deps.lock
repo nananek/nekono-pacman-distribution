@@ -1,0 +1,12 @@
+# Snapshot of Arch official repo versions for depends + makedepends of nekono-pipewire-mcp.
+# Auto-generated and updated by .github/workflows/dep-version-pr.yml.
+# Source: pkgs/nekono-pipewire-mcp/.SRCINFO (depends + makedepends entries).
+# Format: 1 line per package: <name>=<full-version>
+
+# MISSING (not in Arch official repo, likely AUR-only or virtual): python-fastmcp
+python-build=1.4.3-1
+python-hatchling=1.29.0-1
+python-installer=1.0.0-1
+python-wheel=0.47.0-1
+python=3.14.5-1
+wireplumber=0.5.14-1
