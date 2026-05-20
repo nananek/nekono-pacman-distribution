@@ -114,6 +114,14 @@ source = "github"
 github = "p1c2u/jsonschema-path"
 use_latest_release = true
 
+[python-mcp]
+# fastmcp の直接依存 (= fastmcp → mcp)、 AUR python-mcp を fork。
+# Model Context Protocol SDK 本体。 release tag は v X.Y.Z 形式 (prefix "v")。
+source = "github"
+github = "modelcontextprotocol/python-sdk"
+use_latest_release = true
+prefix = "v"
+
 [python-openapi-pydantic]
 # fastmcp 依存 chain transitive (= fastmcp → mcp → openapi-pydantic)、 AUR
 # python-openapi-pydantic を fork。 release tag は v X.Y.Z 形式 (prefix "v")。
