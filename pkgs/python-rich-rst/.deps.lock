@@ -1,0 +1,12 @@
+# Snapshot of Arch official repo versions for depends + makedepends of python-rich-rst.
+# Auto-generated and updated by .github/workflows/dep-version-pr.yml.
+# Source: pkgs/python-rich-rst/.SRCINFO (depends + makedepends entries).
+# Format: 1 line per package: <name>=<full-version>
+
+python-build=1.4.3-1
+python-docutils=1:0.22.4-1
+python-installer=1.0.0-1
+python-poetry-core=2.4.0-1
+python-rich=15.0.0-1
+python-setuptools=1:80.9.0-1
+python-wheel=0.47.0-1
