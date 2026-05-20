@@ -255,7 +255,7 @@ JST 11:50〜11:55 (= 02:50〜02:55 UTC) に新規 Issue / PR を生成し、 12:
 
 | verdict | 対応 |
 |---|---|
-| `safe-to-bump` | build host で PKGBUILD の pkgver / sha256sums を本文の Suggested PKGBUILD changes に従って差し替え → `.SRCINFO` 同期 → `git commit -S` → PR open。`claude-review.yml` の review pass を待って merge → `bin/build-all <pkg>` → `bin/update-repo` → publish → Issue close。 |
+| `safe-to-bump` | build host で PKGBUILD の pkgver / sha256sums を本文の Suggested PKGBUILD changes に従って差し替え → `.SRCINFO` 同期 → `git commit -S` → PR open。`claude-review.yml` の review pass を待って merge → `bin/build-all <pkg>` (= 末尾で repo-add まで完了する) → `sudo pacman -Sy` で client (build host 含む) が新版を見られる → Issue close。 |
 | `needs-attention` | build script / depends 変化あり。Claude の事前調査 (Build script changes / Dependency changes section) を踏まえて手作業更新。場合により `package()` の改変や `optdepends` 追加が要る。あとは safe-to-bump と同じ流れ。 |
 | `block` | supply-chain 上の懸念あり。理由を読み、本当に止めるべきか判断。ユーザコミュニティに新 release で報告されたインシデントを upstream で確認するなど、追加調査してから判断。 |
 
@@ -277,7 +277,7 @@ branch 名 `deps/<pkg>-pkgrel-<N+1>`、title `<pkg>: pkgrel bump to <N+1>
 3. build host で local pull → `git commit --amend -S --no-edit` で Nekono
    GPG 署名し直し → `git push --force-with-lease`。
 4. GitHub UI から merge。
-5. build host で `bin/build-all <pkg>` → `bin/update-repo`。
+5. build host で `bin/build-all <pkg>` (= 末尾で repo-add まで完了するので `bin/update-repo` を別途叩く必要無し)。
 
 #### 手動 bump PR (= 自分が立てる upstream-version-issue 由来の PR)
 
@@ -314,10 +314,15 @@ merge 前のチェックリスト:
    cd ~/nekono-pacman-distribution
    git pull --ff-only
    bin/build-all --pending     # PKGBUILD の pkgver-pkgrel に対応する artifact が
-                               # repo/x86_64/ に無い pkg だけ build + sign。
+                               # repo/x86_64/ に無い pkg だけ build + sign + repo-add。
+                               # 末尾で repo-add まで終わるので `bin/update-repo` は不要
+                               # (= update-repo は手動で db だけ rebuild したい時用 wrapper)。
                                # "nothing to build" が出れば消化完了。
-   bin/update-repo             # publish (= repo db + nginx 経由で配信開始)
    ```
+
+`bin/build-all` 完了後、 build host 自身を含む client 側で
+`sudo pacman -Sy && pacman -Si <pkg>` で新 version が解決できれば配信反映済み
+(= nginx は Tailscale 越し file 配信のみ、 reload 不要)。
 
 3 ステップ全部がゼロアクションで終わる日が「平常運用日」、何か残ったら
 気になる症状として記憶しておく。
