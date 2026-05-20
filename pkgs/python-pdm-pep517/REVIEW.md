@@ -65,4 +65,4 @@ fix」 (= upstream pyproject.toml audit で 10 個漏れ発覚) の一環。
 
 | 日付 | release | review した PKGBUILD repo SHA | upstream tag / commit | findings |
 |---|---|---|---|---|
-| 2026-05-20 | 1:1.1.4-5 | (初回 PR commit SHA、 push 後に固定) | PyPI sdist `pdm-pep517-1.1.4.tar.gz` | 初回 add、 AUR 純 fork、 python-jsonref makedep 経由で fastmcp chain 完成のため必要 |
+| 2026-05-20 | 1:1.1.4-5 | `159506c629eddd7a485a2e5d9eaab5f308503d0f` | PyPI sdist `pdm-pep517-1.1.4.tar.gz` | 初回 add、 AUR 純 fork、 python-jsonref makedep 経由で fastmcp chain 完成のため必要 |
