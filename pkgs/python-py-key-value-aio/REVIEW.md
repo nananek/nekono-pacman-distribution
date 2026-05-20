@@ -55,4 +55,4 @@ upstream で新 release が出たら nvchecker (= `[python-py-key-value-aio]` se
 
 | 日付 | release | review した PKGBUILD repo SHA | upstream tag commit | findings |
 |---|---|---|---|---|
-| 2026-05-20 | 0.4.4-1 | (初回 PR commit SHA、 push 後に固定) | upstream tag `v0.4.4` | 初回 add、 AUR fork + 0.4.4 bump + extras 反映 |
+| 2026-05-20 | 0.4.4-1 | `e808468` | upstream tag `v0.4.4` | 初回 add、 AUR fork + 0.4.4 bump + extras 反映 (= 当初 SHA `eb0fae2`、 master rebase で `e808468` に再付番) |
