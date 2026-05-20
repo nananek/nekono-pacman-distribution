@@ -77,20 +77,40 @@ jobs:
               source (where the hash came from), and reviewer's conclusion.
             - Commit messages should describe the *why*, not just the *what*.
 
-            **Output (必須)**:
-            review summary を **必ず top-level PR comment として post** すること。
-            silent で終わらない。手順:
+            **Output (必須、 spam 防止のため厳格遵守)**:
 
-            1. Review 内容を markdown でまとめる (= verdict 行 + 検証項目別
-               の OK/NG 表 + 補足説明)
-            2. 投稿:
-               `gh pr comment <PR_NUMBER> --body "<review markdown>"`
-               (PR_NUMBER は `$GITHUB_REF_NAME` の `pkg/<name>` から推測、
-               または `gh pr list --head <branch> --json number` で取得)
-            3. 1 行目に **verdict: approve / request-changes / block** の
-               いずれかを必ず入れる
-            4. 行依存の finding があれば追加で
-               `gh pr review <N> --comment --body "..."` で個別 line comment
-               (= 任意、無くてもよい)
+            review summary を **top-level PR comment として 1 回だけ post** する。
+
+            **重要**: 本 review session 中に `gh pr comment` を実行するのは
+            **正確に 1 回のみ**。 同一 session で 2 回目を呼ぶのは禁止 (= user
+            の Anthropic usage を無駄に消費するため。 過去に 1 PR に 11 comment
+            付けたインシデントあり)。 投稿後は即座に session 終了すること。
+
+            手順:
+
+            1. **冪等性 check (必須)**: 投稿前に既存 comment を見る
+               ```
+               PR_NUMBER=$(gh pr list --head "$GITHUB_REF_NAME" --json number --jq '.[0].number')
+               existing=$(gh pr view "$PR_NUMBER" --json comments --jq '[.comments[] | select(.author.login == "claude") | select(.body | startswith("verdict:") or contains("**verdict:"))] | length')
+               if [ "$existing" -gt 0 ]; then
+                 echo "[skip] already posted $existing verdict comment(s) on PR #$PR_NUMBER"
+                 exit 0
+               fi
+               ```
+               既に verdict comment が 1 件以上ある場合は **何もせず session 終了**。
+               これで rerun / re-trigger 時の重複投稿を防ぐ。
+
+            2. 上記 check で 0 件なら、 review 内容を markdown でまとめる
+               (= verdict 行 + 検証項目別の OK/NG 表 + 補足説明)。
+
+            3. 投稿: `gh pr comment "$PR_NUMBER" --body "<review markdown>"`
+               (1 回のみ)
+
+            4. 1 行目に **verdict: approve / request-changes / block** の
+               いずれかを必ず入れる。
+
+            5. 投稿成功したら **即終了**。 追加 comment / review / 確認等は不要。
+               行依存の line comment (= `gh pr review --comment`) は
+               **本 task では使用禁止**。 全ての finding を 1 comment 内にまとめる。
 
             日本語で書くこと。
