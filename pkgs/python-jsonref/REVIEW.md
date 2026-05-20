@@ -32,9 +32,9 @@ ayaka 上の自家 MCP server (= [[nekono-pipewire-mcp]] / [[nekono-voicevox-mcp
 
 - [x] `source` URL = `files.pythonhosted.org/packages/aa/0d/.../jsonref-1.1.0.tar.gz`
   - PyPI 公式 CDN、 PEP 503 形式 path
-- [x] `md5sums` は AUR と一致 (= 純 fork)
-  - **後日 sha256 に upgrade すべき** (= [[supply-chain-md5-deprecation]])。 本 PR は
-    AUR 純 fork 範囲に留め、 hash 種別 upgrade は別 PR で
+- [x] `sha256sums` 独立検証
+  - build host で curl + sha256sum で実測: `32fe8e1d85af0fdefbebce950af85590b22b60f9e95443176adbde4e1ecea552`
+  - claude-review 初回 verdict で AUR の md5sums は [nekono] 規約違反と指摘されたため、 hash 種別を sha256 に **bump 即時**
 - [x] `build()`: `python -m build --wheel --no-isolation`
   - build-backend = `pdm.pep517.api` → makedepends `python-pdm-pep517` (= [nekono]
     別 PR で同時投入) が解決する
@@ -50,9 +50,9 @@ ayaka 上の自家 MCP server (= [[nekono-pipewire-mcp]] / [[nekono-voicevox-mcp
 | 項目 | 差分 | 理由 |
 |---|---|---|
 | `# Maintainer:` | piernov → Nekono、 piernov を Contributor に降格 | [nekono] fork 表示 |
+| `md5sums` → `sha256sums` | AUR の md5 を捨て、 [nekono] 規約 (CLAUDE.md 「sha256sums (or sha512sums) で tarball が pin されているか」) に従って sha256 を独立計算して固定 | MD5 は暗号学的に破綻 (= 衝突攻撃成立)、 supply-chain 監査上 keep するのは不可。 AUR にも修正 PR 送るのが筋だが [nekono] では先に正しい状態を反映 |
 
-それ以外は **0 行差分** (= 純 fork)。 md5sums / `arch=('x86_64')` / LICENSE 非設置
-等も AUR 踏襲。 hash 種別 upgrade + LICENSE 設置は別 PR で別途。
+`arch=('x86_64')` / LICENSE 非設置 等は AUR 踏襲 (= LICENSE 設置は別 PR で別途)。
 
 ## 結論
 
