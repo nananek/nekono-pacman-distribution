@@ -161,6 +161,14 @@ github = "mike-oakley/openapi-pydantic"
 use_latest_release = true
 prefix = "v"
 
+[python-pdm-pep517]
+# python-jsonref の build-backend (pdm.pep517.api)、 AUR python-pdm-pep517
+# を fork。 upstream は release tag を切っていないため use_max_tag で
+# semver 最大 tag を取る。
+source = "github"
+github = "pdm-project/pdm-pep517"
+use_max_tag = true
+
 [python-sse-starlette]
 # fastmcp 依存 chain transitive (= fastmcp → mcp → sse-starlette)、 AUR
 # python-sse-starlette を fork。 release tag は v X.Y.Z 形式 (prefix "v")。
