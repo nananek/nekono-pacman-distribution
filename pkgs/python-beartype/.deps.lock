@@ -3,16 +3,16 @@
 # Source: pkgs/python-beartype/.SRCINFO (depends + makedepends entries).
 # Format: 1 line per package: <name>=<full-version>
 
+python=3.14.5-1
 python-build=1.4.3-1
-python-click=8.3.0-1
+python-click=8.3.3-1
 python-hatchling=1.29.0-1
 python-installer=1.0.0-1
 python-numpy=2.4.6-1
-python-poetry=2.2.1-1
-python-pygments=2.19.2-1
-python-pytest=1:8.4.2-1
-python-rich-click=1.9.1-1
+python-poetry=2.4.1-1
+python-pygments=2.20.0-1
+python-pytest=1:9.0.3-1
+python-rich-click=1.9.7-1
 python-typing_extensions=4.15.0-3
 python-wheel=0.47.0-1
-python-xarray=2025.10.1-1
-python=3.14.5-1
+python-xarray=2026.04.0-1
