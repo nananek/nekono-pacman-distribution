@@ -5,23 +5,26 @@
 # nekono 説明コメントのみ)。 AUR 元 PKGBUILD は既に check() / checkdepends
 # が空で minimal なので、 [nekono] convention の追加削除は不要。
 #
-# nekono-pipewire-mcp / nekono-voicevox-mcp の直接依存。 fastmcp chain の頂点、
-# このまでに投入した 7 個の [nekono] fork (= jsonschema-path / httpx-sse /
-# sse-starlette / openapi-pydantic / uncalled-for / mcp / uv-dynamic-versioning)
-# が全て resolve できることが本 PKGBUILD build の前提。
+# nekono-pipewire-mcp / nekono-voicevox-mcp の直接依存。 fastmcp chain の頂点。
+#
+# 3.3.0 以降の package 構成変更:
+#   fastmcp PyPI pkg が空の meta-package に。 実コードは fastmcp-slim に分離。
+#   source[] に fastmcp-slim sdist (= 実コード) と fastmcp meta sdist (= LICENSE 取得用)
+#   の両方を vendor する。 build() / package() は fastmcp_slim-* dir を使う。
 
-_upstreamver='3.2.4'
+_upstreamver='3.3.1'
 _upstreamver_regex='^[0-9]+\.[0-9]+\.[0-9]+$'
 _source_type='pypi-releases'
-_pypi_package='fastmcp'
+# 3.3.0 以降: fastmcp は空 meta-pkg。 実コードは fastmcp-slim (PyPI 別 pkg)。
+_slim_pkg='fastmcp-slim'
+_meta_pkg='fastmcp'
 
-
-pkgname="python-${_pypi_package}"
+pkgname='python-fastmcp'         # pacman 名は変えない (_slim_pkg が変わったため明示固定)
 pkgver="${_upstreamver}"
-pkgrel=2
+pkgrel=1
 pkgdesc="The fast, Pythonic way to build MCP servers and clients."
 arch=('any')
-url='https://github.com/jlowin/fastmcp'
+url='https://github.com/PrefectHQ/fastmcp'
 license=('MIT')
 
 depends=(
@@ -45,12 +48,9 @@ depends=(
   'python-mcp'                  # [nekono] PR #60
   'python-jsonschema-path'       # [nekono] PR #54
   'python-uncalled-for'         # [nekono] PR #57
-  # ↓ pkgrel 2 で追加 (= fastmcp dep audit で upstream pyproject.toml と
-  # diff 取って漏れていた 10 個。 ayaka 上で ModuleNotFoundError 'jsonref'
-  # が出た事案の根本原因)
-  'python-jsonref'              # [nekono] PR #68 (= 直接依存、 jsonref>=1.1.0)
-  'python-cyclopts'             # [nekono] PR #79 (= 直接依存、 cyclopts>=4.0.0)
-  'python-py-key-value-aio'     # [nekono] PR #80 (= 直接依存、 py-key-value-aio[filetree,keyring,memory]>=0.4.4)
+  'python-jsonref'              # [nekono] PR #68 (= jsonref>=1.1.0)
+  'python-cyclopts'             # [nekono] PR #79 (= cyclopts>=4.0.0)
+  'python-py-key-value-aio'     # [nekono] PR #80 (= py-key-value-aio[filetree,keyring,memory]>=0.4.4)
   'python-opentelemetry-api'    # Arch 公式 (= opentelemetry-api>=1.20.0)
   'python-packaging'            # Arch 公式 (= packaging>=24.0)
   'python-platformdirs'         # Arch 公式 (= platformdirs>=4.0.0)
@@ -58,6 +58,7 @@ depends=(
   'python-websockets'           # Arch 公式 (= websockets>=15.0.1)
   'python-watchfiles'           # Arch 公式 (= watchfiles>=1.0.0)
   'python-griffelib'            # Arch 公式 (= griffelib>=2.0.0)
+  'python-multipart'            # Arch 公式 (= fastmcp-slim 3.3.x [server] extra 新規 dep)
 )
 makedepends=(
   'python-setuptools'
@@ -68,25 +69,32 @@ makedepends=(
   'python-uv-dynamic-versioning' # [nekono] PR #59
 )
 
-source=("https://files.pythonhosted.org/packages/source/${_pypi_package::1}/${_pypi_package//-/_}/${_pypi_package//-/_}-${pkgver}.tar.gz")
-sha256sums=('083ecb75b44a4169e7fc0f632f94b781bdb0ff877c6b35b9877cbb566fd4d4d1')
+source=(
+    # fastmcp-slim: 実コード (3.3.0 以降の分離 pkg)
+    "https://files.pythonhosted.org/packages/source/${_slim_pkg::1}/${_slim_pkg//-/_}/${_slim_pkg//-/_}-${pkgver}.tar.gz"
+    # fastmcp meta-pkg sdist: LICENSE 取得のみ (slim sdist に含まれないため)
+    "https://files.pythonhosted.org/packages/source/${_meta_pkg::1}/${_meta_pkg}/${_meta_pkg}-${pkgver}.tar.gz"
+)
+sha256sums=(
+    '0957835fc59452e143ab2f4b7836d2d2df9b2d9958408edc79ba8b56232b2a88'  # fastmcp_slim-3.3.1.tar.gz
+    '979362ea557de42a5f40342563c7e4b236bcc8e7cd192715f50030695d1a71cd'  # fastmcp-3.3.1.tar.gz (meta, LICENSE用)
+)
 
 
 build() {
-    cd "${srcdir}/${_pypi_package//-/_}-${pkgver}/"
+    cd "${srcdir}/fastmcp_slim-${pkgver}/"
 
     python -m build --wheel --no-isolation
 }
 
 package() {
-    cd "${srcdir}/${_pypi_package//-/_}-${pkgver}/"
+    cd "${srcdir}/fastmcp_slim-${pkgver}/"
 
     python -m installer --destdir="$pkgdir" dist/*.whl
 
-    install -Dm644 "LICENSE" "${pkgdir}/usr/share/licenses/${pkgname}/LICENSE"
+    # LICENSE は slim sdist に含まれないため meta-package sdist から取得
+    install -Dm644 "${srcdir}/${_meta_pkg}-${pkgver}/LICENSE" "${pkgdir}/usr/share/licenses/${pkgname}/LICENSE"
 
     install -Dm644 "README.md" "${pkgdir}/usr/share/doc/${pkgname}/README.md"
-    install -Dm644 "AGENTS.md" "${pkgdir}/usr/share/doc/${pkgname}/AGENTS.md"
-    install -Dm644 "SECURITY.md" "${pkgdir}/usr/share/doc/${pkgname}/SECURITY.md"
-    install -Dm644 "CODE_OF_CONDUCT.md" "${pkgdir}/usr/share/doc/${pkgname}/CODE_OF_CONDUCT.md"
+    # AGENTS.md / SECURITY.md / CODE_OF_CONDUCT.md は slim sdist に含まれないため省略
 }

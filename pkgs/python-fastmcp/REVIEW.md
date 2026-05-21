@@ -2,12 +2,9 @@
 
 ## 状態
 
-**review 済み、 approve** (2026-05-20、 初回 add)
+**review 済み、 approve** (最新: 2026-05-21 / 3.3.1)
 
-AUR の `python-fastmcp` PKGBUILD (pkgver=3.2.4, pkgrel=1) を fork。 純 fork
-(= 機能変化なし、 改変は Maintainer 行 + nekono 説明コメントのみ)。
-AUR 元 PKGBUILD は check() / checkdepends / optdepends が空で minimal な
-ため、 [nekono] convention の削除作業は不要。
+AUR の `python-fastmcp` PKGBUILD を fork (+ 3.3.x の package split 対応)。
 
 ## 用途
 
@@ -82,4 +79,5 @@ upstream で新 release (= v3.2.5 等) が出たら:
 | 日付 | release | review した PKGBUILD repo SHA | upstream tag commit | findings |
 |---|---|---|---|---|
 | 2026-05-20 | 3.2.4 | `a5d709ad36d834b5e5a42d30eae67c37cd0d821f` | `7d7607473d7713d9937cbbbe0bfc635976c511d3` | 初回 add、 純 fork (= Maintainer 行のみ改変)。 fastmcp chain 頂点 |
+| 2026-05-21 | 3.3.1 | (this PR) | `PrefectHQ/fastmcp v3.3.1` | needs-attention: 3.3.0 で fastmcp PyPI が空 meta-pkg に分離。source を fastmcp-slim sdist に切替 + meta sdist (LICENSE 取得用) を追加 source。url を PrefectHQ/fastmcp に更新。python-multipart を depends に追加 (= [server] extra 新規 dep)。OAuth proxy security fix あり。Closes #76 |
 | 2026-05-20 | 3.2.4 (pkgrel +1 → 2) | `7196acd19e029061f28f4c2dfd6bab4fc7af121b` | (同上) | dep audit で漏れていた 10 個を depends に追加 (= jsonref / cyclopts / py-key-value-aio [nekono] + opentelemetry-api / packaging / platformdirs / yaml / websockets / watchfiles / griffelib Arch 公式)。 ayaka 上の ModuleNotFoundError 'jsonref' 事案が契機 |
