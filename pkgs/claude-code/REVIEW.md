@@ -2,7 +2,7 @@
 
 ## 状態
 
-**review 済み、approve** (最新: 2026-05-21 / 2.1.145)
+**review 済み、approve** (最新: 2026-05-21 / 2.1.146)
 
 AUR の `claude-code` PKGBUILD を fork。改変なし。各 release の review 履歴は
 本ファイル末尾の「更新履歴」 section 参照。
@@ -77,6 +77,13 @@ upstream の新 release (2.1.143 等) が出たら:
    1 行追記
 
 ## 更新履歴
+
+- **2026-05-21 / 2.1.146** — approve。upstream tag commit: Issue #92 調査済み (release author `ashwin-ant`)。
+  バグ修正リリース (`/simplify` → `/code-review` リネーム、MCP paginating 修正、GNOME Terminal paste 修正 等)。
+  セキュリティ修正なし。sha256 は Issue #92 の供給値 (upstream `SHASUMS256.txt` cross-check 済み):
+  - x86_64: `825d5301380f1f5f466c5268de25a062927be658938fc1d630cfa02c521b8185`
+  - aarch64: `af25334c7a2632a531b34e3f4c0d69763b997149d31d5f0d748e44813758806f`
+  PKGBUILD 改変は `pkgver` + 2 sha256 の 3 値のみ。Closes #92。
 
 - **2026-05-21 / 2.1.145** — approve。upstream tag commit: Issue #72 調査済み。
   **セキュリティ修正** (パーミッションプロンプトバイパス脆弱性を修正)。
