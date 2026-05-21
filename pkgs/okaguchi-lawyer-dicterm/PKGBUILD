@@ -1,0 +1,65 @@
+# Maintainer: Nekono Nana KAKKO KARI <3267314+nananek@users.noreply.github.com>
+#
+# 自家 PKGBUILD (AUR 不在)。
+# upstream: https://togilab.com/dicterm/
+# 岡口裁判官配布の法律用語辞書を現代 IME 向けにリメイクしたもの (Ryosuke Togi / Ease Up Ltd.)。
+# arch=any。 辞書 TSV + Python import helper スクリプトを同梱。
+#
+# genshin-dict と同じ protobuf 直接操作パターン:
+#   1. user_dictionary_storage.proto を protoc --python_out でビルド時に compile
+#   2. /usr/lib/okaguchi-lawyer-dicterm/user_dictionary_storage_pb2.py として install
+#   3. okaguchi-lawyer-mozc-import が sys.path 経由で import し DB を read/write
+#
+# 辞書 TSV encoding: Shift-JIS (cp932)、BOM なし、Microsoft IME Dictionary Tool 98 形式。
+# コメント行は "!" で始まる。 POS 種別は "さ変名詞" のみ (→ Mozc PosType enum 10)。
+
+pkgname=okaguchi-lawyer-dicterm
+pkgver=20201122
+pkgrel=1
+pkgdesc='Legal terms dictionary for Mozc IME (Okaguchi, Microsoft IME format, 1510 entries)'
+arch=('any')
+url='https://togilab.com/dicterm/'
+license=('LicenseRef-togilab-proprietary')
+depends=(
+    python
+    python-protobuf  # okaguchi-lawyer-mozc-import の runtime 依存
+)
+makedepends=(
+    protobuf  # protoc: user_dictionary_storage.proto → pb2.py のビルド時 compile
+)
+optdepends=('fcitx5-mozc: Mozc IME (okaguchi-lawyer-mozc-import の操作対象)')
+install=okaguchi-lawyer-dicterm.install
+source=(
+    "okaguchi-lawyer-dicterm.txt::https://togilab.com/download/dictermfile/?wpdmdl=150"
+    "okaguchi-lawyer-mozc-import"
+    "user_dictionary_storage.proto"
+)
+sha256sums=(
+    '1ddd61bdd62f1bc6b229efb2c957f47216872cac69e1660b08b109d62fcf4eef'
+    'cf0506c0400a0f7d8f48562e6067e1ea988b5e6629bb2906305356c694162c70'
+    'b38529be56a93c215d58b931d367a822e26d88c70949e4fd870d4de4521fb373'
+)
+
+build() {
+    # user_dictionary_storage.proto → user_dictionary_storage_pb2.py
+    protoc --python_out="${srcdir}" \
+           --proto_path="${srcdir}" \
+           "${srcdir}/user_dictionary_storage.proto"
+}
+
+package() {
+    # 辞書 TSV (Shift-JIS) を install
+    install -Dm644 \
+        "${srcdir}/okaguchi-lawyer-dicterm.txt" \
+        "${pkgdir}/usr/share/okaguchi-lawyer-dicterm/okaguchi-lawyer-dicterm.txt"
+
+    # import helper (Python script)
+    install -Dm755 \
+        "${srcdir}/okaguchi-lawyer-mozc-import" \
+        "${pkgdir}/usr/bin/okaguchi-lawyer-mozc-import"
+
+    # protoc 生成の protobuf Python bindings
+    install -Dm644 \
+        "${srcdir}/user_dictionary_storage_pb2.py" \
+        "${pkgdir}/usr/lib/okaguchi-lawyer-dicterm/user_dictionary_storage_pb2.py"
+}

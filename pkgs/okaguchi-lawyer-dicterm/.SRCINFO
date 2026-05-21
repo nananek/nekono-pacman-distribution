@@ -1,0 +1,20 @@
+pkgbase = okaguchi-lawyer-dicterm
+	pkgdesc = Legal terms dictionary for Mozc IME (Okaguchi, Microsoft IME format, 1510 entries)
+	pkgver = 20201122
+	pkgrel = 1
+	url = https://togilab.com/dicterm/
+	install = okaguchi-lawyer-dicterm.install
+	arch = any
+	license = LicenseRef-togilab-proprietary
+	depends = python
+	depends = python-protobuf
+	makedepends = protobuf
+	optdepends = fcitx5-mozc: Mozc IME (okaguchi-lawyer-mozc-import の操作対象)
+	source = okaguchi-lawyer-dicterm.txt::https://togilab.com/download/dictermfile/?wpdmdl=150
+	source = okaguchi-lawyer-mozc-import
+	source = user_dictionary_storage.proto
+	sha256sums = 1ddd61bdd62f1bc6b229efb2c957f47216872cac69e1660b08b109d62fcf4eef
+	sha256sums = cf0506c0400a0f7d8f48562e6067e1ea988b5e6629bb2906305356c694162c70
+	sha256sums = b38529be56a93c215d58b931d367a822e26d88c70949e4fd870d4de4521fb373
+
+pkgname = okaguchi-lawyer-dicterm

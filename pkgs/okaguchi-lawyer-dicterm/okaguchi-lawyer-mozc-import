@@ -1,0 +1,146 @@
+#!/usr/bin/env python3
+"""
+okaguchi-lawyer-mozc-import: Import okaguchi-lawyer-dicterm into Mozc user dictionary.
+Idempotent per version: re-imports automatically when the package is upgraded.
+Run as the desktop user (not root).
+
+Directly writes ~/.config/mozc/user_dictionary.db (protobuf binary).
+Stops mozc_server if running to avoid file lock conflicts; it restarts
+automatically when fcitx5 next needs it.
+"""
+
+import os
+import shutil
+import subprocess
+import sys
+import time
+from pathlib import Path
+
+sys.path.insert(0, '/usr/lib/okaguchi-lawyer-dicterm')
+
+DICT_FILE = Path('/usr/share/okaguchi-lawyer-dicterm/okaguchi-lawyer-dicterm.txt')
+DICT_NAME = 'okaguchi-lawyer'
+
+# Microsoft IME Dictionary Tool 98 POS label → Mozc PosType enum value
+_POS_MAP = {
+    'さ変名詞': 10,  # 名詞サ変 (legal terms are typically suru-verb nouns)
+}
+
+
+def _pkgver() -> str:
+    r = subprocess.run(['pacman', '-Q', 'okaguchi-lawyer-dicterm'],
+                       capture_output=True, text=True)
+    if r.returncode != 0:
+        print('okaguchi-lawyer-dicterm: package not installed, skipping', file=sys.stderr)
+        sys.exit(0)
+    return r.stdout.split()[1]  # "okaguchi-lawyer-dicterm 20201122-1" → "20201122-1"
+
+
+def _mozc_data_dir() -> Path:
+    xdg = os.environ.get('XDG_DATA_HOME', str(Path.home() / '.local/share'))
+    return Path(xdg) / 'mozc'
+
+
+def _mozc_db_dir() -> Path:
+    home = Path.home()
+    old = home / '.mozc'
+    if old.is_dir():
+        return old
+    xdg = os.environ.get('XDG_CONFIG_HOME')
+    return Path(xdg) / 'mozc' if xdg else home / '.config/mozc'
+
+
+def _parse_tsv():
+    raw = DICT_FILE.read_bytes()
+    text = raw.decode('cp932')  # Microsoft IME format: Shift-JIS, no BOM
+    entries = []
+    for line in text.splitlines():
+        line = line.strip()
+        if not line or line.startswith('!'):  # ! = comment in MS-IME format
+            continue
+        cols = line.split('\t')
+        if len(cols) < 2:
+            continue
+        reading, word = cols[0].strip(), cols[1].strip()
+        pos_label = cols[2].strip() if len(cols) > 2 else 'さ変名詞'
+        entries.append((reading, word, _POS_MAP.get(pos_label, 1)))
+    return entries
+
+
+def _stop_mozc_server() -> bool:
+    r = subprocess.run(['pgrep', '-x', 'mozc_server'], capture_output=True)
+    if r.returncode != 0:
+        return False
+    subprocess.run(['pkill', '-x', 'mozc_server'], check=False)
+    time.sleep(0.5)
+    return True
+
+
+def main() -> int:
+    ver = _pkgver()
+    data_dir = _mozc_data_dir()
+    flag = data_dir / f'.okaguchi-lawyer-dicterm-{ver}-imported'
+
+    if flag.exists():
+        print(f'okaguchi-lawyer-dicterm: {ver} already imported')
+        return 0
+
+    try:
+        import user_dictionary_storage_pb2 as pb2
+    except ImportError as exc:
+        print(f'okaguchi-lawyer-dicterm: ERROR: {exc}', file=sys.stderr)
+        return 1
+
+    print(f'okaguchi-lawyer-dicterm: parsing TSV for {ver} ...')
+    tsv = _parse_tsv()
+    print(f'okaguchi-lawyer-dicterm: {len(tsv)} entries loaded')
+
+    db_path = _mozc_db_dir() / 'user_dictionary.db'
+    stopped = _stop_mozc_server()
+
+    try:
+        storage = pb2.UserDictionaryStorage()
+        if db_path.exists():
+            storage.ParseFromString(db_path.read_bytes())
+            print(f'okaguchi-lawyer-dicterm: loaded existing DB '
+                  f'({len(storage.dictionaries)} dicts) from {db_path}')
+        else:
+            storage.version = 1
+            db_path.parent.mkdir(parents=True, exist_ok=True)
+            print(f'okaguchi-lawyer-dicterm: creating new DB at {db_path}')
+
+        gd = next((d for d in storage.dictionaries if d.name == DICT_NAME), None)
+        if gd is None:
+            gd = storage.dictionaries.add()
+            gd.id = int(time.time() * 1_000_000) & 0xFFFFFFFFFFFFFFFF
+            gd.name = DICT_NAME
+
+        del gd.entries[:]
+        for key, value, pos in tsv:
+            e = gd.entries.add()
+            e.key = key
+            e.value = value
+            e.pos = pos
+
+        tmp = db_path.with_suffix('.db.tmp')
+        tmp.write_bytes(storage.SerializeToString())
+        shutil.move(str(tmp), str(db_path))
+        print(f'okaguchi-lawyer-dicterm: written {len(tsv)} entries to {db_path}')
+
+    finally:
+        if stopped:
+            pass  # mozc_server restarts on demand
+
+    # flag 書き込み + 旧バージョンの flag を cleanup
+    data_dir.mkdir(parents=True, exist_ok=True)
+    flag.touch()
+    for old in data_dir.glob('.okaguchi-lawyer-dicterm-*-imported'):
+        if old != flag:
+            old.unlink(missing_ok=True)
+
+    print(f'okaguchi-lawyer-dicterm: import complete ({ver})')
+    return 0
+
+
+if __name__ == '__main__':
+    sys.exit(main())
