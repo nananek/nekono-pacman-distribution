@@ -6,7 +6,7 @@
 # 自家 PKGBUILD として投入する。 詳細は REVIEW.md 参照。
 
 pkgname=python-jsonschema-path
-pkgver=0.4.6
+pkgver=0.5.0
 pkgrel=1
 pkgdesc="JSONSchema Spec with object-oriented paths"
 arch=('any')
@@ -14,6 +14,7 @@ url="https://github.com/p1c2u/jsonschema-path"
 license=('Apache-2.0')
 depends=(
     'python'
+    'python-attrs'
     'python-yaml'
     'python-pathable'
     'python-referencing'
@@ -27,7 +28,7 @@ makedepends=(
 
 _pypiname=jsonschema_path
 source=("https://files.pythonhosted.org/packages/source/${_pypiname:0:1}/$_pypiname/$_pypiname-$pkgver.tar.gz")
-sha256sums=('c89eb635f4d497c9ac328eeff359c489755838806a7d033510a692e9576f5c4b')
+sha256sums=('493b156ba895c97602655b620a8456caa2ce08c1aa389f5a7addec065e6e855c')
 
 build() {
     cd "$_pypiname-$pkgver"

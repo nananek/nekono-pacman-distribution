@@ -2,9 +2,9 @@
 
 ## 状態
 
-**review 済み、 approve** (2026-05-19、 初回 add)
+**review 済み、 approve** (最新: 2026-05-21 / 0.5.0)
 
-PyPI sdist (`jsonschema_path-0.4.6.tar.gz`) を直接 vendor する自家 PKGBUILD。
+PyPI sdist (`jsonschema_path-0.5.0.tar.gz`) を直接 vendor する自家 PKGBUILD。
 AUR にも該当 pkg が無い (= 2026-05-19 時点で AUR search hit 0)。
 
 ## 用途
@@ -43,9 +43,9 @@ pacman 経由 install できるようにする取り組みの一環。
 - [x] `package()`: `python -m installer --destdir` のみ
   - wheel 内 dist-info 経由でファイル配置、 shell injection / exec / curl / wget なし
   - LICENSE は sdist に含まれる前提で `install -Dm644` (= 不在時 skip)
-- [x] `depends`: python / python-yaml / python-pathable / python-referencing
+- [x] `depends`: python / python-attrs / python-yaml / python-pathable / python-referencing
   - すべて Arch 公式 extra に存在 (= `.deps.lock` 参照)
-  - upstream `pyproject.toml` の runtime deps と一致 (= PyYAML>=5.1 / pathable<0.6.0,>=0.5.0 / referencing<0.38.0)
+  - upstream `pyproject.toml` の runtime deps と一致 (0.5.0: attrs>=22.2.0 追加 / pathable>=0.6.0,<0.7.0 / referencing / PyYAML>=5.1)
   - `requests` は upstream で extras 扱い (= `[requests]`)、 我々の用途 (= mcp/fastmcp chain) では不要
 - [x] `makedepends`: python-build / python-installer / python-wheel / python-poetry-core — 標準的な poetry-core build pattern
 - [x] `secrets` 混入なし
@@ -82,4 +82,5 @@ upstream で新 release (= 0.4.7 等) が出たら:
 
 | 日付 | release | review した PKGBUILD repo SHA | upstream tag commit | findings |
 |---|---|---|---|---|
+| 2026-05-21 | 0.5.0 | (本 PR commit SHA) | upstream tag `0.5.0` | upstream bump、python-attrs 追加 (新規 runtime dep)、pathable constraint 0.5→0.6 系に更新、PR #96 close (pkgrel bump PR を pkgver bump で置換) |
 | 2026-05-19 | 0.4.6 | `2f527cd6e13a81deea7074384ed22a0dcc1464b6` | `a3de101627714f15d8d0699950f35d1f811a90a4` | 初回 add、 PyPI sdist 直接 vendor (= AUR 不在のため自家 PKGBUILD 化) |
