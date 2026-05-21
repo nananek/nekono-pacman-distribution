@@ -46,8 +46,14 @@ jobs:
         id: skip-check
         env:
           GH_TOKEN: ${{ github.token }}
+          # PR 番号は github context から直接取得。gh pr list --head は
+          # detached HEAD 状態で git にブランチを問い合わせて失敗するため使わない。
+          PR_NUMBER: ${{ github.event.pull_request.number || github.event.issue.number }}
         run: |
-          PR_NUMBER=$(gh pr list --head "$GITHUB_REF_NAME" --json number --jq '.[0].number')
+          if [[ -z "$PR_NUMBER" ]]; then
+            echo "result=review" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
           commit_ts=$(gh api "repos/$GITHUB_REPOSITORY/git/commits/$GITHUB_SHA" \
             --jq '.committer.date')
           last_verdict_ts=$(gh pr view "$PR_NUMBER" --json comments \
@@ -116,7 +122,7 @@ jobs:
 
             1. **冪等性 check (必須)**: 現在の HEAD commit に対する verdict が既にないか確認
                ```
-               PR_NUMBER=$(gh pr list --head "$GITHUB_REF_NAME" --json number --jq '.[0].number')
+               PR_NUMBER=${{ github.event.pull_request.number || github.event.issue.number }}
                commit_ts=$(gh api "repos/$GITHUB_REPOSITORY/git/commits/$GITHUB_SHA" --jq '.committer.date')
                last_verdict_ts=$(gh pr view "$PR_NUMBER" --json comments \
                  --jq '[.comments[] | select(.author.login == "claude") | select(.body | contains("**verdict:"))] | sort_by(.createdAt) | last | .createdAt // ""')
