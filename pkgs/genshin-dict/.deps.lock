@@ -1,0 +1,6 @@
+# Snapshot of Arch official repo versions for depends + makedepends of genshin-dict.
+# Auto-generated and updated by .github/workflows/dep-version-pr.yml.
+# Source: pkgs/genshin-dict/.SRCINFO (depends + makedepends entries).
+# Format: 1 line per package: <name>=<full-version>
+
+# (no Arch official depends or makedepends — data-only package)

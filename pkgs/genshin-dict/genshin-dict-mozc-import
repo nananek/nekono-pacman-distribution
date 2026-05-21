@@ -1,0 +1,35 @@
+#!/usr/bin/env bash
+# genshin-dict-mozc-import: Import genshin-dict into Mozc user dictionary.
+# Idempotent: skips if flag file exists.
+# Run as the desktop user (not root).
+
+set -euo pipefail
+
+DICT_FILE="/usr/share/genshin-dict/genshin-dict.txt"
+DICT_NAME="genshin-impact"
+FLAG_FILE="${XDG_DATA_HOME:-${HOME}/.local/share}/mozc/.genshin-dict-imported"
+TOOL="/usr/lib/mozc/mozc_user_dictionary_tool"
+
+if [[ -f "${FLAG_FILE}" ]]; then
+    echo "genshin-dict: already imported (remove ${FLAG_FILE} to reimport)"
+    exit 0
+fi
+
+if [[ ! -x "${TOOL}" ]]; then
+    echo "genshin-dict: ${TOOL} not found" >&2
+    echo "  fcitx5-mozc does not ship mozc_user_dictionary_tool." >&2
+    echo "  Manual import: open Mozc Dictionary Tool (fcitx5-configtool)" >&2
+    echo "    → Mozc → User Dictionary → Import from file → ${DICT_FILE}" >&2
+    exit 1
+fi
+
+echo "genshin-dict: importing into Mozc dictionary '${DICT_NAME}' ..."
+"${TOOL}" \
+    --mode=import_data \
+    --dictionary_name="${DICT_NAME}" \
+    --input="${DICT_FILE}" \
+    --strategy=merge
+
+mkdir -p "$(dirname "${FLAG_FILE}")"
+touch "${FLAG_FILE}"
+echo "genshin-dict: import complete. Flag: ${FLAG_FILE}"

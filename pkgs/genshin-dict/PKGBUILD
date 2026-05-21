@@ -1,0 +1,46 @@
+# Maintainer: Nekono Nana KAKKO KARI <3267314+nananek@users.noreply.github.com>
+#
+# 自家 PKGBUILD (AUR 不在)。 upstream: https://github.com/kotofurumiya/genshin-dict
+# arch=any、 data-only (tarball 展開 + ファイルコピーのみ、 build() 不要)。
+#
+# 同梱 genshin-dict-mozc-import:
+#   /usr/lib/mozc/mozc_user_dictionary_tool が存在すれば自動 import、
+#   fcitx5-mozc は同 tool を含まないため exit 1 + 手動案内に fallback する。
+#   Ansible task は failed_when: false で呼ぶ想定 (= 手動 import でも playbook は通る)。
+#
+# 辞書ファイルの encoding: upstream 配布の 原神辞書_Windows.txt は UTF-16 LE + BOM。
+#   /usr/share/genshin-dict/genshin-dict.txt にそのまま配置 (mozc_user_dictionary_tool
+#   が UTF-16 LE を受け付けるかは tool 入手後に要確認)。
+
+pkgname=genshin-dict
+pkgver=6.3.1
+pkgrel=1
+pkgdesc='Genshin Impact dictionary for Mozc IME (Windows IME format TSV + import helper)'
+arch=('any')
+url='https://github.com/kotofurumiya/genshin-dict'
+license=('MIT')
+optdepends=('fcitx5-mozc: for genshin-dict-mozc-import (GUI import available without it)')
+install=genshin-dict.install
+source=(
+    "${pkgname}-${pkgver}.tar.gz::${url}/archive/refs/tags/v${pkgver}.tar.gz"
+    "genshin-dict-mozc-import"
+)
+sha256sums=(
+    '3759b9e5d575c17ac287ee079cfcfaf79e69805994f7c6eb35e4d89b6a7e79f0'
+    '6e008e67fe20c5c53aec30fa8a06915e659a8d2c4ab8fee4b5997784d79ad731'
+)
+
+package() {
+    # 辞書 TSV (UTF-16 LE + BOM) を ASCII パスに rename して install
+    install -Dm644 \
+        "${srcdir}/${pkgname}-${pkgver}/genshin-dictionary/原神辞書_Windows.txt" \
+        "${pkgdir}/usr/share/genshin-dict/genshin-dict.txt"
+
+    install -Dm644 \
+        "${srcdir}/${pkgname}-${pkgver}/LICENSE" \
+        "${pkgdir}/usr/share/licenses/${pkgname}/LICENSE"
+
+    install -Dm755 \
+        "${srcdir}/genshin-dict-mozc-import" \
+        "${pkgdir}/usr/bin/genshin-dict-mozc-import"
+}

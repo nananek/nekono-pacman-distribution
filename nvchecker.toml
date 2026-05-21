@@ -46,6 +46,14 @@ github = "moby/moby"
 use_latest_release = true
 prefix = "docker-v"
 
+[genshin-dict]
+# 自家 package (AUR 不在)。 Genshin Impact 固有名詞 Mozc 辞書。
+# release tag は "vX.Y.Z" 形式。
+source = "github"
+github = "kotofurumiya/genshin-dict"
+use_latest_release = true
+prefix = "v"
+
 [localsend-bin]
 # release tag "vX.Y.Z" 形式。
 source = "github"
