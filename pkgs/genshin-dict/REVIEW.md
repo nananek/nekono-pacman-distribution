@@ -104,4 +104,5 @@ upstream で新 release が出たら:
 | 日付 | release | review した PKGBUILD repo SHA | upstream tag commit | findings |
 |---|---|---|---|---|
 | 2026-05-21 | 6.3.1 | 4916106 (49161063616031108f3e175baaf8c3890ada8189) | v6.3.1 (6bffdf3da2d386117f941df2f483d48aafb6ace3) | 初回 add (pkgrel=1)。mozc_user_dictionary_tool 非同梱確認済み |
-| 2026-05-21 | 6.3.1 | (本 commit 後に確定) | v6.3.1 (6bffdf3da2d386117f941df2f483d48aafb6ace3) | pkgrel=2: protobuf 直接操作に移行。user_dictionary_storage.proto vendor + genshin-dict-mozc-import を Python 実装に書き替え |
+| 2026-05-21 | 6.3.1 | 96374fc | v6.3.1 (6bffdf3da2d386117f941df2f483d48aafb6ace3) | pkgrel=2: protobuf 直接操作に移行。user_dictionary_storage.proto vendor + genshin-dict-mozc-import を Python 実装に書き替え |
+| 2026-05-21 | 6.3.1 | (本 commit 後に確定) | v6.3.1 (6bffdf3da2d386117f941df2f483d48aafb6ace3) | pkgrel=3: バージョン stamp 付き flag file に変更 (`.genshin-dict-{pkgver}-imported`)。upgrade 時に自動再 import、古い flag を cleanup |
