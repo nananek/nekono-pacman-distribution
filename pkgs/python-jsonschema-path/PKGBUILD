@@ -7,7 +7,7 @@
 
 pkgname=python-jsonschema-path
 pkgver=0.4.6
-pkgrel=1
+pkgrel=2
 pkgdesc="JSONSchema Spec with object-oriented paths"
 arch=('any')
 url="https://github.com/p1c2u/jsonschema-path"
