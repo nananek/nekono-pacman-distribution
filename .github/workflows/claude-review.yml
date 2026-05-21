@@ -37,7 +37,33 @@ jobs:
         with:
           fetch-depth: 0
 
+      # 現在の HEAD commit に対する verdict comment が既にあれば Claude を起動しない。
+      # 旧実装は「verdict comment が 1 件でもあれば skip」だったため、
+      # request-changes → 修正 push のたびに手動 comment 削除が必要だった。
+      # 新実装は「verdict comment のタイムスタンプ > HEAD commit のタイムスタンプ」
+      # を条件にする (= 同一 commit に対する重複投稿のみ防止)。
+      - name: Skip if already reviewed for this commit
+        id: skip-check
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          PR_NUMBER=$(gh pr list --head "$GITHUB_REF_NAME" --json number --jq '.[0].number')
+          commit_ts=$(gh api "repos/$GITHUB_REPOSITORY/git/commits/$GITHUB_SHA" \
+            --jq '.committer.date')
+          last_verdict_ts=$(gh pr view "$PR_NUMBER" --json comments \
+            --jq '[.comments[] | select(.author.login == "claude") |
+                   select(.body | contains("**verdict:"))]
+                  | sort_by(.createdAt) | last | .createdAt // ""')
+          echo "commit_ts=$commit_ts  last_verdict_ts=$last_verdict_ts"
+          if [[ -n "$last_verdict_ts" && "$last_verdict_ts" > "$commit_ts" ]]; then
+            echo "result=skip" >> "$GITHUB_OUTPUT"
+            echo "[skip] verdict already posted for $GITHUB_SHA (verdict=$last_verdict_ts > commit=$commit_ts)"
+          else
+            echo "result=review" >> "$GITHUB_OUTPUT"
+          fi
+
       - uses: anthropics/claude-code-action@v1
+        if: steps.skip-check.outputs.result != 'skip'
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
           # `gh pr comment` を allow して Claude が直接 PR conversation に
@@ -88,17 +114,19 @@ jobs:
 
             手順:
 
-            1. **冪等性 check (必須)**: 投稿前に既存 comment を見る
+            1. **冪等性 check (必須)**: 現在の HEAD commit に対する verdict が既にないか確認
                ```
                PR_NUMBER=$(gh pr list --head "$GITHUB_REF_NAME" --json number --jq '.[0].number')
-               existing=$(gh pr view "$PR_NUMBER" --json comments --jq '[.comments[] | select(.author.login == "claude") | select(.body | startswith("verdict:") or contains("**verdict:"))] | length')
-               if [ "$existing" -gt 0 ]; then
-                 echo "[skip] already posted $existing verdict comment(s) on PR #$PR_NUMBER"
+               commit_ts=$(gh api "repos/$GITHUB_REPOSITORY/git/commits/$GITHUB_SHA" --jq '.committer.date')
+               last_verdict_ts=$(gh pr view "$PR_NUMBER" --json comments \
+                 --jq '[.comments[] | select(.author.login == "claude") | select(.body | contains("**verdict:"))] | sort_by(.createdAt) | last | .createdAt // ""')
+               if [[ -n "$last_verdict_ts" && "$last_verdict_ts" > "$commit_ts" ]]; then
+                 echo "[skip] verdict already posted for $GITHUB_SHA"
                  exit 0
                fi
                ```
-               既に verdict comment が 1 件以上ある場合は **何もせず session 終了**。
-               これで rerun / re-trigger 時の重複投稿を防ぐ。
+               現在の HEAD commit より後に verdict comment が投稿済みなら **何もせず session 終了**。
+               request-changes 後に修正 push した場合はスキップされず再 review される。
 
             2. 上記 check で 0 件なら、 review 内容を markdown でまとめる
                (= verdict 行 + 検証項目別の OK/NG 表 + 補足説明)。
