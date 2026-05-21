@@ -3,4 +3,6 @@
 # Source: pkgs/genshin-dict/.SRCINFO (depends + makedepends entries).
 # Format: 1 line per package: <name>=<full-version>
 
-# (no Arch official depends or makedepends — data-only package)
+protobuf=34.1-1
+python=3.14.5-1
+python-protobuf=34.1-1

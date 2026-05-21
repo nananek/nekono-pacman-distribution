@@ -4,8 +4,7 @@ post_install() {
     echo "    Dictionary file: /usr/share/genshin-dict/genshin-dict.txt"
     echo "    To import into Mozc, run as your desktop user:"
     echo "      genshin-dict-mozc-import"
-    echo "    Note: requires mozc_user_dictionary_tool (not in fcitx5-mozc)."
-    echo "    If not available, import manually via Mozc Dictionary Tool (GUI)."
+    echo "    (Ansible will run this automatically on next site.yml run.)"
     echo ""
 }
 

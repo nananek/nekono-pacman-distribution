@@ -1,35 +1,146 @@
-#!/usr/bin/env bash
-# genshin-dict-mozc-import: Import genshin-dict into Mozc user dictionary.
-# Idempotent: skips if flag file exists.
-# Run as the desktop user (not root).
+#!/usr/bin/env python3
+"""
+genshin-dict-mozc-import: Import genshin-dict into Mozc user dictionary.
+Idempotent: skips if flag file exists.
+Run as the desktop user (not root).
 
-set -euo pipefail
+Directly writes ~/.config/mozc/user_dictionary.db (protobuf binary).
+Stops mozc_server if running to avoid file lock conflicts; it restarts
+automatically when fcitx5 next needs it.
+"""
 
-DICT_FILE="/usr/share/genshin-dict/genshin-dict.txt"
-DICT_NAME="genshin-impact"
-FLAG_FILE="${XDG_DATA_HOME:-${HOME}/.local/share}/mozc/.genshin-dict-imported"
-TOOL="/usr/lib/mozc/mozc_user_dictionary_tool"
+import os
+import shutil
+import subprocess
+import sys
+import time
+from pathlib import Path
 
-if [[ -f "${FLAG_FILE}" ]]; then
-    echo "genshin-dict: already imported (remove ${FLAG_FILE} to reimport)"
-    exit 0
-fi
+sys.path.insert(0, '/usr/lib/genshin-dict')
 
-if [[ ! -x "${TOOL}" ]]; then
-    echo "genshin-dict: ${TOOL} not found" >&2
-    echo "  fcitx5-mozc does not ship mozc_user_dictionary_tool." >&2
-    echo "  Manual import: open Mozc Dictionary Tool (fcitx5-configtool)" >&2
-    echo "    → Mozc → User Dictionary → Import from file → ${DICT_FILE}" >&2
-    exit 1
-fi
+DICT_FILE = Path('/usr/share/genshin-dict/genshin-dict.txt')
+DICT_NAME = 'genshin-impact'
 
-echo "genshin-dict: importing into Mozc dictionary '${DICT_NAME}' ..."
-"${TOOL}" \
-    --mode=import_data \
-    --dictionary_name="${DICT_NAME}" \
-    --input="${DICT_FILE}" \
-    --strategy=merge
+# Windows IME POS label → Mozc PosType enum value (from user_dictionary_storage.proto)
+_POS_MAP = {
+    '名詞': 1, '短縮よみ': 2, 'サジェストのみ': 3, '固有名詞': 4,
+    '人名': 5, '姓': 6, '名': 7, '組織': 8,
+    '地名': 9, '地名その他': 9,
+    '名詞サ変': 10, '名詞形動': 11, '数': 12, 'アルファベット': 13,
+    '記号': 14, '顔文字': 15, '副詞': 16, '連体詞': 17,
+    '接続詞': 18, '感動詞': 19, '接頭語': 20, '助数詞': 21,
+    '接尾一般': 22, '接尾人名': 23, '接尾地名': 24,
+    '動詞ワ行五段': 25, '動詞カ行五段': 26, '動詞サ行五段': 27,
+    '動詞タ行五段': 28, '動詞ナ行五段': 29, '動詞マ行五段': 30,
+    '動詞ラ行五段': 31, '動詞ガ行五段': 32, '動詞バ行五段': 33,
+    '動詞ハ行四段': 34, '動詞一段': 35, '動詞カ変': 36,
+    '動詞サ変': 37, '動詞ザ変': 38, '動詞ラ変': 39,
+    '形容詞': 40, '終助詞': 41, '句読点': 42, '独立語': 43,
+    '抑制単語': 44,
+}
 
-mkdir -p "$(dirname "${FLAG_FILE}")"
-touch "${FLAG_FILE}"
-echo "genshin-dict: import complete. Flag: ${FLAG_FILE}"
+
+def _mozc_dir() -> Path:
+    home = Path.home()
+    old = home / '.mozc'
+    if old.is_dir():
+        return old
+    xdg = os.environ.get('XDG_CONFIG_HOME')
+    return Path(xdg) / 'mozc' if xdg else home / '.config/mozc'
+
+
+def _flag_file() -> Path:
+    xdg = os.environ.get('XDG_DATA_HOME', str(Path.home() / '.local/share'))
+    return Path(xdg) / 'mozc' / '.genshin-dict-imported'
+
+
+def _parse_tsv():
+    raw = DICT_FILE.read_bytes()
+    text = raw.decode('utf-16')  # auto-strips BOM, handles LE/BE
+    entries = []
+    for line in text.splitlines():
+        line = line.strip()
+        if not line or line.startswith('#'):
+            continue
+        cols = line.split('\t')
+        if len(cols) < 2:
+            continue
+        reading, word = cols[0].strip(), cols[1].strip()
+        pos_label = cols[2].strip() if len(cols) > 2 else '名詞'
+        entries.append((reading, word, _POS_MAP.get(pos_label, 1)))
+    return entries
+
+
+def _stop_mozc_server() -> bool:
+    r = subprocess.run(['pgrep', '-x', 'mozc_server'], capture_output=True)
+    if r.returncode != 0:
+        return False
+    subprocess.run(['pkill', '-x', 'mozc_server'], check=False)
+    time.sleep(0.5)
+    return True
+
+
+def main() -> int:
+    flag = _flag_file()
+    if flag.exists():
+        print(f'genshin-dict: already imported (remove {flag} to reimport)')
+        return 0
+
+    try:
+        import user_dictionary_storage_pb2 as pb2
+    except ImportError as exc:
+        print(f'genshin-dict: ERROR: {exc}', file=sys.stderr)
+        print('  /usr/lib/genshin-dict/user_dictionary_storage_pb2.py が見つかりません',
+              file=sys.stderr)
+        return 1
+
+    print('genshin-dict: parsing TSV ...')
+    tsv = _parse_tsv()
+    print(f'genshin-dict: {len(tsv)} entries loaded')
+
+    db_path = _mozc_dir() / 'user_dictionary.db'
+    stopped = _stop_mozc_server()
+
+    try:
+        storage = pb2.UserDictionaryStorage()
+        if db_path.exists():
+            storage.ParseFromString(db_path.read_bytes())
+            print(f'genshin-dict: loaded existing DB '
+                  f'({len(storage.dictionaries)} dicts) from {db_path}')
+        else:
+            storage.version = 1
+            db_path.parent.mkdir(parents=True, exist_ok=True)
+            print(f'genshin-dict: creating new DB at {db_path}')
+
+        # Find or create the genshin-impact dictionary
+        gd = next((d for d in storage.dictionaries if d.name == DICT_NAME), None)
+        if gd is None:
+            gd = storage.dictionaries.add()
+            gd.id = int(time.time() * 1_000_000) & 0xFFFFFFFFFFFFFFFF
+            gd.name = DICT_NAME
+
+        del gd.entries[:]
+        for key, value, pos in tsv:
+            e = gd.entries.add()
+            e.key = key
+            e.value = value
+            e.pos = pos
+
+        tmp = db_path.with_suffix('.db.tmp')
+        tmp.write_bytes(storage.SerializeToString())
+        shutil.move(str(tmp), str(db_path))
+        print(f'genshin-dict: written {len(tsv)} entries to {db_path}')
+
+    finally:
+        if stopped:
+            # mozc_server restarts on demand; no explicit start needed
+            pass
+
+    flag.parent.mkdir(parents=True, exist_ok=True)
+    flag.touch()
+    print(f'genshin-dict: import complete. Flag: {flag}')
+    return 0
+
+
+if __name__ == '__main__':
+    sys.exit(main())
