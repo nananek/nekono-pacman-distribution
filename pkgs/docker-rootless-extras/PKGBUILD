@@ -10,7 +10,7 @@
 # とは flow が異なるため、ansible roles/docker は OS-dispatch で扱う必要。
 
 pkgname=docker-rootless-extras
-pkgver=29.5.1
+pkgver=29.5.2
 pkgrel=1
 pkgdesc="Extras to run docker as non-root."
 arch=('any')
