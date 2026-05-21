@@ -2,7 +2,7 @@
 
 ## 状態
 
-**review 済み、 approve (条件付き)** (2026-05-19)
+**review 済み、 approve (条件付き)** (最新: 2026-05-21 / 0.25.2)
 
 AUR の `voicevox-engine` PKGBUILD (pkgver=0.24.1, pkgrel=1) を fork、 CUDA
 専用 variant 化 + supply-chain 強化のためフル改修。 意図的改変多数 (後述)。
@@ -148,6 +148,7 @@ AUR の `voicevox-engine` PKGBUILD (pkgver=0.24.1, pkgrel=1) を fork、 CUDA
 
 | 日付 | release | review した PKGBUILD repo SHA | upstream tag commit | findings |
 |---|---|---|---|---|
+| 2026-05-21 | 0.25.2 | (this PR) | `f2a20b1d4d2613851daffdd1de2217a472d89c48` | needs-attention: psutil>=7.1.1 が新規 runtime dep (cpu_count HT 改善)。python-psutil を depends に直接追加。新キャラ 3 名追加で .7z.002 が 335MB→496MB に増加。breaking changes なし。sha256 は build host 実測値。Closes #78 |
 | 2026-05-19 | 0.24.1-3 (runtime fix + pkgrel bump) | (本 PR の commit SHA を merge 時に追記) | — | system Python の C extension (soxr_ext / 他) が `ImportError: CXXABI_1.3.15 not found in /usr/lib/VOICEVOX/vv-engine/libstdc++.so.6` で fail していた問題を修正。 bundle 内の `libstdc++.so.6` / `libgcc_s.so.1` / `libmvec.so.1` が LD_LIBRARY_PATH=/usr/lib/VOICEVOX/vv-engine 経由で system 版より先に resolve され、 古い ABI が system の新 C ext に互換しない問題。 package() で該当 3 lib を `rm -f` → system 版 (gcc-libs / glibc) にフォールバックさせる。 bundle 同梱の CUDA stack (libcudart 等) は system libstdc++ で問題なく動く (= libstdc++ は ABI backward compatible)。 pkgrel を 2 → 3 に bump |
 | 2026-05-19 | 0.24.1-2 (pkgrel bump) | `736073d` (PR #52 merge) | — | pkgrel を 1 → 2 に bump。 PR #43 / #46 / #48 / #51 の build fix を pkgrel 据え置きで重ねていたが、 build host (nekono-pacman0) で 0.24.1-1 が既に build + install (= restart loop 観測) されてしまっていたため、 client の pacman -Syu で新 build を拾わせるには pkgrel +1 が必要。 fix 内容自体は #51 を踏襲 |
 | 2026-05-19 | 0.24.1 (build fix) | `57f4d24` (PR #51 merge) | — | runtime ImportError 修正: `import uvicorn` で fail し systemd restart loop していた問題を解消。 Arch には extra/uvicorn (= `python-` prefix なしの命名例外) で存在するので depends に直接追加。 starlette / setuptools も `_syspymods` に追加 (= python-starlette, python-setuptools)。 当初 vendor で対応しかけたが Arch 公式 pkg 経由の方が clean (= pacman 自動更新、 サイズ減、 trust chain 短) なので方針転換 |
