@@ -1,0 +1,69 @@
+# Maintainer: Nekono Nana KAKKO KARI <3267314+nananek@users.noreply.github.com>
+#
+# 自家 PKGBUILD (AUR 不在)。 upstream: https://github.com/kotofurumiya/genshin-dict
+# arch=any。 data (TSV 辞書) + Python import helper スクリプトを同梱。
+#
+# mozc_user_dictionary_tool は fcitx5-mozc (Arch 公式) に含まれないため、
+# genshin-dict-mozc-import は protobuf で user_dictionary.db を直接操作する:
+#   1. user_dictionary_storage.proto を protoc --python_out でビルド時に compile
+#   2. /usr/lib/genshin-dict/user_dictionary_storage_pb2.py として install
+#   3. genshin-dict-mozc-import が sys.path 経由で import し DB を read/write
+# mozc_server が起動中なら pgrep/pkill で一時停止 (再起動は fcitx5 が自動で行う)。
+#
+# 辞書 TSV encoding: 原神辞書_Windows.txt は UTF-16 LE + BOM。
+#   decode('utf-16') で自動 BOM 検出、/usr/share/genshin-dict/genshin-dict.txt に配置。
+
+pkgname=genshin-dict
+pkgver=6.3.1
+pkgrel=2
+pkgdesc='Genshin Impact dictionary for Mozc IME (Windows IME format TSV + import helper)'
+arch=('any')
+url='https://github.com/kotofurumiya/genshin-dict'
+license=('MIT')
+depends=(
+    python
+    python-protobuf  # genshin-dict-mozc-import の runtime 依存
+)
+makedepends=(
+    protobuf  # protoc: user_dictionary_storage.proto → pb2.py のビルド時 compile
+)
+optdepends=('fcitx5-mozc: Mozc IME (genshin-dict-mozc-import の操作対象)')
+install=genshin-dict.install
+source=(
+    "${pkgname}-${pkgver}.tar.gz::${url}/archive/refs/tags/v${pkgver}.tar.gz"
+    "genshin-dict-mozc-import"
+    "user_dictionary_storage.proto"
+)
+sha256sums=(
+    '3759b9e5d575c17ac287ee079cfcfaf79e69805994f7c6eb35e4d89b6a7e79f0'
+    '9a513e893d2334d6ba13812b49932a317a16c4d01973d2d6e37089fe1f2d47c9'
+    'b38529be56a93c215d58b931d367a822e26d88c70949e4fd870d4de4521fb373'
+)
+
+build() {
+    # user_dictionary_storage.proto → user_dictionary_storage_pb2.py
+    protoc --python_out="${srcdir}" \
+           --proto_path="${srcdir}" \
+           "${srcdir}/user_dictionary_storage.proto"
+}
+
+package() {
+    # 辞書 TSV (UTF-16 LE + BOM) を ASCII パスに rename して install
+    install -Dm644 \
+        "${srcdir}/${pkgname}-${pkgver}/genshin-dictionary/原神辞書_Windows.txt" \
+        "${pkgdir}/usr/share/genshin-dict/genshin-dict.txt"
+
+    install -Dm644 \
+        "${srcdir}/${pkgname}-${pkgver}/LICENSE" \
+        "${pkgdir}/usr/share/licenses/${pkgname}/LICENSE"
+
+    # import helper (Python script)
+    install -Dm755 \
+        "${srcdir}/genshin-dict-mozc-import" \
+        "${pkgdir}/usr/bin/genshin-dict-mozc-import"
+
+    # protoc 生成の protobuf Python bindings
+    install -Dm644 \
+        "${srcdir}/user_dictionary_storage_pb2.py" \
+        "${pkgdir}/usr/lib/genshin-dict/user_dictionary_storage_pb2.py"
+}
