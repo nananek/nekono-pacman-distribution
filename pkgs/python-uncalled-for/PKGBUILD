@@ -9,13 +9,11 @@
 #   - bin/build-all は --check なし default 運用、 [nekono] は AUR helper
 #     前提を取らない方針
 #
-# python-fastmcp の transitive 依存。 v0.2.0 を AUR 踏襲で pin (= upstream は
-# 0.3.2 まで進んでいるが、 fastmcp 3.2.4 の要求は 0.2.0、 AUR fastmcp PKGBUILD
-# も 0.2.0 を要求するため整合)。
+# python-fastmcp の transitive 依存 (fastmcp `uncalled-for>=0.2.0` 要件を満たす)。
 
 _name=uncalled-for
 pkgname=python-$_name
-pkgver=0.2.0
+pkgver=0.3.2
 pkgrel=1
 pkgdesc="Async dependency injection for Python functions."
 arch=('any')
@@ -25,7 +23,7 @@ depends=('python')
 makedepends=('python-hatchling' 'python-hatch-vcs' 'python-build' 'python-installer' 'python-wheel')
 
 source=("https://files.pythonhosted.org/packages/source/${_name::1}/$_name/${_name//-/_}-$pkgver.tar.gz")
-sha256sums=('b4f8fdbcec328c5a113807d653e041c5094473dd4afa7c34599ace69ccb7e69f')
+sha256sums=('89f5dbcd71e2b8f47c030b1fa302e6cce2ec795d1ac565eeb6525c5fe55cb8a2')
 
 build() {
     cd "$srcdir"/${_name//-/_}-$pkgver
