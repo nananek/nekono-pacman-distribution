@@ -205,11 +205,10 @@ prefix = "v"
 
 [python-pdm-pep517]
 # python-jsonref の build-backend (pdm.pep517.api)、 AUR python-pdm-pep517
-# を fork。 upstream は release tag を切っていないため use_max_tag で
-# semver 最大 tag を取る。
-source = "github"
-github = "pdm-project/pdm-pep517"
-use_max_tag = true
+# を fork。 upstream pdm-pep517 は PyPI で 1.1.4 frozen (後継は pdm-backend)。
+# GitHub タグ監視は pdm-backend のタグ (v2.x) を誤検知するため PyPI に変更。
+source = "pypi"
+pypi = "pdm-pep517"
 
 [python-py-key-value-aio]
 # fastmcp の直接依存 (= upstream pyproject.toml の
