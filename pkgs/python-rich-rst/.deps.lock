@@ -8,5 +8,5 @@ python-docutils=1:0.22.4-1
 python-installer=1.0.0-1
 python-poetry-core=2.4.0-1
 python-rich=15.0.0-1
-python-setuptools=1:80.9.0-1
+python-setuptools=1:82.0.1-1
 python-wheel=0.47.0-1
