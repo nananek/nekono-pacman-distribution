@@ -142,11 +142,10 @@ use_latest_release = true
 [python-fastmcp]
 # fastmcp chain の頂点、 ayaka 上の MCP server runtime を支える。
 # AUR python-fastmcp を fork。 release tag は v X.Y.Z 形式 (prefix "v")。
-# NOTE: repo が jlowin/fastmcp → PrefectHQ/fastmcp に migration 済み、 redirect
-# 有効。 AUR PKGBUILD 踏襲で jlowin alias を使用、 redirect 切れたら PrefectHQ
-# に直接書き換え (= REVIEW.md「更新方針」参照)。
+# 3.3.0 以降は fastmcp-slim が実コード (fastmcp は空 meta-pkg)。
+# jlowin/fastmcp → PrefectHQ/fastmcp に migration 済み (2026-05-21 更新)。
 source = "github"
-github = "jlowin/fastmcp"
+github = "PrefectHQ/fastmcp"
 use_latest_release = true
 prefix = "v"
 
