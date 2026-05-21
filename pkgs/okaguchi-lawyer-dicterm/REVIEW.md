@@ -99,4 +99,4 @@ upstream で更新があれば:
 
 | 日付 | pkgver | review した PKGBUILD repo SHA | findings |
 |---|---|---|---|
-| 2026-05-21 | 20201122 | (本 commit 後に確定) | 初回 add (pkgrel=1)。辞書 sha256 実測確認済み |
+| 2026-05-21 | 20201122 | daac685 | 初回 add (pkgrel=1)。辞書 sha256 実測確認済み |
