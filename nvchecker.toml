@@ -54,6 +54,18 @@ github = "kotofurumiya/genshin-dict"
 use_latest_release = true
 prefix = "v"
 
+[okaguchi-lawyer-dicterm]
+# 自家 package (AUR 不在)。WordPress ブログ配布。
+# download ページの JSON-LD dateModified を YYYYMMDD に変換して pkgver と比較。
+source = "cmd"
+cmd = "python3 .github/scripts/nvchecker-scrapers/okaguchi-lawyer-dicterm.py"
+
+[debuyoko-seiyuu-dicterm]
+# 自家 package (AUR 不在)。WordPress ブログ配布。
+# ページ本文の「※N件 YYYY/M/D」形式の更新日を YYYYMMDD に変換して pkgver と比較。
+source = "cmd"
+cmd = "python3 .github/scripts/nvchecker-scrapers/debuyoko-seiyuu-dicterm.py"
+
 [localsend-bin]
 # release tag "vX.Y.Z" 形式。
 source = "github"
