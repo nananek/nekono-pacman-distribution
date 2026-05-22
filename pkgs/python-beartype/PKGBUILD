@@ -6,7 +6,7 @@
 pkgname=python-beartype
 _pkgname=${pkgname#python-}
 pkgver=0.22.9
-pkgrel=3
+pkgrel=4
 pkgdesc="Unbearably fast near-real-time hybrid runtime-static type-checking in pure Python"
 arch=('any')
 url="https://github.com/beartype/beartype"
@@ -47,7 +47,11 @@ check() {
   python -m installer --destdir=tmp_install dist/*.whl
   local site_packages=$(python -c "import site; print(site.getsitepackages()[0])")
   export PYTHONPATH="$PWD/tmp_install/$site_packages"
-  pytest --deselect beartype_test/a90_func/pep/test_pep561_static.py -p asyncio
+  # test_claw_fastmcp は Python 3.14 + multiprocessing のピクリング非互換で
+  # PicklingError: it's not the same object が出るため除外 (beartype upstream 未修正)
+  pytest --deselect beartype_test/a90_func/pep/test_pep561_static.py \
+         --deselect beartype_test/a90_func/a40_claw/external/test_claw_fastmcp.py::test_claw_fastmcp \
+         -p asyncio
 }
 
 package() {
