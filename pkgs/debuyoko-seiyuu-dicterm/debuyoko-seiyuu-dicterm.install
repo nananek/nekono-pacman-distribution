@@ -1,9 +1,9 @@
 post_install() {
     echo ""
-    echo "==> genshin-dict installed."
-    echo "    Dictionary file: /usr/share/genshin-dict/genshin-dict.txt"
+    echo "==> debuyoko-seiyuu-dicterm installed."
+    echo "    Dictionary file: /usr/share/debuyoko-seiyuu-dicterm/debuyoko-seiyuu-dicterm.txt"
     echo "    To import into Mozc, run as your desktop user:"
-    echo "      genshin-dict-mozc-import"
+    echo "      debuyoko-seiyuu-mozc-import"
     echo "    (Ansible will run this automatically on next site.yml run.)"
     echo ""
 }
