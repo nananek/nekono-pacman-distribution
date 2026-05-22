@@ -4,17 +4,18 @@
 # Format: 1 line per package: <name>=<full-version>
 
 git=2.54.0-1
+python=3.14.5-1
 python-anyio=4.13.0-1
 python-build=1.4.3-1
 python-cryptography=48.0.0-1
 python-hatchling=1.29.0-1
-python-httpx-sse=0.4.3-1
 python-httpx=0.28.1-7
+python-httpx-sse=0.4.3-1
 python-installer=1.0.0-1
 python-jsonschema=4.26.0-1
-python-opentelemetry-api=1.42.0-1
-python-pydantic-settings=2.14.1-1
+python-opentelemetry-api=1.42.1-1
 python-pydantic=2.13.4-1
+python-pydantic-settings=2.14.1-1
 python-pyjwt=2.12.1-1
 python-python-multipart=0.0.29-1
 python-sse-starlette=3.3.4-1
@@ -23,5 +24,4 @@ python-typing-inspection=0.4.2-2
 python-typing_extensions=4.15.0-3
 python-uv-dynamic-versioning=0.14.0-1
 python-wheel=0.47.0-1
-python=3.14.5-1
 uvicorn=0.38.0-2
