@@ -1,0 +1,20 @@
+pkgbase = debuyoko-seiyuu-dicterm
+	pkgdesc = Voice actor name dictionary for Mozc IME (debuyoko.com, MS-IME format, 9238 entries)
+	pkgver = 20260405
+	pkgrel = 1
+	url = https://debuyoko.com/1388
+	install = debuyoko-seiyuu-dicterm.install
+	arch = any
+	license = LicenseRef-debuyoko-proprietary
+	makedepends = protobuf
+	depends = python
+	depends = python-protobuf
+	optdepends = fcitx5-mozc: Mozc IME (debuyoko-seiyuu-mozc-import の操作対象)
+	source = debuyoko-seiyuu-dicterm.txt::https://debuyoko.com/?sdm_process_download=1&download_id=1398
+	source = debuyoko-seiyuu-mozc-import
+	source = user_dictionary_storage.proto
+	sha256sums = 6a1bf397309a84eed84111b6faf82a89904f87c7a13d4afac9d18f8e62723519
+	sha256sums = 090ee6cfdecc5c4cda79668251435b6c883744bf6b731d1498c499e8269d731c
+	sha256sums = b38529be56a93c215d58b931d367a822e26d88c70949e4fd870d4de4521fb373
+
+pkgname = debuyoko-seiyuu-dicterm

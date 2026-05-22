@@ -1,0 +1,115 @@
+// Copyright 2010-2021, Google Inc.
+// All rights reserved.
+//
+// Redistribution and use in source and binary forms, with or without
+// modification, are permitted provided that the following conditions are
+// met:
+//
+//     * Redistributions of source code must retain the above copyright
+// notice, this list of conditions and the following disclaimer.
+//     * Redistributions in binary form must reproduce the above copyright
+// notice, this list of conditions and the following disclaimer in the
+// documentation and/or other materials provided with the distribution.
+//     * Neither the name of Google Inc. nor the names of its contributors may
+// be used to endorse or promote products derived from this software without
+// specific prior written permission.
+//
+// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+// "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+// LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+// A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+// OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+// SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+// LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+// DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+// THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+// OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+//
+// Vendored from https://github.com/google/mozc/blob/master/src/protocol/user_dictionary_storage.proto
+// for use by genshin-dict-mozc-import (offline, no network access).
+
+syntax = "proto2";
+
+package mozc.user_dictionary;
+
+option java_outer_classname = "ProtoUserDictionaryStorage";
+option java_package = "org.mozc.android.inputmethod.japanese.protobuf";
+
+message UserDictionary {
+  enum PosType {
+    NO_POS = 0;
+    NOUN = 1;
+    ABBREVIATION = 2;
+    SUGGESTION_ONLY = 3;
+    PROPER_NOUN = 4;
+    PERSONAL_NAME = 5;
+    FAMILY_NAME = 6;
+    FIRST_NAME = 7;
+    ORGANIZATION_NAME = 8;
+    PLACE_NAME = 9;
+    SA_IRREGULAR_CONJUGATION_NOUN = 10;
+    ADJECTIVE_VERBAL_NOUN = 11;
+    NUMBER = 12;
+    ALPHABET = 13;
+    SYMBOL = 14;
+    EMOTICON = 15;
+    ADVERB = 16;
+    PRENOUN_ADJECTIVAL = 17;
+    CONJUNCTION = 18;
+    INTERJECTION = 19;
+    PREFIX = 20;
+    COUNTER_SUFFIX = 21;
+    GENERIC_SUFFIX = 22;
+    PERSON_NAME_SUFFIX = 23;
+    PLACE_NAME_SUFFIX = 24;
+    WA_GROUP1_VERB = 25;
+    KA_GROUP1_VERB = 26;
+    SA_GROUP1_VERB = 27;
+    TA_GROUP1_VERB = 28;
+    NA_GROUP1_VERB = 29;
+    MA_GROUP1_VERB = 30;
+    RA_GROUP1_VERB = 31;
+    GA_GROUP1_VERB = 32;
+    BA_GROUP1_VERB = 33;
+    HA_GROUP1_VERB = 34;
+    GROUP2_VERB = 35;
+    KURU_GROUP3_VERB = 36;
+    SURU_GROUP3_VERB = 37;
+    ZURU_GROUP3_VERB = 38;
+    RU_GROUP3_VERB = 39;
+    ADJECTIVE = 40;
+    SENTENCE_ENDING_PARTICLE = 41;
+    PUNCTUATION = 42;
+    FREE_STANDING_WORD = 43;
+    SUPPRESSION_WORD = 44;
+  }
+
+  optional uint64 id = 1 [default = 0, jstype = JS_STRING];
+  reserved 2;
+  optional string name = 3 [default = ""];
+  message Entry {
+    optional string key = 1 [default = ""];
+    optional string value = 2 [default = ""];
+    reserved 3;
+    optional string comment = 4 [default = ""];
+    optional PosType pos = 5 [default = NOUN];
+    optional string locale = 12 [default = ""];
+    reserved 10;
+    reserved 11;
+  }
+  repeated Entry entries = 4;
+  reserved 5;
+  reserved 6;
+}
+
+message UserDictionaryStorage {
+  optional int32 version = 1 [default = 0];
+  repeated UserDictionary dictionaries = 2;
+  reserved 10;
+}
+
+message UserDictionaryImportData {
+  optional string dictionary_name = 1;
+  optional string data = 2;
+}

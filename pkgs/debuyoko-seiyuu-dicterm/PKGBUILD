@@ -1,0 +1,36 @@
+# Maintainer: Nekono Nana KAKKO KARI <3267314+nananek@users.noreply.github.com>
+pkgname=debuyoko-seiyuu-dicterm
+pkgver=20260405
+pkgrel=1
+pkgdesc='Voice actor name dictionary for Mozc IME (debuyoko.com, MS-IME format, 9238 entries)'
+arch=('any')
+url='https://debuyoko.com/1388'
+license=('LicenseRef-debuyoko-proprietary')
+depends=(python python-protobuf)
+makedepends=(protobuf)
+optdepends=('fcitx5-mozc: Mozc IME (debuyoko-seiyuu-mozc-import の操作対象)')
+install=debuyoko-seiyuu-dicterm.install
+source=(
+    "debuyoko-seiyuu-dicterm.txt::https://debuyoko.com/?sdm_process_download=1&download_id=1398"
+    "debuyoko-seiyuu-mozc-import"
+    "user_dictionary_storage.proto"
+)
+sha256sums=(
+    '6a1bf397309a84eed84111b6faf82a89904f87c7a13d4afac9d18f8e62723519'
+    '090ee6cfdecc5c4cda79668251435b6c883744bf6b731d1498c499e8269d731c'
+    'b38529be56a93c215d58b931d367a822e26d88c70949e4fd870d4de4521fb373'
+)
+
+build() {
+    protoc --python_out="${srcdir}" --proto_path="${srcdir}" \
+           "${srcdir}/user_dictionary_storage.proto"
+}
+
+package() {
+    install -Dm644 "${srcdir}/debuyoko-seiyuu-dicterm.txt" \
+        "${pkgdir}/usr/share/debuyoko-seiyuu-dicterm/debuyoko-seiyuu-dicterm.txt"
+    install -Dm755 "${srcdir}/debuyoko-seiyuu-mozc-import" \
+        "${pkgdir}/usr/bin/debuyoko-seiyuu-mozc-import"
+    install -Dm644 "${srcdir}/user_dictionary_storage_pb2.py" \
+        "${pkgdir}/usr/lib/debuyoko-seiyuu-dicterm/user_dictionary_storage_pb2.py"
+}
