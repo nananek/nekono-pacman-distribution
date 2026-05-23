@@ -1,0 +1,85 @@
+# Maintainer: Nekono <noreply@nekono.invalid>
+# nekono-pacman-distribution の改変 (= Arch 公式 extra/shairport-sync 4.3.5-4 との diff):
+#   - pkgname を shairport-sync-airplay2 に rename (extra との同名 install 衝突回避)
+#   - provides/conflicts/replaces=shairport-sync で extra 版を明示置換
+#   - configure flags に --with-airplay-2 を追加 (AirPlay 2 receiver 化)
+#   - depends に nqptp / libplist / libsodium / libsndfile / ffmpeg を追加
+#     (AirPlay 2 mode の run-time / build-time 依存、upstream BUILD.md 準拠)
+#   - sha256sums を .zip → .tar.gz の値に差し替え (GitHub archive URL も変更)
+# Contributor: Anatol Pomozov <anatol.pomozov@gmail.com> (extra 元 maintainer)
+
+pkgname=shairport-sync-airplay2
+_upstream=shairport-sync
+pkgver=4.3.5
+pkgrel=1
+pkgdesc='Emulates an AirPort Express; built with AirPlay 2 receiver support (requires nqptp)'
+url='https://github.com/mikebrady/shairport-sync'
+arch=(x86_64)
+license=(GPL)
+backup=(etc/shairport-sync.conf)
+depends=(openssl avahi libsoxr popt alsa-lib libconfig libpipewire libpulse jack mosquitto
+         nqptp libplist libsodium libsndfile ffmpeg)
+makedepends=(glib2-devel xmltoman vim) # vim for xxd tool
+provides=(shairport-sync)
+conflicts=(shairport-sync)
+replaces=(shairport-sync)
+source=("$_upstream-$pkgver.tar.gz::https://github.com/mikebrady/shairport-sync/archive/$pkgver.tar.gz"
+        shairport-sync.sysusers
+        remove_useradd.patch)
+sha256sums=('66e985e8e51e8e2c5883c95f68063e2b27d81eb372c8f048acf46dd80a94c118'
+            'bc2d92254910996e837d1c4c7dd81eddfb96a9f5f0cb2faad9fcb0414ea79a1d'
+            '3973049b1a92c729efacd3312636a8c7f3d51cd62c7d5af214668c8104378dc6')
+
+prepare() {
+  cd "$_upstream-$pkgver"
+
+  patch -p1 < ../remove_useradd.patch
+}
+
+build() {
+  cd "$_upstream-$pkgver"
+
+  autoreconf -i -f
+  configure_args=(
+    --prefix=/usr
+    --sysconfdir=/etc
+    # Audio Output
+    --with-alsa
+    --with-pa
+    --with-pw
+    --with-jack
+    --with-stdout
+    --with-pipe
+    # Audio Options
+    --with-soxr
+    --with-convolution
+    # Metadata
+    --with-metadata
+    # IPC
+    --with-mqtt-client
+    --with-dbus-interface
+    --with-mpris-interface
+    # Zeroconf/Bonjour
+    --with-avahi
+    --with-dns_sd
+    # Misc
+    --with-systemd
+    --with-ssl=openssl
+    --with-configfiles
+    --with-pkg-config
+    # AirPlay 2 receiver (requires nqptp + libplist/libsodium/libsndfile/ffmpeg)
+    --with-airplay-2
+  )
+  ./configure "${configure_args[@]}"
+  make
+
+  sed 's|/usr/local/bin/|/usr/bin/|' -i scripts/shairport-sync.service.in
+}
+
+package() {
+  cd "$_upstream-$pkgver"
+  make DESTDIR="$pkgdir" install
+  install -D -m644 "$srcdir"/shairport-sync.sysusers "$pkgdir"/usr/lib/sysusers.d/shairport-sync.conf
+  install -D -m664 LICENSES "$pkgdir"/usr/share/licenses/$pkgname/LICENSE
+  rm "$pkgdir"/etc/shairport-sync.conf.sample
+}
