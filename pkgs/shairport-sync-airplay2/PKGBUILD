@@ -1,16 +1,26 @@
 # Maintainer: Nekono <noreply@nekono.invalid>
-# nekono-pacman-distribution の改変 (= Arch 公式 extra/shairport-sync 4.3.5-4 との diff):
+# nekono-pacman-distribution の改変 (= Arch 公式 extra/shairport-sync 4.3.5-4 + upstream 5.0.4 を base):
 #   - pkgname を shairport-sync-airplay2 に rename (extra との同名 install 衝突回避)
+#   - pkgver を upstream latest stable (5.0.4) に追従 (extra はまだ 4.3.5、 我々
+#     は upstream を直接 pin する方針。 nvchecker が新 release を拾う)
+#   - 5.0.x で configure flag rename:
+#       --with-pa → --with-pulseaudio
+#       --with-pw → --with-pipewire
+#       --with-systemd → --with-systemd-startup
+#     を反映。 --with-ffmpeg は --with-airplay-2 で auto-on になるため明示不要
+#     (configure.ac の "if test ... = airplay_2 -o ... = ffmpeg ; then using_ffmpeg=true")
 #   - provides/conflicts/replaces=shairport-sync で extra 版を明示置換
-#   - configure flags に --with-airplay-2 を追加 (AirPlay 2 receiver 化)
+#   - configure flags に --with-airplay-2 を追加 (AirPlay 2 receiver 化、 本 fork の目的)
 #   - depends に nqptp / libplist / libsodium / libsndfile / ffmpeg を追加
-#     (AirPlay 2 mode の run-time / build-time 依存、upstream BUILD.md 準拠)
-#   - sha256sums を .zip → .tar.gz の値に差し替え (GitHub archive URL も変更)
+#     (AirPlay 2 mode の run-time / build-time 依存、 upstream BUILD.md 準拠)
+#   - remove_useradd.patch は 5.0.4 Makefile.am の行ずれに合わせて再生成
+#   - --with-apple-alac は upstream で deprecated 化 (= macOS Realtime AirPlay
+#     stream 系で issue #2178 として報告あり)、 採用しない
 # Contributor: Anatol Pomozov <anatol.pomozov@gmail.com> (extra 元 maintainer)
 
 pkgname=shairport-sync-airplay2
 _upstream=shairport-sync
-pkgver=4.3.5
+pkgver=5.0.4
 pkgrel=1
 pkgdesc='Emulates an AirPort Express; built with AirPlay 2 receiver support (requires nqptp)'
 url='https://github.com/mikebrady/shairport-sync'
@@ -26,9 +36,9 @@ replaces=(shairport-sync)
 source=("$_upstream-$pkgver.tar.gz::https://github.com/mikebrady/shairport-sync/archive/$pkgver.tar.gz"
         shairport-sync.sysusers
         remove_useradd.patch)
-sha256sums=('66e985e8e51e8e2c5883c95f68063e2b27d81eb372c8f048acf46dd80a94c118'
+sha256sums=('b89d4af74cffadd83d1be6eaf4e967180aa5a6aed32f561c937ae1d787909c25'
             'bc2d92254910996e837d1c4c7dd81eddfb96a9f5f0cb2faad9fcb0414ea79a1d'
-            '3973049b1a92c729efacd3312636a8c7f3d51cd62c7d5af214668c8104378dc6')
+            '38f5c7aa7a35d1fd1a591b28d50293798cb29c3d9c600c0a750cb4209aed42f1')
 
 prepare() {
   cd "$_upstream-$pkgver"
@@ -45,8 +55,8 @@ build() {
     --sysconfdir=/etc
     # Audio Output
     --with-alsa
-    --with-pa
-    --with-pw
+    --with-pulseaudio
+    --with-pipewire
     --with-jack
     --with-stdout
     --with-pipe
@@ -63,11 +73,11 @@ build() {
     --with-avahi
     --with-dns_sd
     # Misc
-    --with-systemd
+    --with-systemd-startup
     --with-ssl=openssl
     --with-configfiles
     --with-pkg-config
-    # AirPlay 2 receiver (requires nqptp + libplist/libsodium/libsndfile/ffmpeg)
+    # AirPlay 2 receiver (requires nqptp、 ffmpeg は auto-on)
     --with-airplay-2
   )
   ./configure "${configure_args[@]}"
