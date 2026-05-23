@@ -70,3 +70,9 @@ upstream の新 release (0.5.3 等) が出たら:
 3. b2sum を独立再計算 (= `curl -fsSL <url> | b2sum` で照合)
 4. tag commit author を GitHub API で確認 (= saivert が変わってないか)
 5. REVIEW.md に確認日 + 結論 update
+
+## 更新履歴
+
+| 日付 | release | review した PKGBUILD repo SHA | findings |
+|---|---|---|---|
+| 2026-05-23 | 0.5.2-2 | `f574a11` | `pkgrel` +1 (deps changed): meson 1.11.1-1 → 1.11.1-3 |
