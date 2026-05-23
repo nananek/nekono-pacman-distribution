@@ -1,0 +1,10 @@
+# Snapshot of Arch official repo versions for depends + makedepends of nqptp.
+# Auto-generated and updated by .github/workflows/dep-version-pr.yml.
+# Source: pkgs/nqptp/.SRCINFO (depends + makedepends entries).
+# Format: 1 line per package: <name>=<full-version>
+
+autoconf=2.73-1
+automake=1.18.1-1
+glibc=2.43+r22+g8362e8ce10b2-2
+libtool=2.6.0+r23+gb08cb0a0-1
+pkgconf=2.5.1-1

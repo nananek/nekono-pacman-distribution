@@ -1,0 +1,36 @@
+# Maintainer: Nekono <noreply@nekono.invalid>
+# nekono-pacman-distribution 自作 PKGBUILD (AUR には nqptp-git のみで、
+# nekono 規約 (-git 抑制) と整合しないため新規作成)。
+# shairport-sync-airplay2 が AirPlay 2 timing/sync で require する system
+# daemon。PTP (UDP 319/320) を排他的に握る。
+
+pkgname=nqptp
+pkgver=1.2.8
+pkgrel=1
+pkgdesc='Not Quite PTP - timing/sync daemon required by shairport-sync for AirPlay 2'
+arch=('x86_64')
+url='https://github.com/mikebrady/nqptp'
+license=('GPL-3.0-or-later')
+depends=('glibc')
+makedepends=('autoconf' 'automake' 'libtool' 'pkgconf')
+source=("$pkgname-$pkgver.tar.gz::https://github.com/mikebrady/nqptp/archive/$pkgver.tar.gz")
+sha256sums=('3a2882a299c21605f53bb215ce537f9cc7a1e894476f639ab28562c68fd183a9')
+
+prepare() {
+    cd "$pkgname-$pkgver"
+    autoreconf -fi
+}
+
+build() {
+    cd "$pkgname-$pkgver"
+    ./configure \
+        --prefix=/usr \
+        --with-systemd-startup \
+        --with-systemdsystemunitdir=/usr/lib/systemd/system
+    make
+}
+
+package() {
+    cd "$pkgname-$pkgver"
+    make DESTDIR="$pkgdir" install
+}

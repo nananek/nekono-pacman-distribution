@@ -1,0 +1,16 @@
+pkgbase = nqptp
+	pkgdesc = Not Quite PTP - timing/sync daemon required by shairport-sync for AirPlay 2
+	pkgver = 1.2.8
+	pkgrel = 1
+	url = https://github.com/mikebrady/nqptp
+	arch = x86_64
+	license = GPL-3.0-or-later
+	makedepends = autoconf
+	makedepends = automake
+	makedepends = libtool
+	makedepends = pkgconf
+	depends = glibc
+	source = nqptp-1.2.8.tar.gz::https://github.com/mikebrady/nqptp/archive/1.2.8.tar.gz
+	sha256sums = 3a2882a299c21605f53bb215ce537f9cc7a1e894476f639ab28562c68fd183a9
+
+pkgname = nqptp
