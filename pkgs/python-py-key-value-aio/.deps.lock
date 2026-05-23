@@ -3,11 +3,11 @@
 # Source: pkgs/python-py-key-value-aio/.SRCINFO (depends + makedepends entries).
 # Format: 1 line per package: <name>=<full-version>
 
-# MISSING (not in Arch official repo, likely AUR-only or virtual): python-beartype
+python=3.14.5-1
 python-build=1.4.3-1
-python-cachetools=7.1.3-1
+# MISSING (not in Arch official repo, likely AUR-only or virtual): python-beartype
+python-cachetools=7.1.4-1
 python-installer=1.0.0-1
 python-typing_extensions=4.15.0-3
-python-uv-build=0.11.15-1
+python-uv-build=0.11.16-1
 python-wheel=0.47.0-1
-python=3.14.5-1
