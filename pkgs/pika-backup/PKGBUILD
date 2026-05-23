@@ -4,7 +4,7 @@
 # upstream 最新 0.8.2 (= Cargo.toml で edition = "2024" 明示済み) に bump。
 pkgname=pika-backup
 pkgver=0.8.2
-pkgrel=1
+pkgrel=2
 epoch=1
 pkgdesc="Keep your data safe"
 arch=('x86_64' 'aarch64')

@@ -71,3 +71,9 @@ upstream の新 release (0.8.3 等) が出たら:
 
 将来 AUR maintainer が 0.8.x に追随したら、AUR PKGBUILD と diff を取り直して
 本 fork の divergence を縮める方向を検討。
+
+## 更新履歴
+
+| 日付 | release | review した PKGBUILD repo SHA | findings |
+|---|---|---|---|
+| 2026-05-23 | 0.7.2-2 | `23691d2` | `pkgrel` +1 (deps changed): meson 1.11.1-1 → 1.11.1-3 |
