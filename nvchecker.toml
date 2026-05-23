@@ -105,6 +105,14 @@ github = "nananek/nekonopaw"
 use_max_tag = true
 prefix = "v"
 
+[nqptp]
+# shairport-sync-airplay2 が AirPlay 2 timing/sync で require する system
+# daemon (Mike Brady / shairport-sync 主開発者と同一作者)。 release tag は
+# 素の X.Y.Z 形式 (prefix 無し)。
+source = "github"
+github = "mikebrady/nqptp"
+use_latest_release = true
+
 [pam_pkcs11]
 # OpenSC は release tag に "pam_pkcs11-X.Y.Z" の prefix を付ける。
 source = "github"
@@ -269,6 +277,17 @@ prefix = "v"
 # release tag は素の X.Y.Z 形式 (prefix 無し)。
 source = "github"
 github = "jurplel/qView"
+use_latest_release = true
+
+[shairport-sync-airplay2]
+# extra/shairport-sync (4.3.5-4) を fork して --with-airplay-2 を有効化した
+# 自家 variant。upstream は extra と共通 (mikebrady/shairport-sync)。
+# release tag は素の X.Y.Z 形式 (prefix 無し)。
+# 注意: extra 側 PKGBUILD の bump (depends / configure_args 構成) も合わせて
+# 追従する必要があるため、新 release を拾った Issue では extra 側の packaging
+# diff も併せて確認する旨を REVIEW.md「更新方針」に記載済み。
+source = "github"
+github = "mikebrady/shairport-sync"
 use_latest_release = true
 
 [voicevox-bin]
