@@ -74,6 +74,7 @@ upstream の新 release (0.8.3 等) が出たら:
 
 ## 更新履歴
 
-| 日付 | release | review した PKGBUILD repo SHA | findings |
-|---|---|---|---|
-| 2026-05-23 | 0.7.2-2 | `23691d2` | `pkgrel` +1 (deps changed): meson 1.11.1-1 → 1.11.1-3 |
+| 日付 | release | review した PKGBUILD repo SHA | upstream tag commit | findings |
+|---|---|---|---|---|
+| 2026-05-23 | 0.8.2-2 | `23691d2` | — (pkgrel bump のみ) | `pkgrel` +1 (deps changed): meson 1.11.1-1 → 1.11.1-3 |
+| 2026-05-24 | 0.8.2-3 | `58131e1` | — (pkgrel bump のみ) | `pkgrel` +1 (deps changed): python-pyfuse3 3.4.2-1 → 3.5.0-1 |
