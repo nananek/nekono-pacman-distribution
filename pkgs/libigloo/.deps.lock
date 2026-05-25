@@ -1,0 +1,6 @@
+# Snapshot of Arch official repo versions for depends + makedepends of libigloo.
+# Auto-generated and updated by .github/workflows/dep-version-pr.yml.
+# Source: pkgs/libigloo/.SRCINFO (depends + makedepends entries).
+# Format: 1 line per package: <name>=<full-version>
+
+rhash=1.4.6-1
