@@ -239,14 +239,75 @@ Arch host で .SRCINFO の depends + makedepends について `pacman -Si <dep>`
 bump PR をうっかり merge → 旧 pkgver のまま rebuild されて配布パッケージ
 が更新されない」事故を踏む。
 
+## Claude への委任フロー (全自動)
+
+「PR 消化して」「Issue 確認して」と言われたら、以下のフローを **ユーザ確認
+なしで自律実行** する。途中で判断に迷う場合 (block verdict、PKGBUILD 大改修
+が必要な場合等) のみ報告して止まる。
+
+### bot PR (dep-version-pr) の全自動フロー
+
+```
+gh pr list --state open  →  deps/<pkg>-pkgrel-<N> の PR を列挙
+```
+
+各 PR に対して順番に:
+
+1. **個別事情テーブル確認** (後述「PR review 時の個別事情」)。該当する pkg
+   (= `docker-rootless-extras` 等) なら `gh pr close <N>` して次へ。
+
+2. **3 点チェックを事前修正** (これをしないと claude-review.yml がループする):
+   - `pkgs/<pkg>/REVIEW.md` の「更新履歴」テーブルに 5 列行を追記
+     (`| 日付 | release | SHA | — (pkgrel bump のみ) | findings |`)
+   - `pkgs/<pkg>/.SRCINFO` の `pkgrel` を PKGBUILD と一致させる
+   - `pkgs/<pkg>/.deps.lock` の `# MISSING ...` 行が消えていたら復元
+     (bot は AUR-only / virtual provide の MISSING 行を削除してしまう)
+
+3. `git commit --amend -S --no-edit` + `git push --force-with-lease`
+
+4. `gh pr checks <N>` で claude-review.yml が pass するまで確認
+   (push 直後は走行中なので少し待ってから再確認)
+
+5. pass したら `gh pr merge <N> --merge --delete-branch`
+
+6. 全 PR 処理後、build host で実行するコマンドをユーザに提示:
+   ```sh
+   git pull --ff-only && bin/build-all --pending
+   ```
+
+### upstream Issue (upstream-version-issue) の全自動フロー
+
+```
+gh issue list --state open  →  [<pkg>] upstream version: <new_pkgver> の Issue を列挙
+```
+
+各 Issue に対して:
+
+| verdict | Claude の動作 |
+|---|---|
+| `safe-to-bump` | Issue 本文の "Suggested PKGBUILD changes" に従い PKGBUILD/sha256/.SRCINFO/REVIEW.md を更新 → `git commit -S` → `gh pr create` → claude-review pass 待ち → `gh pr merge` → ユーザに `bin/build-all <pkg>` を提示 |
+| `needs-attention` | Issue 本文の build script / dep 変化 section を読み込み、PKGBUILD を適切に改修 → あとは safe-to-bump と同じ |
+| `block` | ユーザに内容を要約して報告し、判断を仰ぐ。自動では何もしない |
+| 誤検知疑い (nvchecker の誤検知等) | 内容を示しユーザに確認してから close |
+
+### build host 作業 (Claude には実行できない)
+
+`bin/build-all` / `bin/update-repo` は build host (nekono-pacman0) 上での実行が必要。
+Claude は merge 後に実行コマンドを提示するのみ:
+
+```sh
+cd ~/nekono-pacman-distribution
+git pull --ff-only
+bin/build-all --pending
+```
+
+---
+
 ## デイリー運用 (Issue / PR 消化)
 
 `upstream-version-issue` / `dep-version-pr` の 2 本の cron workflow が毎日
-JST 11:50〜11:55 (= 02:50〜02:55 UTC) に新規 Issue / PR を生成し、 12:00
-頃には結果が GitHub UI で見える。 **放置すると溜まる**ので、
-**毎日 1 度 GitHub の Issues / Pull Requests タブを開いて消化する** ことを
-ルーチンにする。所要時間は変化ない日で 1〜2 分、bump が来ている日でも
-1 pkg 10〜30 分程度。
+JST 11:50〜11:55 (= 02:50〜02:55 UTC) に新規 Issue / PR を生成する。
+Claude に「PR 消化して」と伝えれば上記の全自動フローで処理する。
 
 ### Issues タブ (upstream-version-issue 経由)
 
@@ -255,9 +316,9 @@ JST 11:50〜11:55 (= 02:50〜02:55 UTC) に新規 Issue / PR を生成し、 12:
 
 | verdict | 対応 |
 |---|---|
-| `safe-to-bump` | build host で PKGBUILD の pkgver / sha256sums を本文の Suggested PKGBUILD changes に従って差し替え → `.SRCINFO` 同期 → `git commit -S` → PR open。`claude-review.yml` の review pass を待って merge → `bin/build-all <pkg>` (= 末尾で repo-add まで完了する) → `sudo pacman -Sy` で client (build host 含む) が新版を見られる → Issue close。 |
-| `needs-attention` | build script / depends 変化あり。Claude の事前調査 (Build script changes / Dependency changes section) を踏まえて手作業更新。場合により `package()` の改変や `optdepends` 追加が要る。あとは safe-to-bump と同じ流れ。 |
-| `block` | supply-chain 上の懸念あり。理由を読み、本当に止めるべきか判断。ユーザコミュニティに新 release で報告されたインシデントを upstream で確認するなど、追加調査してから判断。 |
+| `safe-to-bump` | PKGBUILD の pkgver / sha256sums を本文の Suggested PKGBUILD changes に従って差し替え → `.SRCINFO` 同期 → `git commit -S` → PR open。`claude-review.yml` の review pass を待って merge → `bin/build-all <pkg>` → Issue close。 |
+| `needs-attention` | build script / depends 変化あり。Claude が事前調査 section を読み込み PKGBUILD を改修。あとは safe-to-bump と同じ流れ。 |
+| `block` | supply-chain 上の懸念あり。Claude がユーザに報告して止まる。 |
 
 verdict 判定に疑義がある場合 (例: nvchecker の誤検知で立った Issue) は、
 内容を読んで close する。冪等性 key は title なので、close されていても
@@ -271,15 +332,13 @@ branch 名 `deps/<pkg>-pkgrel-<N+1>`、title `<pkg>: pkgrel bump to <N+1>
 (deps changed)`。
 
 1. **「PR review 時の個別事情」 表 (上記) で該当 pkg を確認**。該当する
-   なら close して別経路 (upstream-version-issue) で対応 — bot PR の中身
-   は捨てる。
-2. 該当しないなら、`claude-review.yml` の review pass を待つ。
-3. build host で local pull → `git commit --amend -S --no-edit` で Nekono
-   GPG 署名し直し → `git push --force-with-lease`。
-4. GitHub UI から merge。
-5. build host で `bin/build-all <pkg>` (= 末尾で repo-add まで完了するので `bin/update-repo` を別途叩く必要無し)。
+   なら `gh pr close <N>` して別経路 (upstream-version-issue) で対応。
+2. 3 点チェック事前修正 (REVIEW.md / .SRCINFO / .deps.lock)。
+3. `git commit --amend -S --no-edit` + `git push --force-with-lease`。
+4. `gh pr checks <N>` で claude-review pass 確認。
+5. `gh pr merge <N> --merge --delete-branch`。
 
-#### 手動 bump PR (= 自分が立てる upstream-version-issue 由来の PR)
+#### 手動 bump PR (= upstream-version-issue 由来の PR)
 
 `pkgs/<pkg>` ディレクトリの PKGBUILD / .SRCINFO / .deps.lock を更新して
 立てる PR。CLAUDE.md 規約「1 PKGBUILD update = 1 commit」「`-S` 署名」を
@@ -303,29 +362,18 @@ merge 前のチェックリスト:
 
 ### 朝 routine (推奨)
 
-毎朝 1 度、以下を順に踏む:
+毎朝 1 度、Claude に「PR/Issue 消化して」と伝える。Claude が全自動で
+Issues/PRs を処理する。終了後、build host で:
 
-1. **Issues タブ消化** — https://github.com/nananek/nekono-pacman-distribution/issues
-   (open Issue を verdict で並べて消化、必要なら手動 PR を立てる)
-2. **PRs タブ消化** — https://github.com/nananek/nekono-pacman-distribution/pulls
-   (open PR を 1 個ずつ処理 — close か merge、merge 時は GPG `-S` 署名し直し)
-3. **build host で merge 済み bump を消化**:
-   ```sh
-   cd ~/nekono-pacman-distribution
-   git pull --ff-only
-   bin/build-all --pending     # PKGBUILD の pkgver-pkgrel に対応する artifact が
-                               # repo/x86_64/ に無い pkg だけ build + sign + repo-add。
-                               # 末尾で repo-add まで終わるので `bin/update-repo` は不要
-                               # (= update-repo は手動で db だけ rebuild したい時用 wrapper)。
-                               # "nothing to build" が出れば消化完了。
-   ```
+```sh
+cd ~/nekono-pacman-distribution
+git pull --ff-only
+bin/build-all --pending   # 末尾で repo-add まで完了。"nothing to build" が出れば消化完了
+```
 
 `bin/build-all` 完了後、 build host 自身を含む client 側で
 `sudo pacman -Sy && pacman -Si <pkg>` で新 version が解決できれば配信反映済み
 (= nginx は Tailscale 越し file 配信のみ、 reload 不要)。
-
-3 ステップ全部がゼロアクションで終わる日が「平常運用日」、何か残ったら
-気になる症状として記憶しておく。
 
 ## ansible-nekonodesk との分担
 
