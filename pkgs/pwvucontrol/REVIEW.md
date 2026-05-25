@@ -73,6 +73,7 @@ upstream の新 release (0.5.3 等) が出たら:
 
 ## 更新履歴
 
-| 日付 | release | review した PKGBUILD repo SHA | findings |
-|---|---|---|---|
-| 2026-05-23 | 0.5.2-2 | `f574a11` | `pkgrel` +1 (deps changed): meson 1.11.1-1 → 1.11.1-3 |
+| 日付 | release | review した PKGBUILD repo SHA | upstream tag commit | findings |
+|---|---|---|---|---|
+| 2026-05-23 | 0.5.2-2 | `f574a11` | — (pkgrel bump のみ) | `pkgrel` +1 (deps changed): meson 1.11.1-1 → 1.11.1-3 |
+| 2026-05-25 | 0.5.2-3 | `745841a` | — (pkgrel bump のみ) | `pkgrel` +1 (deps changed): libadwaita 1:1.9.0-1 → 1:1.9.1-1 |
