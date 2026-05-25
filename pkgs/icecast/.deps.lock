@@ -1,0 +1,19 @@
+# Snapshot of Arch official repo versions for depends + makedepends of icecast.
+# Auto-generated and updated by .github/workflows/dep-version-pr.yml.
+# Source: pkgs/icecast/.SRCINFO (depends + makedepends entries).
+# Format: 1 line per package: <name>=<full-version>
+
+# MISSING libigloo  -- nekono repo package (not in Arch official repos)
+autoconf=2.73-1
+automake=1.18.1-1
+curl=8.20.0-7
+glibc=2.43+r22+g8362e8ce10b2-2
+libogg=1.3.6-1
+libtheora=1.2.0-1
+libtool=2.6.0+r23+gb08cb0a0-1
+libvorbis=1.3.7-4
+libxml2=2.15.3-1
+libxslt=1.1.45-2
+openssl=3.6.2-2
+rhash=1.4.6-1
+speex=1.2.1-2

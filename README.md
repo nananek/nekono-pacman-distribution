@@ -26,10 +26,13 @@
 .
 ├── README.md                 — この文書
 ├── CLAUDE.md                 — 規約 (review 手順 / 命名 / commit policy)
+├── nvchecker.toml            — upstream version 監視設定 (cron で daily 実行)
 ├── pkgs/
 │   ├── <name>/
 │   │   ├── PKGBUILD          — AUR fork + 改変版
+│   │   ├── .SRCINFO          — makepkg --printsrcinfo 出力 (AUR diff 用)
 │   │   ├── REVIEW.md         — review log (誰が・いつ・何を)
+│   │   ├── .deps.lock        — depends/makedepends の version snapshot
 │   │   └── *.install         — (任意) post-install hook
 │   └── ...
 ├── bin/
@@ -46,14 +49,61 @@
 
 ## 配布パッケージ一覧
 
+### デスクトップアプリ
+
 | package | source 方針 | 役割 |
 |---|---|---|
-| `vesktop-bin`    | -bin (upstream AppImage) | Discord client (Vencord patched) |
 | `moonlight-qt`   | from-source (Qt6/FFmpeg/SDL2) | NVIDIA GameStream / Sunshine client |
-| `qview`          | from-source (Qt6 small)  | 画像ビューア |
-| `pika-backup`    | from-source (GTK4/Rust)  | borg backup GUI frontend |
-| `localsend-bin`  | -bin (Flutter prebuilt)  | AirDrop 代替 (iOS / Android / Linux LAN ファイル転送) |
-| `claude-code`    | -bin (npm tarball)       | Anthropic Claude Code CLI (Arch 公式 repo 無し) |
+| `qview`          | from-source (Qt6)             | 画像ビューア |
+| `pika-backup`    | from-source (GTK4/Rust)       | borg backup GUI frontend |
+| `localsend-bin`  | -bin (Flutter prebuilt)       | AirDrop 代替 (LAN ファイル転送) |
+| `pwvucontrol`    | from-source (Rust/GTK4)       | PipeWire 音量コントロール |
+
+### システム・インフラ
+
+| package | source 方針 | 役割 |
+|---|---|---|
+| `claude-code`            | -bin (npm tarball)      | Anthropic Claude Code CLI |
+| `docker-rootless-extras` | from-source             | Docker rootless mode 補助バイナリ |
+| `nekonopaw`              | from-source (Go)        | PipeWire → PAM 連携デーモン |
+| `pam_pkcs11`             | from-source (C)         | PIV/PKCS#11 PAM 認証モジュール |
+| `pass-secret-service`    | from-source (Rust)      | pass を D-Bus secrets backend に |
+
+### 音声・メディア
+
+| package | source 方針 | 役割 |
+|---|---|---|
+| `icecast`                 | from-source (C)          | HTTP audio streaming server |
+| `libigloo`                | from-source (C)          | Icecast 2.5.x 必須共通フレームワーク |
+| `shairport-sync-airplay2` | from-source (C)          | AirPlay 2 受信 (nqptp 連携) |
+| `nqptp`                   | from-source (C)          | AirPlay 2 timing/sync デーモン |
+| `voicevox-bin`            | -bin (Electron AppImage) | VOICEVOX エディタ GUI |
+| `voicevox-engine-cuda`    | -bin (CUDA bundle)       | VOICEVOX TTS エンジン (CUDA 版) |
+
+### MCP サーバー
+
+| package | source 方針 | 役割 |
+|---|---|---|
+| `nekono-pipewire-mcp`  | from-source (Go)     | PipeWire 操作 MCP server |
+| `nekono-voicevox-mcp`  | from-source (Python) | VOICEVOX 音声合成 MCP server |
+
+### MCP サーバー Python 依存
+
+`nekono-voicevox-mcp` / `nekono-pipewire-mcp` の依存 chain。Arch 公式・AUR 未収録のため自家管理。
+
+`python-fastmcp` / `python-mcp` / `python-cyclopts` / `python-beartype` /
+`python-rich-rst` / `python-docstring-parser` / `python-sse-starlette` /
+`python-httpx-sse` / `python-openapi-pydantic` / `python-jsonschema-path` /
+`python-jsonref` / `python-pdm-pep517` / `python-py-key-value-aio` /
+`python-uv-dynamic-versioning` / `python-uncalled-for`
+
+### 辞書
+
+| package | source 方針 | 役割 |
+|---|---|---|
+| `genshin-dict`            | from-source        | 原神固有名詞辞書 |
+| `debuyoko-seiyuu-dicterm` | scrape (WordPress) | でぶよこ声優辞書 |
+| `okaguchi-lawyer-dicterm` | scrape (WordPress) | 岡口法律辞書 |
 
 ## Build host セットアップ (要件)
 
