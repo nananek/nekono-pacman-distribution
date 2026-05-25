@@ -120,3 +120,9 @@ upstream で新 release tag (v0.2.0 等) が出たら:
    .SRCINFO を差し替え
 3. license が SPDX 別値に変わったら license= も更新
 4. REVIEW.md に確認日 + 結論 update
+
+## 更新履歴
+
+| 日付 | release | review した PKGBUILD repo SHA | upstream tag commit | findings |
+|---|---|---|---|---|
+| 2026-05-24 | 0.1.2-2 | `2eae7fb` | — (pkgrel bump のみ) | `pkgrel` +1 (deps changed): pipewire version bump |
