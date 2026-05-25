@@ -1,0 +1,6 @@
+# Snapshot of Arch official repo versions for depends + makedepends of ff2mpv-rust.
+# Auto-generated and updated by .github/workflows/dep-version-pr.yml.
+# Source: pkgs/ff2mpv-rust/.SRCINFO (depends + makedepends entries).
+# Format: 1 line per package: <name>=<full-version>
+
+# MISSING (not in Arch official repo, likely AUR-only or virtual): cargo
