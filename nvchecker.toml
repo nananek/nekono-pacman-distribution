@@ -66,6 +66,21 @@ cmd = "python3 .github/scripts/nvchecker-scrapers/okaguchi-lawyer-dicterm.py"
 source = "cmd"
 cmd = "python3 .github/scripts/nvchecker-scrapers/debuyoko-seiyuu-dicterm.py"
 
+[icecast]
+# Xiph.Org Foundation の HTTP audio streaming server。release tag は素の
+# X.Y.Z 形式 (prefix 無し)。depends の libigloo も nekono repo で管理。
+source = "github"
+github = "xiph/icecast-server"
+use_latest_release = true
+
+[libigloo]
+# Icecast 2.5.x が必須とする共通 C フレームワーク。release tag は素の
+# X.Y.Z 形式 (prefix 無し)。xiph/igloo は GitHub Release を切らず tag のみ
+# のため use_max_tag で semver 最大を取る。
+source = "github"
+github = "xiph/igloo"
+use_max_tag = true
+
 [localsend-bin]
 # release tag "vX.Y.Z" 形式。
 source = "github"
