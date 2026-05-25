@@ -46,6 +46,16 @@ github = "moby/moby"
 use_latest_release = true
 prefix = "docker-v"
 
+[ff2mpv-rust]
+# Firefox 拡張 "ff2mpv" の native messaging host (Rust 実装、ryze312/
+# ff2mpv-rust)。AUR `ff2mpv-rust` を fork。Python upstream
+# (woodruffw/ff2mpv) は GitHub Releases 未運用 + AUR には -git 版しか無いため
+# Rust 版を採用 (= 規約 「-git 避ける」 を満たす唯一の選択肢)。
+# release tag は素の X.Y.Z 形式 (prefix 無し)。
+source = "github"
+github = "ryze312/ff2mpv-rust"
+use_latest_release = true
+
 [genshin-dict]
 # 自家 package (AUR 不在)。 Genshin Impact 固有名詞 Mozc 辞書。
 # release tag は "vX.Y.Z" 形式。
