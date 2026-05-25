@@ -78,3 +78,4 @@ upstream の新 release (0.8.3 等) が出たら:
 |---|---|---|---|---|
 | 2026-05-23 | 0.8.2-2 | `23691d2` | — (pkgrel bump のみ) | `pkgrel` +1 (deps changed): meson 1.11.1-1 → 1.11.1-3 |
 | 2026-05-24 | 0.8.2-3 | `58131e1` | — (pkgrel bump のみ) | `pkgrel` +1 (deps changed): python-pyfuse3 3.4.2-1 → 3.5.0-1 |
+| 2026-05-25 | 0.8.2-4 | `f9f0874` | — (pkgrel bump のみ) | `pkgrel` +1 (deps changed): libadwaita 1:1.9.0-1 → 1:1.9.1-1 |
