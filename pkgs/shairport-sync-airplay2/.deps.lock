@@ -1,5 +1,4 @@
-# Snapshot of Arch official repo versions for depends + makedepends of
-# shairport-sync-airplay2.
+# Snapshot of Arch official repo versions for depends + makedepends of shairport-sync-airplay2.
 # Auto-generated and updated by .github/workflows/dep-version-pr.yml.
 # Source: pkgs/shairport-sync-airplay2/.SRCINFO (depends + makedepends entries).
 # Format: 1 line per package: <name>=<full-version>
@@ -9,7 +8,7 @@ avahi=1:0.9rc4-1
 ffmpeg=2:8.1.1-2
 glib2-devel=2.88.1-1
 libconfig=1.8.2-2
-libpipewire=1:1.6.5-1
+libpipewire=1:1.6.5-2
 libplist=2.7.0-3
 libpulse=17.0+r98+gb096704c0-1
 libsndfile=1.2.2-4
