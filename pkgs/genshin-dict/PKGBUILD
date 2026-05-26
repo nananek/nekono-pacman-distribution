@@ -14,8 +14,8 @@
 #   decode('utf-16') で自動 BOM 検出、/usr/share/genshin-dict/genshin-dict.txt に配置。
 
 pkgname=genshin-dict
-pkgver=6.3.1
-pkgrel=3
+pkgver=6.6.0
+pkgrel=1
 pkgdesc='Genshin Impact dictionary for Mozc IME (Windows IME format TSV + import helper)'
 arch=('any')
 url='https://github.com/kotofurumiya/genshin-dict'
@@ -35,7 +35,7 @@ source=(
     "user_dictionary_storage.proto"
 )
 sha256sums=(
-    '3759b9e5d575c17ac287ee079cfcfaf79e69805994f7c6eb35e4d89b6a7e79f0'
+    'e75119097bab7efeb8b89c21814b316e902c1d246e5e338012134ffdcc3109ac'
     '51ad4257eb8e249cad6089b205d4f9e4bb76bd032da4782792b66abea945146c'
     'b38529be56a93c215d58b931d367a822e26d88c70949e4fd870d4de4521fb373'
 )
