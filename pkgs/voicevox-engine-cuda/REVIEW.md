@@ -148,6 +148,7 @@ AUR の `voicevox-engine` PKGBUILD (pkgver=0.24.1, pkgrel=1) を fork、 CUDA
 
 | 日付 | release | review した PKGBUILD repo SHA | upstream tag commit | findings |
 |---|---|---|---|---|
+| 2026-05-26 | 0.25.2-3 | `07832ae` | — (pkgrel bump のみ) | `pkgrel` +1 (deps changed): python-fastapi 0.136.1-1 → 0.136.3-1 |
 | 2026-05-25 | 0.25.2-2 | `b89e4ac` | — (pkgrel bump のみ) | `pkgrel` +1 (deps changed): cython 3.2.4-4 → 3.2.5-1 |
 | 2026-05-21 | 0.25.2 | (this PR) | `f2a20b1d4d2613851daffdd1de2217a472d89c48` | needs-attention: psutil>=7.1.1 が新規 runtime dep (cpu_count HT 改善)。python-psutil を depends に直接追加。新キャラ 3 名追加で .7z.002 が 335MB→496MB に増加。breaking changes なし。sha256 は build host 実測値。Closes #78 |
 | 2026-05-19 | 0.24.1-3 (runtime fix + pkgrel bump) | (本 PR の commit SHA を merge 時に追記) | — | system Python の C extension (soxr_ext / 他) が `ImportError: CXXABI_1.3.15 not found in /usr/lib/VOICEVOX/vv-engine/libstdc++.so.6` で fail していた問題を修正。 bundle 内の `libstdc++.so.6` / `libgcc_s.so.1` / `libmvec.so.1` が LD_LIBRARY_PATH=/usr/lib/VOICEVOX/vv-engine 経由で system 版より先に resolve され、 古い ABI が system の新 C ext に互換しない問題。 package() で該当 3 lib を `rm -f` → system 版 (gcc-libs / glibc) にフォールバックさせる。 bundle 同梱の CUDA stack (libcudart 等) は system libstdc++ で問題なく動く (= libstdc++ は ABI backward compatible)。 pkgrel を 2 → 3 に bump |
