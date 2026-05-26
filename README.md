@@ -55,7 +55,6 @@
 |---|---|---|
 | `moonlight-qt`   | from-source (Qt6/FFmpeg/SDL2) | NVIDIA GameStream / Sunshine client |
 | `qview`          | from-source (Qt6)             | 画像ビューア |
-| `pika-backup`    | from-source (GTK4/Rust)       | borg backup GUI frontend |
 | `localsend-bin`  | -bin (Flutter prebuilt)       | AirDrop 代替 (LAN ファイル転送) |
 | `pwvucontrol`    | from-source (Rust/GTK4)       | PipeWire 音量コントロール |
 
