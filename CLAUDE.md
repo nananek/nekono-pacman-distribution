@@ -375,6 +375,39 @@ bin/build-all --pending   # 末尾で repo-add まで完了。"nothing to build"
 `sudo pacman -Sy && pacman -Si <pkg>` で新 version が解決できれば配信反映済み
 (= nginx は Tailscale 越し file 配信のみ、 reload 不要)。
 
+## Package の退役 (retirement)
+
+不要になった package を [nekono] から外す手順。 `pkgs/<name>/` を消すだけでは
+**db と repo/x86_64/ の `.pkg.tar.zst` が残る** ので、別途 `repo-remove` +
+`bin/prune` が必要。 `bin/build-all` が両方を自動でやるように整えてある。
+
+1. ローカル (この repo, master):
+   ```sh
+   git rm -r pkgs/<pkg>/
+   # README.md「配布パッケージ一覧」 から該当行を削除
+   # nvchecker.toml の [<pkg>] section を削除
+   git commit -S -m "<pkg>: retire (<reason>)"
+   git push
+   ```
+2. Build host:
+   ```sh
+   cd ~/nekono-pacman-distribution
+   git pull --ff-only
+   bin/build-all --pending
+   # build-all は pkgs/ に PKGBUILD が無く db に entry が残っている pkg を
+   # 検出し、 repo-remove --sign で db から外したあと bin/prune を呼んで
+   # `.pkg.tar.zst{,.sig}` も削除する。 retirement は --pending / 個別 pkg
+   # 指定とは独立に常に走る。
+   ```
+3. Client 側 (ayaka 等):
+   ```sh
+   sudo pacman -Rns <pkg>     # まだ install されていれば
+   sudo pacman -Sy            # repo db refresh
+   ```
+4. ansible-nekonodesk: `roles/os_packages/vars/Archlinux.yml` の
+   "Self-hosted (nekono repo)" block から該当行を消す PR を別途出す
+   (= 次回 ansible run で client から消える)。
+
 ## ansible-nekonodesk との分担
 
 | 領域 | 置き場所 |
