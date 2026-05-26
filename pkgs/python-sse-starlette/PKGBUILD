@@ -17,7 +17,7 @@
 pkgname=python-sse-starlette
 _pkgname=${pkgname#python-}
 pkgver=3.4.4
-pkgrel=1
+pkgrel=2
 pkgdesc="Server Sent Events (SSE) for Starlette and FastAPI"
 arch=(any)
 url="https://github.com/sysid/sse-starlette"
