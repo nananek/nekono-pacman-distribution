@@ -241,7 +241,25 @@ for p in "${topo_all[@]}"; do
     fi
 done
 
-if [[ ${#packages[@]} -eq 0 ]]; then
+# Detect retired packages: db に entry はあるが pkgs/<name>/PKGBUILD が
+# 既に削除されているもの (= ローカルで `git rm -r pkgs/<name>/` した結果)。
+# repo-add は addition 専用なので、 別途 repo-remove + bin/prune で db + file
+# 両方を掃除する必要がある。 retirement は build target (`requested`) や
+# `--pending` フラグとは独立に常に検査・実行する (= 1 度 push されれば
+# 次の build-all 実行で必ず反映される)。
+retired_pkgs=()
+db_file="$REPO_DIR/$DB_NAME.db.tar.gz"
+if [[ -f "$db_file" ]]; then
+    mapfile -t db_listed_names < <(
+        tar -xzO -f "$db_file" --wildcards '*/desc' 2>/dev/null \
+            | awk '/^%NAME%$/{getline n; print n}'
+    )
+    for n in "${db_listed_names[@]}"; do
+        [[ -f "$REPO_ROOT/pkgs/$n/PKGBUILD" ]] || retired_pkgs+=("$n")
+    done
+fi
+
+if [[ ${#packages[@]} -eq 0 && ${#retired_pkgs[@]} -eq 0 ]]; then
     echo ""
     echo "[OK] nothing to build (all packages up to date in $REPO_DIR)"
     if [[ ${#cascade_pkgs[@]} -gt 0 ]]; then
@@ -251,14 +269,19 @@ if [[ ${#packages[@]} -eq 0 ]]; then
 fi
 
 echo ""
-echo "[*] Will build ${#packages[@]} package(s) in dep order: ${packages[*]}"
+if [[ ${#packages[@]} -gt 0 ]]; then
+    echo "[*] Will build ${#packages[@]} package(s) in dep order: ${packages[*]}"
+fi
+if [[ ${#retired_pkgs[@]} -gt 0 ]]; then
+    echo "[*] Will retire ${#retired_pkgs[@]} package(s) (no PKGBUILD in pkgs/): ${retired_pkgs[*]}"
+fi
 if [[ ${#cascade_pkgs[@]} -gt 0 ]]; then
     echo "[!] ${#cascade_pkgs[@]} pkg(s) flagged for cascade-warn — review and PR pkgrel bumps after this run: ${cascade_pkgs[*]}"
 fi
 
 if $DRY_RUN; then
     echo ""
-    echo "[OK] --dry-run, exiting before makepkg / gpg / repo-add"
+    echo "[OK] --dry-run, exiting before makepkg / gpg / repo-add / repo-remove"
     exit 0
 fi
 
@@ -269,54 +292,74 @@ gpg-connect-agent "SCD SERIALNO" /bye >/dev/null
 # "Please insert card with serial ..." を回避)。
 gpg --card-status >/dev/null 2>&1 || true
 
-for pkg in "${packages[@]}"; do
-    pkg_dir="$REPO_ROOT/pkgs/$pkg"
-    if [[ ! -f "$pkg_dir/PKGBUILD" ]]; then
-        echo "[WARN] skip $pkg (no PKGBUILD)" >&2
-        continue
-    fi
+# Phase 1: 退役 pkg を db から外し、 orphan file を prune する。
+# build loop / repo-add より前に走らせる必要がある (= 後段の repo-add は
+# `*.pkg.tar.zst` glob を使うので、 退役 pkg の file を残したまま走らせると
+# 退役したはずの pkg が db に再 add されてしまう)。
+if [[ ${#retired_pkgs[@]} -gt 0 ]]; then
+    echo ""
+    echo "[*] Retiring ${#retired_pkgs[@]} package(s) from db: ${retired_pkgs[*]}"
+    pushd "$REPO_DIR" >/dev/null
+    repo-remove --sign --key "${NEKONO_GPG_FP}!" "$DB_NAME.db.tar.gz" \
+        "${retired_pkgs[@]}"
+    popd >/dev/null
+    echo ""
+    echo "[*] Pruning orphan files for retired packages"
+    "$REPO_ROOT/bin/prune"
+fi
+
+# Phase 2: 新 build + repo-add + 最終 prune。 packages が空 (= retirement-only
+# 実行) ならまるごと skip する。
+if [[ ${#packages[@]} -gt 0 ]]; then
+    for pkg in "${packages[@]}"; do
+        pkg_dir="$REPO_ROOT/pkgs/$pkg"
+        if [[ ! -f "$pkg_dir/PKGBUILD" ]]; then
+            echo "[WARN] skip $pkg (no PKGBUILD)" >&2
+            continue
+        fi
+
+        echo ""
+        echo "============================================================"
+        echo "[*] Building $pkg"
+        echo "============================================================"
+
+        pushd "$pkg_dir" >/dev/null
+
+        # 既存の同一 package version の中間物 / sig は掃除して再現性確保
+        rm -f -- *.pkg.tar.zst *.pkg.tar.zst.sig
+
+        # makepkg: deps install + tarball verify + build + package。
+        # -s で deps を pacman -S、-c で build 後 src/pkg を clean。
+        # --sign は makepkg が builtin GPG 署名する flag、Nekono GPG fp を指定。
+        # `!` 末尾で primary key 強制固定 (= card に load されていない subkey に
+        # 流れて "wrong card" になる事故防止、詳細は bin/update-repo コメント参照)。
+        makepkg -sc --noconfirm --sign --key "${NEKONO_GPG_FP}!"
+
+        # 生成物 (.pkg.tar.zst + .sig) を repo/x86_64/ に移動
+        mv -- *.pkg.tar.zst *.pkg.tar.zst.sig "$REPO_DIR/"
+
+        popd >/dev/null
+    done
 
     echo ""
-    echo "============================================================"
-    echo "[*] Building $pkg"
-    echo "============================================================"
+    echo "[*] Updating $DB_NAME repo db at $REPO_DIR"
+    pushd "$REPO_DIR" >/dev/null
 
-    pushd "$pkg_dir" >/dev/null
-
-    # 既存の同一 package version の中間物 / sig は掃除して再現性確保
-    rm -f -- *.pkg.tar.zst *.pkg.tar.zst.sig
-
-    # makepkg: deps install + tarball verify + build + package。
-    # -s で deps を pacman -S、-c で build 後 src/pkg を clean。
-    # --sign は makepkg が builtin GPG 署名する flag、Nekono GPG fp を指定。
-    # `!` 末尾で primary key 強制固定 (= card に load されていない subkey に
-    # 流れて "wrong card" になる事故防止、詳細は bin/update-repo コメント参照)。
-    makepkg -sc --noconfirm --sign --key "${NEKONO_GPG_FP}!"
-
-    # 生成物 (.pkg.tar.zst + .sig) を repo/x86_64/ に移動
-    mv -- *.pkg.tar.zst *.pkg.tar.zst.sig "$REPO_DIR/"
+    # repo-add: 既存 db に新 pkg を追加 (or 上書き)。--sign で db 自体も
+    # Nekono GPG で署名 (= /etc/pacman.conf の SigLevel = Required DatabaseRequired
+    # を満たす)。
+    repo-add --sign --key "${NEKONO_GPG_FP}!" "$DB_NAME.db.tar.gz" \
+        *.pkg.tar.zst
 
     popd >/dev/null
-done
+
+    echo ""
+    echo "[*] Pruning orphan packages from $REPO_DIR"
+    "$REPO_ROOT/bin/prune"
+fi
 
 echo ""
-echo "[*] Updating $DB_NAME repo db at $REPO_DIR"
-pushd "$REPO_DIR" >/dev/null
-
-# repo-add: 既存 db に新 pkg を追加 (or 上書き)。--sign で db 自体も
-# Nekono GPG で署名 (= /etc/pacman.conf の SigLevel = Required DatabaseRequired
-# を満たす)。
-repo-add --sign --key "${NEKONO_GPG_FP}!" "$DB_NAME.db.tar.gz" \
-    *.pkg.tar.zst
-
-popd >/dev/null
-
-echo ""
-echo "[*] Pruning orphan packages from $REPO_DIR"
-"$REPO_ROOT/bin/prune"
-
-echo ""
-echo "[OK] build-all completed. $(ls -1 "$REPO_DIR"/*.pkg.tar.zst | wc -l) signed packages in $REPO_DIR"
+echo "[OK] build-all completed. $(ls -1 "$REPO_DIR"/*.pkg.tar.zst 2>/dev/null | wc -l) signed packages in $REPO_DIR"
 
 if [[ ${#cascade_pkgs[@]} -gt 0 ]]; then
     echo ""
