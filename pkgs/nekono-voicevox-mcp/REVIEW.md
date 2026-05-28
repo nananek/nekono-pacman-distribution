@@ -83,3 +83,4 @@ upstream で新 release (= v0.2.0 等) が出たら:
 |---|---|---|---|---|
 | 2026-05-20 | 0.1.0 | `2a6f86b252998cf0e52fea0be9480372f05ae1fa` | `a1d1423524ad7eb53db0667e8ce7b1dd6473a831` | 初回 add、 自家 source v0.1.0 |
 | 2026-05-24 | 0.1.0-2 | `66f853b` | — (pkgrel bump のみ) | `pkgrel` +1 (deps changed): pipewire version bump |
+| 2026-05-28 | 0.1.0-3 | (this PR) | — (pkgrel bump のみ) | `pkgrel` +1 (deps changed): pipewire 1:1.6.5-2 → 1:1.6.6-1 |
