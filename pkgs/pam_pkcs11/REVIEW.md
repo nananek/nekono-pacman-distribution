@@ -100,3 +100,10 @@ upstream の新 release (0.6.14 等) が出たら:
 3. md5 / sha256 を独立再計算 (= `curl -fsSL <url> | md5sum` で照合)
 4. tag commit author を GitHub API で確認 (= Paul Wolneykien が変わってないか)
 5. REVIEW.md に確認日 + 結論 update
+
+## 更新履歴
+
+| 日付 | release | review した PKGBUILD repo SHA | upstream tag commit | findings |
+|---|---|---|---|---|
+| 2026-05-16 | 0.6.13-1 | (初回 add) | — | 初回 add |
+| 2026-05-28 | 0.6.13-2 | (this PR) | — (pkgrel bump のみ) | `pkgrel` +1 (deps changed): pcsclite 2.4.1-1 → 2.5.0-1 |
