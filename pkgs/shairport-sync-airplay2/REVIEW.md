@@ -143,3 +143,4 @@ extra/shairport-sync の追従は **本 fork の更新方針からは外す**。
 | 2026-05-23 | 4.3.5 | (初版) | — | 新規追加、 extra 4.3.5-4 fork + `--with-airplay-2`、 sha256 OK、 `remove_useradd.patch` 4.3.5 Makefile.am に適用可確認 |
 | 2026-05-24 | 5.0.4 | (bump) | — | upstream latest stable 追従、 configure flag rename 反映 (pa/pw/systemd)、 `--with-ffmpeg` は airplay-2 で auto-on、 `--with-apple-alac` は upstream deprecated のため非採用、 `remove_useradd.patch` を 5.0.4 用に再生成、 全 sha256 verify OK。 ※ ayaka 運用は AirPlay 1 のまま (iOS 26 + issue #2179 待ち) |
 | 2026-05-25 | 5.0.4-2 | `620aacc` | — (pkgrel bump のみ) | `pkgrel` +1 (deps changed): libpipewire 1:1.6.5-1 → 1:1.6.5-2 |
+| 2026-05-28 | 5.0.4-3 | (this PR) | — (pkgrel bump のみ) | `pkgrel` +1 (deps changed): libpipewire 1:1.6.5-2 → 1:1.6.6-1 |
