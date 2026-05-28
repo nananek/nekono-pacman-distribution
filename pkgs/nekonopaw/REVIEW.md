@@ -126,3 +126,4 @@ upstream で新 release tag (v0.2.0 等) が出たら:
 | 日付 | release | review した PKGBUILD repo SHA | upstream tag commit | findings |
 |---|---|---|---|---|
 | 2026-05-24 | 0.1.2-2 | `2eae7fb` | — (pkgrel bump のみ) | `pkgrel` +1 (deps changed): pipewire version bump |
+| 2026-05-28 | 0.1.2-3 | (this PR) | — (pkgrel bump のみ) | `pkgrel` +1 (deps changed): pipewire 1:1.6.5-2 → 1:1.6.6-1 |
