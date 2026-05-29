@@ -83,3 +83,4 @@ upstream で新 release (= v3.2.5 等) が出たら:
 | 2026-05-20 | 3.2.4 (pkgrel +1 → 2) | `7196acd19e029061f28f4c2dfd6bab4fc7af121b` | (同上) | dep audit で漏れていた 10 個を depends に追加 (= jsonref / cyclopts / py-key-value-aio [nekono] + opentelemetry-api / packaging / platformdirs / yaml / websockets / watchfiles / griffelib Arch 公式)。 ayaka 上の ModuleNotFoundError 'jsonref' 事案が契機 |
 | 2026-05-26 | 3.3.1-4 | `7a5fe13` | — (pkgrel bump のみ) | `pkgrel` +1 (deps changed): python-starlette 1.0.0-1 → 1.1.0-1 |
 | 2026-05-23 | 3.3.1-3 | `14fc8c8` | — (pkgrel bump のみ) | `pkgrel` +1 (deps changed): python-opentelemetry-api 1.42.0-1 → 1.42.1-1 |
+| 2026-05-29 | 3.3.1-5 | (this PR) | — (pkgrel bump のみ) | `pkgrel` +1 (deps changed): python-platformdirs 4.9.6-1 → 4.10.0-1 |
