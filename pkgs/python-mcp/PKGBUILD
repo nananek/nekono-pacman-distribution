@@ -18,7 +18,7 @@
 _name=mcp
 pkgname=python-$_name
 pkgver=1.27.1
-pkgrel=4
+pkgrel=5
 pkgdesc='Model Context Protocol SDK.'
 arch=('any')
 url='https://github.com/modelcontextprotocol/python-sdk'
