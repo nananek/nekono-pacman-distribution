@@ -158,3 +158,4 @@ AUR の `voicevox-engine` PKGBUILD (pkgver=0.24.1, pkgrel=1) を fork、 CUDA
 | 2026-05-19 | 0.24.1 (build fix) | `b4108ea` (PR #46 merge) | — | bundle に同梱されている Python 3.11 build の kanalizer / pyopenjtalk / pyworld + dist-info を pip install --target 前に `rm -rf` で除去 (= system Python 3.14 と ABI 不一致、 かつ pip --target が既存 dir を warn+skip する挙動への対応)。 retroactive 記録 |
 | 2026-05-19 | 0.24.1 (build fix) | (本 PR の commit SHA を merge 時に追記) | — | `--no-build-isolation` 追加: pyopenjtalk sdist の PEP 517 build isolation が `--no-index` と衝突し setuptools>=64 を fetch 不能となる問題を修正。 build host (nekono-pacman0) の実 build で発覚 |
 | 2026-05-19 | 0.24.1 | (本 PR の commit SHA を merge 時に追記) | `fb9972dd5753f81c2a3a1af52b09bfc01f1608ab` | 初回 add、 supply-chain 強化フル改修 |
+| 2026-05-29 | 0.25.2-4 | (this PR) | — (pkgrel bump のみ) | `pkgrel` +1 (deps changed): python-platformdirs 4.9.6-1 → 4.10.0-1 |
