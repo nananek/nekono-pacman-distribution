@@ -80,4 +80,5 @@ upstream で新 release (= 1.27.2 or 1.28.x 等) が出たら:
 |---|---|---|---|---|
 | 2026-05-20 | 1.27.1-2 | `c3370e73e2fe9588b3a6a4f0df8ecd8437ac9924` | `77431ebe7dda9ed0c61451b22d3e7f8d981bc092` | 初回 add、 純 fork ベース (= check() / optdepends 削除) + upstream 準拠で `python-opentelemetry-api` を depends 追加 (= AUR 省略 fix)。 1834.patch 同梱 (= Python 3.14 対応、 upstream 未 merge) |
 | 2026-05-26 | 1.27.1-4 | `ed05192` | — (pkgrel bump のみ) | `pkgrel` +1 (deps changed): python-starlette 1.0.0-1 → 1.1.0-1 |
+| 2026-05-29 | 1.27.1-5 | (this PR) | — (pkgrel bump のみ) | `pkgrel` +1 (deps changed): python-pyjwt 2.12.1-1 → 2.13.0-1 |
 | 2026-05-22 | 1.27.1-3 | `6e9889f` | `77431ebe7dda9ed0c61451b22d3e7f8d981bc092` | `pkgrel` +1 (deps changed): python-opentelemetry-api 1.42.0-1 → 1.42.1-1。 PKGBUILD 本体変更なし |
