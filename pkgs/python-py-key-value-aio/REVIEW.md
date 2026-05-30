@@ -57,3 +57,4 @@ upstream で新 release が出たら nvchecker (= `[python-py-key-value-aio]` se
 |---|---|---|---|---|
 | 2026-05-20 | 0.4.4-1 | `e808468` | upstream tag `v0.4.4` | 初回 add、 AUR fork + 0.4.4 bump + extras 反映 (= 当初 SHA `eb0fae2`、 master rebase で `e808468` に再付番) |
 | 2026-05-23 | 0.4.4-2 | `f6d9184` | — (pkgrel bump のみ) | `pkgrel` +1 (deps changed): python-cachetools 7.1.3-1 → 7.1.4-1, python-uv-build 0.11.15-1 → 0.11.16-1 |
+| 2026-05-30 | 0.4.4-3 | bot PR #137 | — (pkgrel bump のみ) | `pkgrel` +1 (deps changed): python-uv-build 0.11.16-1 → 0.11.17-1 |
