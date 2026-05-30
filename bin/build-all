@@ -345,6 +345,10 @@ if [[ ${#packages[@]} -gt 0 ]]; then
     echo "[*] Updating $DB_NAME repo db at $REPO_DIR"
     pushd "$REPO_DIR" >/dev/null
 
+    # nginx が serve するため world-readable に揃える。 ENOSPC 等で mv 直後の
+    # artifact が 0600 のまま残った事例があり、 client が 403 で取得失敗する。
+    chmod 0644 -- *.pkg.tar.zst *.pkg.tar.zst.sig
+
     # repo-add: 既存 db に新 pkg を追加 (or 上書き)。--sign で db 自体も
     # Nekono GPG で署名 (= /etc/pacman.conf の SigLevel = Required DatabaseRequired
     # を満たす)。
