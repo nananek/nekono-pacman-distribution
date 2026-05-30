@@ -159,3 +159,4 @@ AUR の `voicevox-engine` PKGBUILD (pkgver=0.24.1, pkgrel=1) を fork、 CUDA
 | 2026-05-19 | 0.24.1 (build fix) | (本 PR の commit SHA を merge 時に追記) | — | `--no-build-isolation` 追加: pyopenjtalk sdist の PEP 517 build isolation が `--no-index` と衝突し setuptools>=64 を fetch 不能となる問題を修正。 build host (nekono-pacman0) の実 build で発覚 |
 | 2026-05-19 | 0.24.1 | (本 PR の commit SHA を merge 時に追記) | `fb9972dd5753f81c2a3a1af52b09bfc01f1608ab` | 初回 add、 supply-chain 強化フル改修 |
 | 2026-05-29 | 0.25.2-4 | (this PR) | — (pkgrel bump のみ) | `pkgrel` +1 (deps changed): python-platformdirs 4.9.6-1 → 4.10.0-1 |
+| 2026-05-30 | 0.25.2-5 | bot PR #138 | — (pkgrel bump のみ) | `pkgrel` +1 (deps changed): python-soxr 0.5.0.post1-4 → 1.1.0-2 |
