@@ -4,7 +4,7 @@
 # Format: 1 line per package: <name>=<full-version>
 
 blueprint-compiler=0.20.4-1
-clang=22.1.5-1
+clang=22.1.6-1
 glib2=2.88.1-1
 gtk4=1:4.22.4-1
 libadwaita=1:1.9.1-1
