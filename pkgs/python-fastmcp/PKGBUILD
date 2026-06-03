@@ -12,7 +12,7 @@
 #   source[] に fastmcp-slim sdist (= 実コード) と fastmcp meta sdist (= LICENSE 取得用)
 #   の両方を vendor する。 build() / package() は fastmcp_slim-* dir を使う。
 
-_upstreamver='3.3.1'
+_upstreamver='3.4.0'
 _upstreamver_regex='^[0-9]+\.[0-9]+\.[0-9]+$'
 _source_type='pypi-releases'
 # 3.3.0 以降: fastmcp は空 meta-pkg。 実コードは fastmcp-slim (PyPI 別 pkg)。
@@ -21,11 +21,11 @@ _meta_pkg='fastmcp'
 
 pkgname='python-fastmcp'         # pacman 名は変えない (_slim_pkg が変わったため明示固定)
 pkgver="${_upstreamver}"
-pkgrel=5
+pkgrel=1
 pkgdesc="The fast, Pythonic way to build MCP servers and clients."
 arch=('any')
 url='https://github.com/PrefectHQ/fastmcp'
-license=('MIT')
+license=('Apache-2.0')           # upstream は 3.3 以降 Apache-2.0 (旧 MIT、 PKGBUILD 側追従)
 
 depends=(
   'python'
@@ -59,6 +59,7 @@ depends=(
   'python-watchfiles'           # Arch 公式 (= watchfiles>=1.0.0)
   'python-griffelib'            # Arch 公式 (= griffelib>=2.0.0)
   'python-multipart'            # Arch 公式 (= fastmcp-slim 3.3.x [server] extra 新規 dep)
+  'python-joserfc'              # Arch 公式 (= fastmcp-slim 3.4.0 [server] extra 新規 dep、 JWT 処理を joserfc に移行)
 )
 makedepends=(
   'python-setuptools'
@@ -76,8 +77,8 @@ source=(
     "https://files.pythonhosted.org/packages/source/${_meta_pkg::1}/${_meta_pkg}/${_meta_pkg}-${pkgver}.tar.gz"
 )
 sha256sums=(
-    '0957835fc59452e143ab2f4b7836d2d2df9b2d9958408edc79ba8b56232b2a88'  # fastmcp_slim-3.3.1.tar.gz
-    '979362ea557de42a5f40342563c7e4b236bcc8e7cd192715f50030695d1a71cd'  # fastmcp-3.3.1.tar.gz (meta, LICENSE用)
+    'faa0ccf16e85ec4b9f79c006fed3546b866d7e6dba3f60cd32cd98e84753a496'  # fastmcp_slim-3.4.0.tar.gz
+    '29055fb6816f4862c615aabaf0112ae8feb8b469740db13403a0ce5b799ec1dc'  # fastmcp-3.4.0.tar.gz (meta, LICENSE用)
 )
 
 
