@@ -2,7 +2,7 @@
 
 ## 状態
 
-**review 済み、approve** (最新: 2026-05-21 / 2.1.146)
+**review 済み、approve** (最新: 2026-06-03 / 2.1.161)
 
 AUR の `claude-code` PKGBUILD を fork。改変なし。各 release の review 履歴は
 本ファイル末尾の「更新履歴」 section 参照。
@@ -77,6 +77,15 @@ upstream の新 release (2.1.143 等) が出たら:
    1 行追記
 
 ## 更新履歴
+
+- **2026-06-03 / 2.1.161** — approve。 Issue #152 調査済み (release author `ashwin-ant` = 過去 release と同一)。
+  主な変更: Opus 4.8 サポート、 Dynamic Workflows、 plugin auto-loading、
+  **セキュリティ修正複数** (PowerShell `cd` バイパス / managed-settings バイパス / MCP secrets 漏洩 修正)。
+  v2.1.147 / v2.1.152 で `/simplify` → `/code-review` リネーム (breaking)。
+  sha256 は raw binary を直接 `curl | sha256sum` 実測:
+  - x86_64: `1f6a22f387a3bce496b6d869389a35dffb5a69c97d9831833f3bd6dc0e6c6c28`
+  - aarch64: `7dfa0a79a2fc9f332057cdc0302f808cba63df7b75e2ccb5a7c1ab62639804e3`
+  PKGBUILD 改変は `pkgver` + 2 sha256 の 3 値のみ。 Closes #152。
 
 - **2026-05-21 / 2.1.146** — approve。upstream tag commit: Issue #92 調査済み (release author `ashwin-ant`)。
   バグ修正リリース (`/simplify` → `/code-review` リネーム、MCP paginating 修正、GNOME Terminal paste 修正 等)。
