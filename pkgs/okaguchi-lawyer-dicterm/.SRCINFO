@@ -1,7 +1,7 @@
 pkgbase = okaguchi-lawyer-dicterm
 	pkgdesc = Legal terms dictionary for Mozc IME (Okaguchi, Microsoft IME format, 1510 entries)
 	pkgver = 20201122
-	pkgrel = 1
+	pkgrel = 2
 	url = https://togilab.com/dicterm/
 	install = okaguchi-lawyer-dicterm.install
 	arch = any
