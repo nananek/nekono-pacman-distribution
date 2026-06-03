@@ -8,7 +8,7 @@
 
 pkgname=nekonopaw
 pkgver=0.1.2
-pkgrel=3
+pkgrel=4
 pkgdesc="PipeWire output mixer Web UI (per-stream / per-sink volume control)"
 arch=('x86_64')
 url="https://github.com/nananek/nekonopaw"
