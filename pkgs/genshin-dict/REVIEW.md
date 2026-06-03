@@ -107,3 +107,4 @@ upstream で新 release が出たら:
 | 2026-05-21 | 6.3.1 | 96374fc | v6.3.1 (6bffdf3da2d386117f941df2f483d48aafb6ace3) | pkgrel=2: protobuf 直接操作に移行。user_dictionary_storage.proto vendor + genshin-dict-mozc-import を Python 実装に書き替え |
 | 2026-05-26 | 6.6.0 | (this PR) | v6.6.0 (`4188a9d624083c992cab9ea9a0234a9f3a8b0f0d`) | safe-to-bump: 辞書エントリ追加のみ (アファールの鳥、アムリタ学院、ヴァフマナ等)。PKGBUILD 構造変化なし、sha256 独立検証済み |
 | 2026-05-21 | 6.3.1 | (本 commit 後に確定) | v6.3.1 (6bffdf3da2d386117f941df2f483d48aafb6ace3) | pkgrel=3: バージョン stamp 付き flag file に変更 (`.genshin-dict-{pkgver}-imported`)。upgrade 時に自動再 import、古い flag を cleanup |
+| 2026-06-03 | 6.6.1 | (this PR) | v6.6.1 (`ff3c2efcccfc`) | safe-to-bump: 辞書エントリ追加のみ (水仙十字関係人物名・書籍名等)。PKGBUILD 構造変化なし、 sha256 独立検証済み |
