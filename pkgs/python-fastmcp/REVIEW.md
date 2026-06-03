@@ -2,7 +2,7 @@
 
 ## 状態
 
-**review 済み、 approve** (最新: 2026-05-21 / 3.3.1)
+**review 済み、 approve** (最新: 2026-06-03 / 3.4.0)
 
 AUR の `python-fastmcp` PKGBUILD を fork (+ 3.3.x の package split 対応)。
 
@@ -84,3 +84,4 @@ upstream で新 release (= v3.2.5 等) が出たら:
 | 2026-05-26 | 3.3.1-4 | `7a5fe13` | — (pkgrel bump のみ) | `pkgrel` +1 (deps changed): python-starlette 1.0.0-1 → 1.1.0-1 |
 | 2026-05-23 | 3.3.1-3 | `14fc8c8` | — (pkgrel bump のみ) | `pkgrel` +1 (deps changed): python-opentelemetry-api 1.42.0-1 → 1.42.1-1 |
 | 2026-05-29 | 3.3.1-5 | (this PR) | — (pkgrel bump のみ) | `pkgrel` +1 (deps changed): python-platformdirs 4.9.6-1 → 4.10.0-1 |
+| 2026-06-03 | 3.4.0-1 | (this PR) | `PrefectHQ/fastmcp v3.4.0` | needs-attention: JWT 処理を `joserfc` に移行 → `python-joserfc` を depends 追加 (Arch 公式 extra)。 license を `MIT` → `Apache-2.0` に修正 (upstream は 3.3 以降 Apache-2.0、 PKGBUILD 側で長らく不一致)。 proxy `initialize` forwarding が breaking (3.3 silent fail → 3.4 loud fail)。 OAuth トークン寿命の切離し、 Code Mode default sandbox 制限、 OTEL spans 拡充、 GHA workflow security fix 3 件。 sha256 (slim / meta) 独立検証済み。 Closes #153 |
