@@ -127,3 +127,4 @@ upstream で新 release tag (v0.2.0 等) が出たら:
 |---|---|---|---|---|
 | 2026-05-24 | 0.1.2-2 | `2eae7fb` | — (pkgrel bump のみ) | `pkgrel` +1 (deps changed): pipewire version bump |
 | 2026-05-28 | 0.1.2-3 | (this PR) | — (pkgrel bump のみ) | `pkgrel` +1 (deps changed): pipewire 1:1.6.5-2 → 1:1.6.6-1 |
+| 2026-06-03 | 0.1.2-4 | (this PR) | — (pkgrel bump のみ) | `pkgrel` +1 (deps changed): go 2:1.26.3-1 → 2:1.26.4-1 |
