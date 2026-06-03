@@ -15,7 +15,7 @@
 
 pkgname=genshin-dict
 pkgver=6.6.0
-pkgrel=1
+pkgrel=2
 pkgdesc='Genshin Impact dictionary for Mozc IME (Windows IME format TSV + import helper)'
 arch=('any')
 url='https://github.com/kotofurumiya/genshin-dict'
