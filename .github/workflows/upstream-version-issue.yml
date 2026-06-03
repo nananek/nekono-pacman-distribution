@@ -33,7 +33,10 @@ jobs:
     steps:
       - name: Install runtime deps
         run: |
-          pacman -Syu --noconfirm --needed git nvchecker python jq github-cli
+          # python-packaging は nvchecker の optional dep (pypi source 用)
+          # だが、 nvchecker 2.20-2 以降 import パス上で必須化されており、
+          # 入れないと `No module named 'packaging'` で死ぬ。
+          pacman -Syu --noconfirm --needed git nvchecker python python-packaging jq github-cli
 
       - uses: actions/checkout@v6
         with:
