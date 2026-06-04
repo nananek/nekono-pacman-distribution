@@ -24,4 +24,4 @@ python-typing-inspection=0.4.2-2
 python-typing_extensions=4.15.0-3
 python-uv-dynamic-versioning=0.14.0-1
 python-wheel=0.47.0-1
-uvicorn=0.38.0-2
+uvicorn=0.49.0-1
