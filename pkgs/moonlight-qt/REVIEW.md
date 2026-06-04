@@ -66,3 +66,4 @@ upstream の新 release (v6.1.1 等) が出たら:
 | 日付 | release | review した PKGBUILD repo SHA | findings |
 |---|---|---|---|
 | 2026-05-23 | 6.1.0-5 | `2c7df2f` | `pkgrel` +1 (deps changed): qt6-declarative 6.11.1-1 → 6.11.1-2 |
+| 2026-06-04 | 6.1.0-6 | (this PR) | `pkgrel` +1 (deps changed): qt6-declarative 6.11.1-2 → 6.11.1-3 |
