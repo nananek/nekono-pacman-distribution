@@ -10,4 +10,4 @@ python-installer=1.0.0-1
 python-setuptools=1:82.0.1-1
 python-starlette=1.1.0-1
 python-wheel=0.47.0-1
-uvicorn=0.38.0-2
+uvicorn=0.49.0-1
