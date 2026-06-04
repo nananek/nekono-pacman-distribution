@@ -137,6 +137,13 @@ upstream の新 release (docker 29.5.x 等) が出たら:
 
 ## 更新履歴
 
+- **2026-06-04 / 29.5.3** — approve。Docker Engine v29.5.3 (release 2026-06-03、by `vvoland`)
+  への sync。upstream tag commit: `285b47192d4b2f183aba5dd360a92cd52d723004`。
+  パッチリリース (rootless UDP / plugin 修正、RootlessKit v3.0.1)。
+  rootless スクリプト群 (`dockerd-rootless.sh` + `dockerd-rootless-setuptool.sh`)
+  の中身は v29.5.2 と **完全同一** (= sha256 不変)。PKGBUILD 改変は `pkgver=29.5.3` の 1 行のみ。
+  Issue #160 (upstream-version-issue.yml 調査) で同一性確認済み。Closes #160。
+
 - **2026-05-21 / 29.5.2** — approve。Docker Engine v29.5.2 (release 2026-05-20、by `vvoland`)
   への sync。upstream tag commit: `b5c3467ddde0169d80aade06b47994dca8137fe6`。
   パッチリリース (docker cp バグ修正 1 件のみ)。rootless スクリプト群
