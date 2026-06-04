@@ -78,6 +78,16 @@ upstream の新 release (2.1.143 等) が出たら:
 
 ## 更新履歴
 
+- **2026-06-04 / 2.1.162** — approve。Issue #161 調査済み (release author `ashwin-ant` = 過去 release と同一)。
+  バグ修正・UX 改善リリース、security fix なし。主な変更: `claude agents --json` の `waitingFor`
+  フィールド追加、 read-only config dir での起動ハング修正、 WebFetch preapproved ドメインの
+  permission rule 修正、 Windows の permission rule バックスラッシュ正規化、 MCP per-server timeout
+  下限 1s への切り上げ修正、 LSP workspaceSymbol 修正、 `claude agents` UI 修正多数。
+  sha256 は raw binary を直接 `curl | sha256sum` 実測:
+  - x86_64: `947a49b0de8688f6a74a6e753c24771ff3ddd17b2a6dae85f36304ec514e61d1`
+  - aarch64: `eca2a603dfebc3426a8469cbe797f9df95245738bc1c20ec842fc8f80af4010d`
+  PKGBUILD 改変は `pkgver` + 2 sha256 の 3 値のみ。 Closes #161。
+
 - **2026-06-03 / 2.1.161** — approve。 Issue #152 調査済み (release author `ashwin-ant` = 過去 release と同一)。
   主な変更: Opus 4.8 サポート、 Dynamic Workflows、 plugin auto-loading、
   **セキュリティ修正複数** (PowerShell `cd` バイパス / managed-settings バイパス / MCP secrets 漏洩 修正)。
