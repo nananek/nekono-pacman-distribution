@@ -78,6 +78,20 @@ upstream の新 release (2.1.143 等) が出たら:
 
 ## 更新履歴
 
+- **2026-06-05 / 2.1.163** — approve。Issue #168 調査済み (release author `ashwin-ant` = 過去 release と同一)。
+  バグ修正・UX 改善リリース、 breaking changes / security fix なし。 主な変更:
+  managed settings に `requiredMinimumVersion` / `requiredMaximumVersion` の version 強制ポリシー追加、
+  `/plugin list --enabled` / `--disabled` フィルタ、 `/btw` に "c to copy" ショートカット、
+  Stop / SubagentStop hook の `hookSpecificOutput.additionalContext` 拡張、
+  Skills の `\$` リテラルエスケープ、 stdio MCP の `--resume` 時 `CLAUDE_CODE_SESSION_ID` 受け渡し、
+  `$TMPDIR` オーバーライドのリグレッション修正 (2.1.154)、 Windows read-only / OneDrive ディレクトリの
+  Bash "EEXIST" 修正、 org managed permission rules / `$HOME` deny rule / hook `if:` 条件マッチング修正、
+  Bedrock/Vertex/Foundry + `CI=true` の `claude -p` 修正、 バックグラウンドシェルハング改善。
+  sha256 は raw binary を直接 `curl | sha256sum` 実測:
+  - x86_64: `5dddcb2c091da60cf9b1bef782e6c78a7fada2f2cd3db4f131c9ebc2478fd447`
+  - aarch64: `ca0010a80e3c4749e59c6e8429ec4a4e2ecbaafac36d3535636e04369bbb87c0`
+  PKGBUILD 改変は `pkgver` + 2 sha256 の 3 値のみ。 Closes #168。
+
 - **2026-06-04 / 2.1.162** — approve。Issue #161 調査済み (release author `ashwin-ant` = 過去 release と同一)。
   バグ修正・UX 改善リリース、security fix なし。主な変更: `claude agents --json` の `waitingFor`
   フィールド追加、 read-only config dir での起動ハング修正、 WebFetch preapproved ドメインの
