@@ -2,7 +2,7 @@
 
 ## 状態
 
-**review 済み、approve** (最新: 2026-06-03 / 2.1.161)
+**review 済み、approve** (最新: 2026-06-06 / 2.1.167)
 
 AUR の `claude-code` PKGBUILD を fork。改変なし。各 release の review 履歴は
 本ファイル末尾の「更新履歴」 section 参照。
@@ -77,6 +77,17 @@ upstream の新 release (2.1.143 等) が出たら:
    1 行追記
 
 ## 更新履歴
+
+- **2026-06-06 / 2.1.167** — approve。Issue #179 調査済み (release author `ashwin-ant` = 過去 release と同一、source URL `downloads.claude.ai` 不変)。
+  `2.1.163 → 2.1.165 → 2.1.166 → 2.1.167` の連続リリース (`v2.1.164` は GitHub タグ無し)。
+  バグ修正・信頼性向上が中心。 v2.1.166 で **セキュリティ強化** (`SendMessage` 経由でクロスセッション中継された
+  メッセージがユーザー権限を失う変更、 受信者は中継 permission を auto モードでもブロック) +
+  `fallbackModel` 設定 (最大 3 つ)・deny ルールの glob 対応・`MAX_THINKING_TOKENS=0` で thinking 無効化を追加。
+  build script / depends / package() / wrapper script の変更なし。 breaking change / 削除なし。
+  sha256 は raw binary を直接 `curl | sha256sum` 実測:
+  - x86_64: `d6d2995bfca3f8539d9e9aa513ff43c3daa0d556d6d1af07c6df681e050e522c`
+  - aarch64: `b8f383df1dca557dc8fb817e4e76335639f94a0a8c7b803ca2f5aef12d373f09`
+  PKGBUILD 改変は `pkgver` + 2 sha256 の 3 値のみ。 Closes #179。
 
 - **2026-06-05 / 2.1.163** — approve。Issue #168 調査済み (release author `ashwin-ant` = 過去 release と同一)。
   バグ修正・UX 改善リリース、 breaking changes / security fix なし。 主な変更:
