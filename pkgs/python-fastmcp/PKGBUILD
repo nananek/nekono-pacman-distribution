@@ -12,7 +12,7 @@
 #   source[] に fastmcp-slim sdist (= 実コード) と fastmcp meta sdist (= LICENSE 取得用)
 #   の両方を vendor する。 build() / package() は fastmcp_slim-* dir を使う。
 
-_upstreamver='3.4.0'
+_upstreamver='3.4.2'
 _upstreamver_regex='^[0-9]+\.[0-9]+\.[0-9]+$'
 _source_type='pypi-releases'
 # 3.3.0 以降: fastmcp は空 meta-pkg。 実コードは fastmcp-slim (PyPI 別 pkg)。
@@ -77,8 +77,8 @@ source=(
     "https://files.pythonhosted.org/packages/source/${_meta_pkg::1}/${_meta_pkg}/${_meta_pkg}-${pkgver}.tar.gz"
 )
 sha256sums=(
-    'faa0ccf16e85ec4b9f79c006fed3546b866d7e6dba3f60cd32cd98e84753a496'  # fastmcp_slim-3.4.0.tar.gz
-    '29055fb6816f4862c615aabaf0112ae8feb8b469740db13403a0ce5b799ec1dc'  # fastmcp-3.4.0.tar.gz (meta, LICENSE用)
+    '290646e0955a516235a317151034559aa48336cb843d3f006131aedad8759bb4'  # fastmcp_slim-3.4.2.tar.gz
+    'b468722946fc467c3796a6572f7a14d93d48c014cf8fea12910245220cbbe4e1'  # fastmcp-3.4.2.tar.gz (meta, LICENSE用)
 )
 
 
