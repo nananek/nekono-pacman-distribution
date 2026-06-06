@@ -83,3 +83,4 @@ upstream の新 release (1.2.9 等) が出たら:
 | 日付 | release | PKGBUILD repo SHA | 確認内容 |
 |---|---|---|---|
 | 2026-05-23 | 1.2.8 | (初版) | 新規追加、Mike Brady upstream、sha256 OK |
+| 2026-06-06 | 1.2.8-2 | (this PR) | `pkgrel` +1 (deps changed): libtool 2.6.0+r23+gb08cb0a0-1 → 2.6.1-1 |

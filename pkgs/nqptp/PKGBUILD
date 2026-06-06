@@ -6,7 +6,7 @@
 
 pkgname=nqptp
 pkgver=1.2.8
-pkgrel=1
+pkgrel=2
 pkgdesc='Not Quite PTP - timing/sync daemon required by shairport-sync for AirPlay 2'
 arch=('x86_64')
 url='https://github.com/mikebrady/nqptp'
