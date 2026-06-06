@@ -3,4 +3,4 @@
 # Source: pkgs/claude-code/.SRCINFO (depends + makedepends entries).
 # Format: 1 line per package: <name>=<full-version>
 
-bash=5.3.9-1
+bash=5.3.12-1
