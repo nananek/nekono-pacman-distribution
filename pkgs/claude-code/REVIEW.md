@@ -78,6 +78,15 @@ upstream の新 release (2.1.143 等) が出たら:
 
 ## 更新履歴
 
+- **2026-06-07 / 2.1.168** — approve。Issue #182 調査済み (release author `ashwin-ant` = 過去 release と同一、source URL `downloads.claude.ai` 不変)。
+  release notes は "Bug fixes and reliability improvements" の汎用テキストのみ (= 2.1.167 と同文)、 breaking change / 削除 / security fix の言及なし。
+  binary サイズが 2.1.167 比で微増 (linux-x64.tar.gz: 74,641,738 → 74,643,179 bytes) のため実コード変更を含む genuine release。
+  build script / depends / package() / wrapper script の変更なし。 install hook / `curl|sh` 等の新規追加なし。
+  sha256 は build host (nekono-pacman0) で raw binary を直接 `curl | sha256sum` 実測:
+  - x86_64: `e2f7cb50442bdee21bf2686ef3725a6af187a204e46c4af5c12d0f6d76326485`
+  - aarch64: `40d50e7c45742aaa3707fa3628d7f765c55ed503108b6f100513e38d32477aa0`
+  PKGBUILD 改変は `pkgver` + 2 sha256 の 3 値のみ。 Closes #182。
+
 - **2026-06-06 / 2.1.167** — approve。Issue #179 調査済み (release author `ashwin-ant` = 過去 release と同一、source URL `downloads.claude.ai` 不変)。
   `2.1.163 → 2.1.165 → 2.1.166 → 2.1.167` の連続リリース (`v2.1.164` は GitHub タグ無し)。
   バグ修正・信頼性向上が中心。 v2.1.166 で **セキュリティ強化** (`SendMessage` 経由でクロスセッション中継された
