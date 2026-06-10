@@ -349,11 +349,21 @@ if [[ ${#packages[@]} -gt 0 ]]; then
     # artifact が 0600 のまま残った事例があり、 client が 403 で取得失敗する。
     chmod 0644 -- *.pkg.tar.zst *.pkg.tar.zst.sig
 
+    # repo-add は同一 pkgname を複数渡されると **last-wins** (= 最後に渡された
+    # version が db entry を上書きする。 version 比較 (vercmp) はしない)。 素の
+    # glob 展開は lexical 順なので "<pkg>-X.Y-10" が "<pkg>-X.Y-9" より **前** に
+    # 来てしまい ('1' < '9')、 旧 build が新 build を上書きする。 その後 prune が
+    # db 非参照になった新 build を orphan として削除し、 新 version が repo から
+    # 消える (= pkgrel 9→10 境界の事故、 voicevox-engine-cuda 0.25.2-9→10 で実発生)。
+    # version 昇順 (sort -V) で並べ、 新しい version を必ず最後に渡すことで
+    # last-wins を正す。 旧 version file は db 非参照になるので後段の prune が掃除。
+    mapfile -t _pkgfiles < <(printf '%s\n' *.pkg.tar.zst | sort -V)
+
     # repo-add: 既存 db に新 pkg を追加 (or 上書き)。--sign で db 自体も
     # Nekono GPG で署名 (= /etc/pacman.conf の SigLevel = Required DatabaseRequired
     # を満たす)。
     repo-add --sign --key "${NEKONO_GPG_FP}!" "$DB_NAME.db.tar.gz" \
-        *.pkg.tar.zst
+        "${_pkgfiles[@]}"
 
     popd >/dev/null
 
