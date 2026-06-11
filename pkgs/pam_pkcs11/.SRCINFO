@@ -1,7 +1,7 @@
 pkgbase = pam_pkcs11
 	pkgdesc = PAM module allows a X.509 certificate based user login
 	pkgver = 0.6.13
-	pkgrel = 4
+	pkgrel = 5
 	url = https://opensc.github.io/pam_pkcs11/
 	arch = i686
 	arch = x86_64
