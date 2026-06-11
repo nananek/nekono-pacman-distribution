@@ -78,6 +78,15 @@ upstream の新 release (2.1.143 等) が出たら:
 
 ## 更新履歴
 
+- **2026-06-11 / 2.1.172** — approve。Issue #196 調査済み (release author `ashwin-ant` = 過去 release と同一、source URL `downloads.claude.ai` 不変)。
+  v2.1.171 はタグなし (スキップ)。sub-agent の多段生成 (最大 5 階層) / Bedrock region 自動検出 (`~/.aws` config) / workflow validation 修正
+  (script 内 `Date.now()` / `Math.random()` 文字列の誤検知) / 1M コンテキスト auto-compact スタック修正等。
+  breaking change / security fix なし。 build script / depends / package() / wrapper script の変更なし。
+  sha256 は raw binary を直接 `curl | sha256sum` 実測 (Issue #196 記載値と独立再計測で一致確認):
+  - x86_64: `c0915dd1691d569aeebc7978b12e029718323685ec0dd4b5c6a453108d6be1f7`
+  - aarch64: `4ef0d735bd4180c3bffc381f6dc38df979229a8637d294be751c6043d93d12e1`
+  PKGBUILD 改変は `pkgver` + 2 sha256 の 3 値のみ。 Closes #196。
+
 - **2026-06-10 / 2.1.170** — approve。Issue #187 (+ #185) 調査済み (release author `ashwin-ant` = 過去 release と同一、source URL `downloads.claude.ai` 不変)。
   `2.1.168 → 2.1.169 → 2.1.170` の連続リリース (スキップなし)。 v2.1.169 で **セキュリティ修正** (信頼されていない project settings が
   trust 確認なしに OTEL クライアント証明書パスを設定できた脆弱性) + `--safe-mode` フラグ / `/cd` コマンド / `disableBundledSkills` 設定の追加、
