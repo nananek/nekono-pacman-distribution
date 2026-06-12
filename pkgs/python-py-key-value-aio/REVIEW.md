@@ -60,3 +60,4 @@ upstream で新 release が出たら nvchecker (= `[python-py-key-value-aio]` se
 | 2026-05-30 | 0.4.4-3 | bot PR #137 | — (pkgrel bump のみ) | `pkgrel` +1 (deps changed): python-uv-build 0.11.16-1 → 0.11.17-1 |
 | 2026-06-02 | 0.4.4-4 | bot PR #143 | — (pkgrel bump のみ) | `pkgrel` +1 (deps changed): python-uv-build 0.11.17-1 → 0.11.18-1 |
 | 2026-06-05 | 0.4.4-5 | bot PR #169 | — (pkgrel bump のみ) | `pkgrel` +1 (deps changed): python-uv-build 0.11.18-1 → 0.11.19-1 |
+| 2026-06-12 | 0.4.4-6 | bot PR #201 | — (pkgrel bump のみ) | `pkgrel` +1 (deps changed): python-uv-build 0.11.19-1 → 0.11.21-1 |
