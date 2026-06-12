@@ -78,6 +78,16 @@ upstream の新 release (2.1.143 等) が出たら:
 
 ## 更新履歴
 
+- **2026-06-12 / 2.1.174** — approve。Issue #200 調査済み (release author `ashwin-ant` = 過去 release と同一、source URL `downloads.claude.ai` 不変)。
+  v2.1.173 はタグなし (スキップ)。バグ修正・UX 改善リリース。**セキュリティ修正** あり (バックグラウンドセッションが別セッションの
+  `ANTHROPIC_*` 環境変数をデーモン起動元シェルから引き継ぐ問題)。 ほか `/model` ピッカー修正 / Bedrock GovCloud 推論プロファイル修正 /
+  シェル中断直後の終了ハング修正等。 breaking change / 削除 / 新規 install hook なし。
+  build script / depends / package() / wrapper script の変更なし。 npm dependencies は両版とも空 `{}`。
+  sha256 は raw binary を直接 `curl | sha256sum` 実測 (Issue #200 記載値と独立再計測で一致確認、 upstream SHASUMS256.txt との照合も Issue 側で済み):
+  - x86_64: `08a7c90925cc622003a94b813ae0fc544c08776f6d890532f6212e15962899a8`
+  - aarch64: `397896495a6cb90376e00797f1520af959b4ac1b9dddf7af9127b8cec1010071`
+  PKGBUILD 改変は `pkgver` + 2 sha256 の 3 値のみ。 Closes #200。
+
 - **2026-06-11 / 2.1.172** — approve。Issue #196 調査済み (release author `ashwin-ant` = 過去 release と同一、source URL `downloads.claude.ai` 不変)。
   v2.1.171 はタグなし (スキップ)。sub-agent の多段生成 (最大 5 階層) / Bedrock region 自動検出 (`~/.aws` config) / workflow validation 修正
   (script 内 `Date.now()` / `Math.random()` 文字列の誤検知) / 1M コンテキスト auto-compact スタック修正等。
