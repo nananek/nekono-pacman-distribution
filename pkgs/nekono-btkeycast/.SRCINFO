@@ -1,6 +1,6 @@
 pkgbase = nekono-btkeycast
 	pkgdesc = Forward the local keyboard to an iPad (or any BLE central) as a HID-over-GATT keyboard
-	pkgver = 0.1.0
+	pkgver = 0.2.0
 	pkgrel = 1
 	url = https://github.com/nananek/nekono-btkeycast
 	arch = any
@@ -15,8 +15,9 @@ pkgbase = nekono-btkeycast
 	depends = gtk3
 	depends = gtk-layer-shell
 	depends = bluez
+	depends = python-evdev
 	optdepends = libnotify: desktop notifications on startup errors
-	source = nekono-btkeycast-0.1.0.tar.gz::https://github.com/nananek/nekono-btkeycast/archive/refs/tags/v0.1.0.tar.gz
-	sha256sums = 21cd9bcb7dd098b5a885ab786c2836d86fbd2ce6fd9f65497ab1ba6ed439fe1d
+	source = nekono-btkeycast-0.2.0.tar.gz::https://github.com/nananek/nekono-btkeycast/archive/refs/tags/v0.2.0.tar.gz
+	sha256sums = 9624da27022c66b39d75b91fb120fb7efd7c03904d53d7a2813394351741bb6e
 
 pkgname = nekono-btkeycast
