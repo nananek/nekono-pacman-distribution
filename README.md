@@ -54,6 +54,7 @@
 | package | source 方針 | 役割 |
 |---|---|---|
 | `moonlight-qt`   | from-source (Qt6/FFmpeg/SDL2) | NVIDIA GameStream / Sunshine client |
+| `nekono-btkeycast` | from-source (Python)        | キーボードを BLE HOGP で iPad へ転送 |
 | `qview`          | from-source (Qt6)             | 画像ビューア |
 | `localsend-bin`  | -bin (Flutter prebuilt)       | AirDrop 代替 (LAN ファイル転送) |
 | `pwvucontrol`    | from-source (Rust/GTK4)       | PipeWire 音量コントロール |
