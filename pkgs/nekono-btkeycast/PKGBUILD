@@ -8,7 +8,7 @@
 # は同梱しない。
 
 pkgname=nekono-btkeycast
-pkgver=0.2.0
+pkgver=0.2.1
 pkgrel=1
 pkgdesc="Forward the local keyboard to an iPad (or any BLE central) as a HID-over-GATT keyboard"
 arch=('any')
@@ -31,7 +31,7 @@ makedepends=(
     'python-hatchling'
 )
 source=("$pkgname-$pkgver.tar.gz::$url/archive/refs/tags/v$pkgver.tar.gz")
-sha256sums=('9624da27022c66b39d75b91fb120fb7efd7c03904d53d7a2813394351741bb6e')
+sha256sums=('717bbf51c0470e57eb27be9730dd1f92cde7cfb91dab455637cb14ae55325b0d')
 
 build() {
     cd "$pkgname-$pkgver"
