@@ -115,6 +115,14 @@ github = "moonlight-stream/moonlight-qt"
 use_latest_release = true
 prefix = "v"
 
+[nekono-btkeycast]
+# 自家 package。 キーボードを BLE HID-over-GATT (HOGP) で iPad へ転送する
+# 常駐デーモン + waybar モジュール。 release tag は vX.Y.Z 形式 (prefix "v")。
+source = "github"
+github = "nananek/nekono-btkeycast"
+use_latest_release = true
+prefix = "v"
+
 [nekono-pipewire-mcp]
 # 自家 source、 claude-code MCP server (wpctl wrapper)。 release tag は
 # v X.Y.Z 形式 (prefix "v")。

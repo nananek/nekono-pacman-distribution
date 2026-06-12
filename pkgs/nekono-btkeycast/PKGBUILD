@@ -1,0 +1,45 @@
+# Maintainer: Nekono Nana KAKKO KARI <3267314+nananek@users.noreply.github.com>
+#
+# 自家 source PKGBUILD (= AUR fork ではない、 nananek upstream を直接 vendor)。
+# ayaka のキーボードを BLE HID-over-GATT (HOGP) キーボードとして iPad
+# (or 任意の BLE central) へ転送する常駐デーモン + waybar モジュール。
+# waybar (custom/btkeycast、 dotfiles 側配線済み) から user session 内で
+# 起動する。 system daemon ではないので systemd unit / sysusers / tmpfiles
+# は同梱しない。
+
+pkgname=nekono-btkeycast
+pkgver=0.1.0
+pkgrel=1
+pkgdesc="Forward the local keyboard to an iPad (or any BLE central) as a HID-over-GATT keyboard"
+arch=('any')
+url="https://github.com/nananek/nekono-btkeycast"
+license=('MIT')
+depends=(
+    'python'
+    'python-dbus'       # bluetoothd D-Bus API client (dbus / dbus.service / dbus.mainloop.glib)
+    'python-gobject'    # GLib mainloop + Gtk introspection (gi.repository)
+    'gtk3'              # popup overlay UI (Gtk 3.0 / Gdk 3.0)
+    'gtk-layer-shell'   # wlroots layer-shell overlay (GtkLayerShell 0.1)
+    'bluez'             # bluetoothd (BLE GATT server を D-Bus 経由で登録)
+)
+optdepends=('libnotify: desktop notifications on startup errors')
+makedepends=(
+    'python-build'
+    'python-installer'
+    'python-wheel'
+    'python-hatchling'
+)
+source=("$pkgname-$pkgver.tar.gz::$url/archive/refs/tags/v$pkgver.tar.gz")
+sha256sums=('21cd9bcb7dd098b5a885ab786c2836d86fbd2ce6fd9f65497ab1ba6ed439fe1d')
+
+build() {
+    cd "$pkgname-$pkgver"
+    python -m build --wheel --no-isolation
+}
+
+package() {
+    cd "$pkgname-$pkgver"
+    python -m installer --destdir="$pkgdir" dist/*.whl
+    install -Dm644 LICENSE "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
+    install -Dm644 README.md "$pkgdir/usr/share/doc/$pkgname/README.md"
+}
