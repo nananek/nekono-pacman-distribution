@@ -29,6 +29,16 @@
 oldver = "oldver.json"
 newver = "newver.json"
 
+[bluez]
+# 暫定 official-shadow (extra/bluez 5.86-6 fork + upstream 2a6968b patch、
+# Issue #208)。恒久メンテ対象ではない: 5.87+ が検知されて Issue が立ったら
+# pkgver bump ではなく pkgs/bluez/ の撤去 (= 公式へ戻す) のトリガーとして
+# 扱う。撤去条件の詳細は pkgs/bluez/REVIEW.md 参照。
+# 古い "utils-3.x" tag が残っているので use_max_tag は不可、Releases を見る。
+source = "github"
+github = "bluez/bluez"
+use_latest_release = true
+
 [claude-code]
 # Anthropic Claude Code CLI。downloads.claude.ai 経由配布だが npm registry
 # にも同 version で publish される (@anthropic-ai/claude-code)。npm の方が
