@@ -62,6 +62,7 @@ user session 内で waybar から起動する常駐プロセスであり、 syst
 | **systemd unit を同梱しない** | waybar (`custom/btkeycast`) が user session 内で起動・常駐させる。 system daemon 化しない |
 | **bluez を depends に置く (optdepends ではなく)** | bluetoothd の D-Bus API が無いとデーモンが起動即 fail。 BLE 転送が本体機能なので hard dep |
 | **libnotify は optdepends** | `notify-send` 不在時は graceful skip するコードを確認済み |
+| **python-evdev は depends (optdepends ではなく)** | code は ImportError を guard して EXCLUSIVE capture に fallback するが、 0.2.0 の主要機能 (キーボード個別転送) が黙って無効化されるのは UX 事故のもと。 box から出してすぐ全機能が動く状態を取る |
 | **コマンド名 `btkeycast` ≠ pkgname** | upstream プロジェクト名は btkeycast (wheel 名 `btkeycast-0.1.0-*.whl`)。 nekono-*-mcp と同じ流儀で pkgname のみ nekono- prefix |
 | **arch=('any')** | pure Python、 C extension 無し |
 | **`# Contributor:` 等の引用なし** | AUR fork ではないので不要 |
@@ -89,3 +90,4 @@ upstream で新 release (= v0.2.0 等) が出たら:
 | 日付 | release | review した PKGBUILD repo SHA | upstream tag commit | findings |
 |---|---|---|---|---|
 | 2026-06-12 | 0.1.0 | (this PR) | `54beee2171a0e4f683286a295b0cdd70b1ccc1cd` | 初回 add、 自家 source v0.1.0 (Issue #210) |
+| 2026-06-12 | 0.2.0 | (this PR) | `2742671feec268a5b06b58f2390acf58b469625f` | 0.2.0 bump (flock 単一インスタンス / evdev キーボード個別転送 / 接続先 pin)。 depends += python-evdev (= `import evdev` を source 実査)。 sha256 独立再計算、 tag GPG 署名 verified (GitHub API) |
