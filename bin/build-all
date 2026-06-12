@@ -241,21 +241,38 @@ for p in "${topo_all[@]}"; do
     fi
 done
 
-# Detect retired packages: db に entry はあるが pkgs/<name>/PKGBUILD が
+# Detect retired packages: db に entry はあるが pkgs/ 側に対応する PKGBUILD が
 # 既に削除されているもの (= ローカルで `git rm -r pkgs/<name>/` した結果)。
 # repo-add は addition 専用なので、 別途 repo-remove + bin/prune で db + file
 # 両方を掃除する必要がある。 retirement は build target (`requested`) や
 # `--pending` フラグとは独立に常に検査・実行する (= 1 度 push されれば
 # 次の build-all 実行で必ず反映される)。
+#
+# 対応付けは dir 名 (= pkgbase) だけでなく pkgs/*/.SRCINFO の pkgname 行
+# 全部を生存集合にする (= split package 対応。 bluez の db entry は
+# bluez-libs / bluez-utils 等で dir 名と一致しない)。 makepkg が自動生成
+# する <pkgbase>-debug も db に入るので生存扱いにする。
 retired_pkgs=()
 db_file="$REPO_DIR/$DB_NAME.db.tar.gz"
 if [[ -f "$db_file" ]]; then
+    declare -A live_pkg_names=()
+    for d in "$REPO_ROOT"/pkgs/*/; do
+        [[ -f "$d/PKGBUILD" ]] || continue
+        _base="$(basename "$d")"
+        live_pkg_names["$_base"]=1
+        live_pkg_names["$_base-debug"]=1
+        if [[ -f "$d/.SRCINFO" ]]; then
+            while IFS= read -r _n; do
+                live_pkg_names["$_n"]=1
+            done < <(awk '$1 == "pkgname" { print $3 }' "$d/.SRCINFO")
+        fi
+    done
     mapfile -t db_listed_names < <(
         tar -xzO -f "$db_file" --wildcards '*/desc' 2>/dev/null \
             | awk '/^%NAME%$/{getline n; print n}'
     )
     for n in "${db_listed_names[@]}"; do
-        [[ -f "$REPO_ROOT/pkgs/$n/PKGBUILD" ]] || retired_pkgs+=("$n")
+        [[ -n "${live_pkg_names[$n]:-}" ]] || retired_pkgs+=("$n")
     done
 fi
 
