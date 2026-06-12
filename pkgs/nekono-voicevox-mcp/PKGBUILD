@@ -10,7 +10,7 @@
 
 pkgname=nekono-voicevox-mcp
 pkgver=0.1.0
-pkgrel=3
+pkgrel=4
 pkgdesc="MCP server bridging VOICEVOX engine HTTP API + pw-cat for TTS playback"
 arch=('any')
 url="https://github.com/nananek/nekono-voicevox-mcp"
