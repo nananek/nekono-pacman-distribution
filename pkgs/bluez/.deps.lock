@@ -1,0 +1,18 @@
+# Snapshot of Arch official repo versions for depends + makedepends of bluez.
+# Auto-generated and updated by .github/workflows/dep-version-pr.yml.
+# Source: pkgs/bluez/.SRCINFO (depends + makedepends entries).
+# Format: 1 line per package: <name>=<full-version>
+
+alsa-lib=1.2.16-1
+cups=2:2.4.19-1
+dbus=1.16.2-1
+ell=0.83-1
+glib2=2.88.1-1
+glibc=2.43+r22+g8362e8ce10b2-2
+json-c=0.18-2
+libical=4.0.2-1
+python-docutils=1:0.22.4-1
+python-pygments=2.20.0-1
+readline=8.3.003-1
+systemd=260.2-2
+systemd-libs=260.2-2

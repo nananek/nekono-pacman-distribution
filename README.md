@@ -62,6 +62,7 @@
 
 | package | source 方針 | 役割 |
 |---|---|---|
+| `bluez` (split 8 pkg)    | from-source (official-shadow、暫定) | kernel 7.0 LE 広告リグレッション fix (上流 2a6968b 先取り、撤去条件は REVIEW.md) |
 | `claude-code`            | -bin (npm tarball)      | Anthropic Claude Code CLI |
 | `docker-rootless-extras` | from-source             | Docker rootless mode 補助バイナリ |
 | `nekonopaw`              | from-source (Go)        | PipeWire → PAM 連携デーモン |
