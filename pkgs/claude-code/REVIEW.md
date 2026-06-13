@@ -2,7 +2,7 @@
 
 ## 状態
 
-**review 済み、approve** (最新: 2026-06-06 / 2.1.167)
+**review 済み、approve** (最新: 2026-06-13 / 2.1.177)
 
 AUR の `claude-code` PKGBUILD を fork。改変なし。各 release の review 履歴は
 本ファイル末尾の「更新履歴」 section 参照。
@@ -77,6 +77,17 @@ upstream の新 release (2.1.143 等) が出たら:
    1 行追記
 
 ## 更新履歴
+
+- **2026-06-13 / 2.1.177** — approve。Issue #215 調査済み (release author `ashwin-ant` = 過去 release と同一、source URL `downloads.claude.ai` 不変)。
+  `2.1.174 → 2.1.175 → 2.1.176 → 2.1.177` の連続リリース (スキップなし)。 v2.1.176 に **セキュリティ強化** あり (hook `if` 条件の
+  ファイルパスパターン `Edit(src/**)` / `Read(~/.ssh/**)` / `Read(.env)` 等がドキュメント通り機能していなかった問題の修正、
+  `availableModels` 強制適用バイパス・`/fast` の allowlist 外切替の修正)。 v2.1.175 で `enforceAvailableModels` managed setting 追加、
+  v2.1.177 は release notes 空 body だが binary に実コード変更を含む genuine release。
+  build script / depends / package() / wrapper script / `options=('!strip')` の変更なし。 breaking change / 削除 / 新規 install hook なし。
+  sha256 は raw binary を直接 `curl | sha256sum` で **独立再計測** (Issue #215 記載値と一致確認):
+  - x86_64: `ff41753634b20c869ef6a32a20863521b33d4186ac0d6a49379ab48a48395ee7`
+  - aarch64: `baf3926dc166215772f959e367da9784ff4c75157aaafe4524fdc79ebff984b1`
+  PKGBUILD 改変は `pkgver` + 2 sha256 の 3 値のみ。 Closes #215。
 
 - **2026-06-12 / 2.1.174** — approve。Issue #200 調査済み (release author `ashwin-ant` = 過去 release と同一、source URL `downloads.claude.ai` 不変)。
   v2.1.173 はタグなし (スキップ)。バグ修正・UX 改善リリース。**セキュリティ修正** あり (バックグラウンドセッションが別セッションの
