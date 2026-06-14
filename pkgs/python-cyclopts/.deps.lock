@@ -5,11 +5,11 @@
 
 # MISSING (not in Arch official repo, likely AUR-only or virtual): python-docstring-parser
 # MISSING (not in Arch official repo, likely AUR-only or virtual): python-rich-rst
+python=3.14.5-1
 python-attrs=26.1.0-1
 python-build=1.4.3-1
 python-hatch-vcs=0.5.0-4
-python-hatchling=1.29.0-1
+python-hatchling=1.30.1-1
 python-installer=1.0.0-1
 python-rich=15.0.0-1
 python-wheel=0.47.0-1
-python=3.14.5-1
