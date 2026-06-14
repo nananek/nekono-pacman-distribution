@@ -9,7 +9,7 @@
 
 pkgname=nekono-btkeycast
 pkgver=0.2.1
-pkgrel=1
+pkgrel=2
 pkgdesc="Forward the local keyboard to an iPad (or any BLE central) as a HID-over-GATT keyboard"
 arch=('any')
 url="https://github.com/nananek/nekono-btkeycast"
