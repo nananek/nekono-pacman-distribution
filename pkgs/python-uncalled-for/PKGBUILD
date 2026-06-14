@@ -14,7 +14,7 @@
 _name=uncalled-for
 pkgname=python-$_name
 pkgver=0.3.2
-pkgrel=1
+pkgrel=2
 pkgdesc="Async dependency injection for Python functions."
 arch=('any')
 license=('MIT')

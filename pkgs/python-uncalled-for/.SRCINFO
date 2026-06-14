@@ -1,7 +1,7 @@
 pkgbase = python-uncalled-for
 	pkgdesc = Async dependency injection for Python functions.
 	pkgver = 0.3.2
-	pkgrel = 1
+	pkgrel = 2
 	url = https://github.com/chrisguidry/uncalled-for/
 	arch = any
 	license = MIT
