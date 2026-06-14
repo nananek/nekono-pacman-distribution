@@ -1,7 +1,7 @@
 pkgbase = python-uv-dynamic-versioning
 	pkgdesc = Dynamic versioning based on VCS tags for uv/hatch project
 	pkgver = 0.14.0
-	pkgrel = 1
+	pkgrel = 2
 	url = https://github.com/ninoseki/uv-dynamic-versioning
 	arch = any
 	license = MIT
