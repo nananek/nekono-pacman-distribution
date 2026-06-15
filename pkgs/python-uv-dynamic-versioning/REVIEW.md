@@ -68,3 +68,4 @@ upstream で新 release (= 0.15.0 等) が出たら:
 | 日付 | release | review した PKGBUILD repo SHA | upstream tag commit | findings |
 |---|---|---|---|---|
 | 2026-05-19 | 0.14.0 | `ed6acc384cde23290c2d3896e184cdd1e87bd415` | `46cb92b53a9b822cee62572a0a14aa0be7cd045d` | 初回 add、 純 fork (= sha512 → sha256 統一のみ) |
+| 2026-06-15 | 0.14.0-2 | (this PR) | — (pkgrel bump のみ) | `pkgrel` +1 (deps changed): python-hatchling 1.29.0-1 → 1.30.1-1 |
