@@ -84,3 +84,4 @@ upstream で新 release (= 1.27.2 or 1.28.x 等) が出たら:
 | 2026-05-22 | 1.27.1-3 | `6e9889f` | `77431ebe7dda9ed0c61451b22d3e7f8d981bc092` | `pkgrel` +1 (deps changed): python-opentelemetry-api 1.42.0-1 → 1.42.1-1。 PKGBUILD 本体変更なし |
 | 2026-06-03 | 1.27.2-1 | (this PR) | `62137874ff26dd74d2fea80ff528a7fd9ca7a5e7` | safe-to-bump: v1.27.2 patch release。 pyproject.toml に Documentation URL 追加のみ、 deps / build script / build() / package() 無変化。 1834.patch (Python 3.14) は引き続き必要。 git source sha256 を makepkg --geninteg で再計算 |
 | 2026-06-04 | 1.27.2-2 | (this PR) | — (pkgrel bump のみ) | `pkgrel` +1 (deps changed): uvicorn 0.38.0-2 → 0.49.0-1 |
+| 2026-06-15 | 1.27.2-3 | (this PR) | — (pkgrel bump のみ) | `pkgrel` +1 (cascade: [nekono] dep rebuilt): python-uv-dynamic-versioning 0.14.0-2 rebuild に追随 (build-all の cascade-warn 由来) |
