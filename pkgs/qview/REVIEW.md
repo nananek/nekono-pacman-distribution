@@ -43,3 +43,10 @@ upstream の新 tag が出たら:
 3. sha256 を独立に再計算 (= AUR の値を盲信せず `curl -fsSL <url> | sha256sum` で照合)
 4. tag commit が GPG verified か gh api で確認
 5. REVIEW.md に確認日 + 結論 update
+
+## 更新履歴
+
+| 日付 | release | review した PKGBUILD repo SHA | upstream tag commit | findings |
+|---|---|---|---|---|
+| 2026-05-15 | 7.1-2 | `f09fb22` | upstream tag `7.1` | 初回 add、 AUR fork (pkgver=7.1, pkgrel=2)、 改変なし |
+| 2026-06-15 | 7.1-3 | (this PR) | — (pkgrel bump のみ) | `pkgrel` +1 (deps changed): qt6-tools 6.11.1-1 → 6.11.1-3 |
