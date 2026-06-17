@@ -63,6 +63,7 @@ upstream で新 release (= 3.3.5 等) が出たら:
 
 | 日付 | release | review した PKGBUILD repo SHA | upstream tag commit | findings |
 |---|---|---|---|---|
+| 2026-06-17 | 3.4.4-4 | (this PR) | — (pkgrel bump のみ) | `pkgrel` +1 (deps changed): python-anyio 4.13.0-1 → 4.14.0-1 |
 | 2026-06-04 | 3.4.4-3 | (this PR) | — (pkgrel bump のみ) | `pkgrel` +1 (deps changed): uvicorn 0.38.0-2 → 0.49.0-1 |
 | 2026-05-26 | 3.4.4-2 | `ee38dae` | — (pkgrel bump のみ) | `pkgrel` +1 (deps changed): python-starlette 1.0.0-1 → 1.1.0-1 |
 | 2026-05-21 | 3.4.4 | (this PR) | `v3.4.4` | safe-to-bump: depends 変化なし、sha256 Issue #75 確認済み。Starlette parity + anyio v4 ExceptionGroup 対応。Closes #75 |
