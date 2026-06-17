@@ -3,7 +3,7 @@
 # Source: pkgs/bluez/.SRCINFO (depends + makedepends entries).
 # Format: 1 line per package: <name>=<full-version>
 
-alsa-lib=1.2.16-1
+alsa-lib=1.2.16.1-1
 cups=2:2.4.19-1
 dbus=1.16.2-1
 ell=0.83-1
