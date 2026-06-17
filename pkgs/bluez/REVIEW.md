@@ -139,3 +139,4 @@ import が必要: `gpg --recv-keys E932D120BC2AEC444E558F0106CA9F5D1DCF2659`
 |---|---|---|---|---|
 | 2026-06-12 | 5.86-6.1 | (初版) | `74770b1` (bluez 5.86) | 新規追加 (official-shadow 初版)。extra 5.86-6 (packaging tag `624b448`) fork + upstream `2a6968b` patch 先取り。tarball / bluetooth.modprobe sha256 が公式 pin と一致確認、patch dry-run OK、既存 3 patch と衝突なし。Issue #208 |
 | 2026-06-15 | 5.86-7.1 | (this PR) | — (pkgrel bump のみ) | `pkgrel` +1 (deps changed): libical 4.0.2-1 → 4.0.3-1 |
+| 2026-06-17 | 5.86-8.1 | (this PR) | — (pkgrel bump のみ) | `pkgrel` +1 (deps changed): alsa-lib 1.2.16-1 → 1.2.16.1-1 |
