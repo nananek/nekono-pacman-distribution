@@ -1,7 +1,7 @@
 pkgbase = shairport-sync-airplay2
 	pkgdesc = Emulates an AirPort Express; built with AirPlay 2 receiver support (requires nqptp)
 	pkgver = 5.0.4
-	pkgrel = 11
+	pkgrel = 12
 	url = https://github.com/mikebrady/shairport-sync
 	arch = x86_64
 	license = GPL

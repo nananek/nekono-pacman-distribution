@@ -152,3 +152,4 @@ extra/shairport-sync の追従は **本 fork の更新方針からは外す**。
 | 2026-06-16 | 5.0.4-9 | (this PR) | — (pkgrel bump のみ) | `pkgrel` +1 (deps changed): vim 9.2.0623-1 → 9.2.0653-1 |
 | 2026-06-17 | 5.0.4-10 | (this PR) | — (pkgrel bump のみ) | `pkgrel` +1 (deps changed): alsa-lib 1.2.16-1 → 1.2.16.1-1、 vim 9.2.0653-1 → 9.2.0663-1 |
 | 2026-06-18 | 5.0.4-11 | (this PR) | — (pkgrel bump のみ) | `pkgrel` +1 (deps changed): vim 9.2.0663-1 → 9.2.0670-1 |
+| 2026-06-20 | 5.0.4-12 | (this PR) | — (pkgrel bump のみ) | `pkgrel` +1 (deps changed): ffmpeg 2:8.1.1-2 → 2:8.1.2-1 |
