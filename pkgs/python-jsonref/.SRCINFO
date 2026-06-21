@@ -1,7 +1,7 @@
 pkgbase = python-jsonref
 	pkgdesc = An implementation of JSON Reference for Python
 	pkgver = 1.1.0
-	pkgrel = 1
+	pkgrel = 2
 	url = https://pypi.org/project/jsonref
 	arch = x86_64
 	license = MIT
