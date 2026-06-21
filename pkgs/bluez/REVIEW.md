@@ -141,3 +141,4 @@ import が必要: `gpg --recv-keys E932D120BC2AEC444E558F0106CA9F5D1DCF2659`
 | 2026-06-15 | 5.86-7.1 | (this PR) | — (pkgrel bump のみ) | `pkgrel` +1 (deps changed): libical 4.0.2-1 → 4.0.3-1 |
 | 2026-06-17 | 5.86-8.1 | (this PR) | — (pkgrel bump のみ) | `pkgrel` +1 (deps changed): alsa-lib 1.2.16-1 → 1.2.16.1-1 |
 | 2026-06-18 | 5.86-9.1 | (this PR) | — (pkgrel bump のみ) | `pkgrel` +1 (deps changed): python-docutils 1:0.22.4-1 → 1:0.23-1 |
+| 2026-06-21 | 5.86-10.1 | (this PR) | — (pkgrel bump のみ) | `pkgrel` +1 (deps changed): libical 4.0.3-1 → 4.0.3-2 |
