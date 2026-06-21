@@ -4,5 +4,5 @@
 # Format: 1 line per package: <name>=<full-version>
 
 fuse2=2.9.9-5
-libayatana-appindicator=0.5.94-1
+libayatana-appindicator=0.6.0-1
 xdg-user-dirs=0.20-1
