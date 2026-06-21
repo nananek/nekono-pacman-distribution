@@ -94,3 +94,4 @@ upstream で新 release (= v0.2.0 等) が出たら:
 | 2026-06-12 | 0.2.1 | (this PR) | `849c7476106f8565c595312fca1123ea356e3b70` | 0.2.1 bump (multi-output: 負け側 instance が primary のバー行をミラー表示 + 昇格)。 depends 変化なし。 sha256 独立再計算、 tag GPG 署名 verified (GitHub API) |
 | 2026-06-15 | 0.2.1-2 | (this PR) | (同上) | `pkgrel` +1 (deps changed): python-hatchling 1.29.0-1 → 1.30.1-1 |
 | 2026-06-17 | 0.2.1-3 | (this PR) | (同上) | `pkgrel` +1 (cascade: [nekono] dep rebuilt): bluez 5.86-8.1 rebuild に追随 (build-all の cascade-warn 由来) |
+| 2026-06-21 | 0.2.1-4 | (this PR) | (同上) | `pkgrel` +1 (deps changed): python 3.14.5-1 → 3.14.6-1 |
