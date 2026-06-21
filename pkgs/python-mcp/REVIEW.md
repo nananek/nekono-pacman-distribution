@@ -86,3 +86,4 @@ upstream で新 release (= 1.27.2 or 1.28.x 等) が出たら:
 | 2026-06-04 | 1.27.2-2 | (this PR) | — (pkgrel bump のみ) | `pkgrel` +1 (deps changed): uvicorn 0.38.0-2 → 0.49.0-1 |
 | 2026-06-15 | 1.27.2-3 | (this PR) | — (pkgrel bump のみ) | `pkgrel` +1 (cascade: [nekono] dep rebuilt): python-uv-dynamic-versioning 0.14.0-2 rebuild に追随 (build-all の cascade-warn 由来) |
 | 2026-06-17 | 1.27.2-4 | (this PR) | — (pkgrel bump のみ) | `pkgrel` +1 (cascade: [nekono] dep rebuilt): python-sse-starlette 3.4.4-4 rebuild に追随 (build-all の cascade-warn 由来) |
+| 2026-06-21 | 1.27.2-5 | (this PR) | — (pkgrel bump のみ) | `pkgrel` +1 (cascade: [nekono] dep rebuilt): python-httpx-sse 0.4.3-2, python-sse-starlette 3.4.4-5 rebuild に追随 (build-all の cascade-warn 由来) |
