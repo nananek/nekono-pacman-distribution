@@ -15,7 +15,7 @@
 
 pkgname=okaguchi-lawyer-dicterm
 pkgver=20201122
-pkgrel=3
+pkgrel=4
 pkgdesc='Legal terms dictionary for Mozc IME (Okaguchi, Microsoft IME format, 1510 entries)'
 arch=('any')
 url='https://togilab.com/dicterm/'
