@@ -60,3 +60,4 @@ upstream で新 release が出たら nvchecker (= `[python-docstring-parser]` se
 |---|---|---|---|---|
 | 2026-05-20 | 0.18.0-1 | `28fbf82` | PyPI sdist `docstring_parser-0.18.0.tar.gz` | 初回 add、 AUR fork + depends typo bug fix、 cyclopts dep 経由で fastmcp chain 完成のため必要 (= 当初 SHA `f54af1e`、 master rebase で `28fbf82` に再付番) |
 | 2026-06-15 | 0.18.0-2 | (this PR) | — (pkgrel bump のみ) | `pkgrel` +1 (deps changed): python-hatchling 1.29.0-1 → 1.30.1-1 |
+| 2026-06-21 | 0.18.0-3 | (this PR) | — (pkgrel bump のみ) | `pkgrel` +1 (deps changed): python 3.14.5-1 → 3.14.6-1 |
