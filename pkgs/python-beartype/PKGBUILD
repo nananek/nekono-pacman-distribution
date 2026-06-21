@@ -6,7 +6,7 @@
 pkgname=python-beartype
 _pkgname=${pkgname#python-}
 pkgver=0.22.9
-pkgrel=5
+pkgrel=6
 pkgdesc="Unbearably fast near-real-time hybrid runtime-static type-checking in pure Python"
 arch=('any')
 url="https://github.com/beartype/beartype"
