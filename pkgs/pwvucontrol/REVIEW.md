@@ -79,3 +79,4 @@ upstream の新 release (0.5.3 等) が出たら:
 | 2026-05-25 | 0.5.2-3 | `745841a` | — (pkgrel bump のみ) | `pkgrel` +1 (deps changed): libadwaita 1:1.9.0-1 → 1:1.9.1-1 |
 | 2026-05-31 | 0.5.2-4 | `ed39ad1` | — (pkgrel bump のみ) | `pkgrel` +1 (deps changed): clang 22.1.5-1 → 22.1.6-1 |
 | 2026-06-03 | 0.5.2-5 | (this PR) | — (pkgrel bump のみ) | `pkgrel` +1 (deps changed): rust 1:1.95.0-1 → 1:1.96.0-1 |
+| 2026-06-21 | 0.5.2-6 | (this PR) | — (pkgrel bump のみ) | `pkgrel` +1 (deps changed): wireplumber 0.5.14-1 → 0.5.15-1 |
