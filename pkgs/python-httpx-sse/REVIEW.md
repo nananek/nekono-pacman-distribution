@@ -62,3 +62,4 @@ upstream で新 release (= 0.4.4 等) が出たら:
 | 日付 | release | review した PKGBUILD repo SHA | upstream tag commit | findings |
 |---|---|---|---|---|
 | 2026-05-19 | 0.4.3 | `1eb2fc83d93358a76287d87076586a411910dd53` | `e8fcd9e159066185963ffb9fa29efb8ba2ca84bf` | 初回 add、 純 fork (= check() 削除のみ) |
+| 2026-06-21 | 0.4.3-2 | `(this PR)` | — (pkgrel bump のみ) | `pkgrel` +1 (deps changed): python 3.14.5-1 → 3.14.6-1 |
