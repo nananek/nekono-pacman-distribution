@@ -1,7 +1,7 @@
 pkgbase = python-docstring-parser
 	pkgdesc = Parse Python docstrings
 	pkgver = 0.18.0
-	pkgrel = 2
+	pkgrel = 3
 	url = https://github.com/rr-/docstring_parser
 	arch = any
 	license = MIT
