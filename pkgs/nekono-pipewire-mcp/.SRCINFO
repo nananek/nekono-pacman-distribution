@@ -1,7 +1,7 @@
 pkgbase = nekono-pipewire-mcp
 	pkgdesc = MCP server exposing PipeWire / wireplumber controls (wpctl wrapper) to Claude
 	pkgver = 0.1.0
-	pkgrel = 5
+	pkgrel = 6
 	url = https://github.com/nananek/nekono-pipewire-mcp
 	arch = any
 	license = MIT
