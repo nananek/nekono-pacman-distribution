@@ -25,7 +25,7 @@
 
 pkgname=voicevox-engine-cuda
 pkgver=0.25.2
-pkgrel=11
+pkgrel=12
 pkgdesc='A http server for text-to-speech (CUDA / NVIDIA GPU build)'
 arch=('x86_64')
 license=('LGPL-3.0-only+nonfree')
