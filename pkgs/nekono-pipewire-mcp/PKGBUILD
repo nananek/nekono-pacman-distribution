@@ -9,7 +9,7 @@
 
 pkgname=nekono-pipewire-mcp
 pkgver=0.1.0
-pkgrel=7
+pkgrel=8
 pkgdesc="MCP server exposing PipeWire / wireplumber controls (wpctl wrapper) to Claude"
 arch=('any')
 url="https://github.com/nananek/nekono-pipewire-mcp"
