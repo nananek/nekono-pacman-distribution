@@ -3,6 +3,6 @@
 # Source: pkgs/okaguchi-lawyer-dicterm/.SRCINFO (depends + makedepends entries).
 # Format: 1 line per package: <name>=<full-version>
 
-protobuf=35.0-2
+protobuf=35.1-1
 python=3.14.6-1
-python-protobuf=35.0-2
+python-protobuf=35.1-1
