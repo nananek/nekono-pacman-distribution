@@ -6,7 +6,7 @@
 # MISSING libigloo  -- nekono repo package (not in Arch official repos)
 autoconf=2.73-1
 automake=1.18.1-1
-curl=8.20.0-7
+curl=8.21.0-1
 glibc=2.43+r22+g8362e8ce10b2-2
 libogg=1.3.6-1
 libtheora=1.2.0-1
