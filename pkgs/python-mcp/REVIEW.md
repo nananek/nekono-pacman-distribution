@@ -89,3 +89,4 @@ upstream で新 release (= 1.27.2 or 1.28.x 等) が出たら:
 | 2026-06-21 | 1.27.2-5 | (this PR) | — (pkgrel bump のみ) | `pkgrel` +1 (cascade: [nekono] dep rebuilt): python-httpx-sse 0.4.3-2, python-sse-starlette 3.4.4-5 rebuild に追随 (build-all の cascade-warn 由来) |
 | 2026-06-23 | 1.27.2-6 | (this PR) | — (pkgrel bump のみ) | `pkgrel` +1 (deps changed): python 3.14.5-1 → 3.14.6-1, python-anyio 4.13.0-1 → 4.14.0-1, python-cryptography 48.0.0-1 → 49.0.0-1, python-hatchling 1.29.0-1 → 1.30.1-1, python-pydantic-settings 2.14.1-1 → 2.14.2-1, python-python-multipart 0.0.29-1 → 0.0.32-1, python-sse-starlette 3.3.4-1 → 3.4.5-1, python-starlette 1.1.0-1 → 1.3.1-1 |
 | 2026-06-25 | 1.27.2-7 | (this PR) | — (pkgrel bump のみ) | `pkgrel` +1 (deps changed): python-opentelemetry-api 1.42.1-1 → 1.43.0-1 |
+| 2026-06-27 | 1.27.2-8 | (this PR) | — (pkgrel bump のみ) | `pkgrel` +1 (deps changed): python-anyio 4.14.0-1 → 4.14.1-1 |
