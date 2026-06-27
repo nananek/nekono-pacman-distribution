@@ -143,3 +143,4 @@ import が必要: `gpg --recv-keys E932D120BC2AEC444E558F0106CA9F5D1DCF2659`
 | 2026-06-18 | 5.86-9.1 | (this PR) | — (pkgrel bump のみ) | `pkgrel` +1 (deps changed): python-docutils 1:0.22.4-1 → 1:0.23-1 |
 | 2026-06-21 | 5.86-10.1 | (this PR) | — (pkgrel bump のみ) | `pkgrel` +1 (deps changed): libical 4.0.3-1 → 4.0.3-2 |
 | 2026-06-25 | 5.86-11.1 | (this PR) | — (pkgrel bump のみ) | `pkgrel` +1 (deps changed): systemd / systemd-libs 260.2-2 → 261-1 |
+| 2026-06-27 | 5.86-12.1 | (this PR) | — (pkgrel bump のみ) | `pkgrel` +1 (deps changed): glib2 2.88.1-1 → 2.88.2-1 |
