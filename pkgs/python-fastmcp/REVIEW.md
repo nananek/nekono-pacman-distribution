@@ -93,3 +93,4 @@ upstream で新 release (= v3.2.5 等) が出たら:
 | 2026-06-23 | 3.4.2-6 | (this PR) | — (pkgrel bump のみ) | `pkgrel` +1 (deps changed): python 3.14.5-1 → 3.14.6-1, python-anyio 4.13.0-1 → 4.14.0-1, python-cryptography 48.0.0-1 → 49.0.0-1, python-griffelib 2.0.2-2 → 2.1.0-1, python-hatchling 1.29.0-1 → 1.30.1-1, python-pydantic-settings 2.14.1-1 → 2.14.2-1, python-starlette 1.1.0-1 → 1.3.1-1, python-watchfiles 1.1.1-3 → 1.2.0-1, uvicorn 0.38.0-2 → 0.49.0-1 |
 | 2026-06-24 | 3.4.2-7 | (this PR) | — (pkgrel bump のみ) | `pkgrel` +1 (cascade: [nekono] dep rebuilt): python-py-key-value-aio 0.4.4-10 rebuild に追随 (build-all の cascade-warn 由来) |
 | 2026-06-25 | 3.4.2-8 | (this PR) | — (pkgrel bump のみ) | `pkgrel` +1 (deps changed): python-opentelemetry-api 1.42.1-1 → 1.43.0-1 |
+| 2026-06-27 | 3.4.2-9 | (this PR) | — (pkgrel bump のみ) | `pkgrel` +1 (deps changed): python-anyio 4.14.0-1 → 4.14.1-1 |
