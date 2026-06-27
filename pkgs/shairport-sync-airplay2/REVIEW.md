@@ -155,3 +155,4 @@ extra/shairport-sync の追従は **本 fork の更新方針からは外す**。
 | 2026-06-20 | 5.0.4-12 | (this PR) | — (pkgrel bump のみ) | `pkgrel` +1 (deps changed): ffmpeg 2:8.1.1-2 → 2:8.1.2-1 |
 | 2026-06-21 | 5.0.4-13 | (this PR) | — (pkgrel bump のみ) | `pkgrel` +1 (deps changed): libpipewire 1:1.6.6-1 → 1:1.6.7-1 |
 | 2026-06-23 | 5.0.4-14 | (this PR) | — (pkgrel bump のみ) | `pkgrel` +1 (deps changed): ffmpeg 2:8.1.2-1 → 2:8.1.2-6、 vim 9.2.0670-1 → 9.2.0699-1 |
+| 2026-06-27 | 5.0.4-15 | (this PR) | — (pkgrel bump のみ) | `pkgrel` +1 (deps changed): avahi 1:0.9rc4-1 → 1:0.9rc5-1、 ffmpeg 2:8.1.2-6 → 2:8.1.2-7 |

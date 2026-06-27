@@ -6,8 +6,8 @@
 # MISSING jack (virtual provide, supplied by pipewire-jack or jack2)
 # MISSING nqptp (nekono-internal)
 alsa-lib=1.2.16.1-1
-avahi=1:0.9rc4-1
-ffmpeg=2:8.1.2-6
+avahi=1:0.9rc5-1
+ffmpeg=2:8.1.2-7
 glib2-devel=2.88.1-1
 libconfig=1.8.2-2
 libpipewire=1:1.6.7-1
