@@ -68,3 +68,4 @@ ayaka 側にも [nekono] 経由で `pacman -S voicevox-bin` で入れて editor 
 | 2026-05-19 | 0.25.2 | (本 PR の commit SHA を merge 時に追記) | `823a760f632d63d23522eb2cee6992b9b42119a5` | 初回 add、 split package 解消 + GPU 動的切替の supply-chain 欠陥を除去 |
 | 2026-06-06 | 0.25.2-2 | (this PR) | — (pkgrel bump のみ) | `pkgrel` +1 (deps changed): bash 5.3.9-1 → 5.3.12-1 |
 | 2026-06-12 | 0.25.2-3 | bot PR #202 | — (pkgrel bump のみ) | `pkgrel` +1 (deps changed): bash 5.3.12-1 → 5.3.15-1 |
+| 2026-06-27 | 0.25.2-4 | (this PR) | — (pkgrel bump のみ) | `pkgrel` +1 (deps changed): 7zip 26.01-1 → 26.02-1 |
