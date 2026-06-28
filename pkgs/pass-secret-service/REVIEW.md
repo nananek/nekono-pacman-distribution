@@ -43,3 +43,10 @@ AUR の `pass-secret-service` PKGBUILD (pkgver=0.7.0, pkgrel=1) を fork。
 ## 結論
 
 **approve** — build host で `makepkg -s --sign --key 483D...` 可。
+
+## 更新履歴
+
+| 日付 | release | review した PKGBUILD repo SHA | upstream tag commit | findings |
+|---|---|---|---|---|
+| 2026-05-19 | 0.7.0-1 | `2b50d97` | `3f9e292` (v0.7.0) | 初回 add、AUR fork + 意図的改変 4 件 |
+| 2026-06-28 | 0.7.0-2 | bot PR #302 | — (pkgrel bump のみ) | `pkgrel` +1 (deps changed): gcc-libs 16.1.1+r12 → 16.1.1+r346、 glibc 2.43+r22 → 2.43+r37 |
