@@ -5,6 +5,6 @@
 
 autoconf=2.73-1
 automake=1.18.1-1
-glibc=2.43+r22+g8362e8ce10b2-2
-libtool=2.6.1-1
+glibc=2.43+r37+gfdf10644d6ee-1
+libtool=2.6.1-2
 pkgconf=2.5.1-1
