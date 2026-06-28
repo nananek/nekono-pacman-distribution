@@ -5,6 +5,6 @@
 
 # MISSING (not in Arch official repo, likely AUR-only or virtual): cargo
 dbus=1.16.2-1
-gcc-libs=16.1.1+r12+g301eb08fa2c5-1
-glibc=2.43+r22+g8362e8ce10b2-2
+gcc-libs=16.1.1+r346+g4e03491b401d-1
+glibc=2.43+r37+gfdf10644d6ee-1
 pass=1.7.4-7
