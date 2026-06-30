@@ -31,7 +31,9 @@ jobs:
        github.event.comment.user.type != 'Bot' &&
        contains(github.event.comment.body, '@claude'))
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    # diff スコープ review なので機械的 bump は数十秒で終わる。20min は
+    # deep path (source/build 変更) が稀に長引いた時の安全マージン。
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v6
         with:
@@ -90,67 +92,69 @@ jobs:
             the owner's GPG (`483DC691DF9F29327EA106BD030130E2F156CD74`) and
             served over Tailscale.
 
-            Review this PR with a supply-chain mindset. Focus on:
+            あなたは PR の **diff だけ** を supply-chain 観点で review する。
+            **repo 全体を読みにいかないこと** (= 過去に毎回フル read して
+            15min timeout で cancelled → verdict 0 件になっていた)。効率最優先、
+            必要な変更ファイルだけ最小限 read し、少ない turn で verdict を出す。
 
-            - PKGBUILD `source` URLs must point at the upstream official path
-              (no typosquatting, no domain spoof, no random mirror).
-            - `sha256sums` must be present and non-`SKIP` for every external
-              `source` entry. If a source is a git ref, prefer a pinned commit
-              SHA or signed tag.
-            - `prepare()` / `build()` / `package()` must not perform network
-              fetches outside `source=()`, nor `curl | sh`, nor any opaque
-              binary execution. Flag suspicious `eval` / dynamic command
-              construction.
-            - `depends` / `makedepends` / `optdepends` must be coherent with
-              what the package actually links / runs.
-            - Compare the diff against AUR's current PKGBUILD for the same
-              package when relevant; flag divergences without justification
-              in REVIEW.md.
-            - Any shell script under `bin/` must be reviewed for injection
-              (unquoted `$var`, `eval`, `IFS` tricks) and for handling of
-              GPG secrets / Tailscale state.
-            - No secrets in the diff: private keys, tokens, passwords,
-              `.gpg` keyring files, ssh private keys, etc.
-            - `REVIEW.md` updates must record: source URL verified, sha256
-              source (where the hash came from), and reviewer's conclusion.
-            - Commit messages should describe the *why*, not just the *what*.
+            ## 手順
 
-            **Output (必須、 spam 防止のため厳格遵守)**:
+            ### 1. 冪等性 check (必須、最初に 1 回)
 
-            review summary を **top-level PR comment として 1 回だけ post** する。
+            ```
+            PR_NUMBER=${{ github.event.pull_request.number || github.event.issue.number }}
+            commit_ts=$(gh api "repos/$GITHUB_REPOSITORY/git/commits/$GITHUB_SHA" --jq '.committer.date')
+            last_verdict_ts=$(gh pr view "$PR_NUMBER" --json comments \
+              --jq '[.comments[] | select(.author.login == "claude") | select(.body | contains("**verdict:"))] | sort_by(.createdAt) | last | .createdAt // ""')
+            if [[ -n "$last_verdict_ts" && "$last_verdict_ts" > "$commit_ts" ]]; then
+              echo "[skip] verdict already posted for $GITHUB_SHA"; exit 0
+            fi
+            ```
+            現 HEAD commit より後に verdict があれば **何もせず終了**。
 
-            **重要**: 本 review session 中に `gh pr comment` を実行するのは
-            **正確に 1 回のみ**。 同一 session で 2 回目を呼ぶのは禁止 (= user
-            の Anthropic usage を無駄に消費するため。 過去に 1 PR に 11 comment
-            付けたインシデントあり)。 投稿後は即座に session 終了すること。
+            ### 2. diff を取得して分類
 
-            手順:
+            まず `gh pr diff "$PR_NUMBER"` (大きければ `--name-only` 併用) で
+            **変更ファイルと hunk** を見る。この diff だけで下記に分類する。
 
-            1. **冪等性 check (必須)**: 現在の HEAD commit に対する verdict が既にないか確認
-               ```
-               PR_NUMBER=${{ github.event.pull_request.number || github.event.issue.number }}
-               commit_ts=$(gh api "repos/$GITHUB_REPOSITORY/git/commits/$GITHUB_SHA" --jq '.committer.date')
-               last_verdict_ts=$(gh pr view "$PR_NUMBER" --json comments \
-                 --jq '[.comments[] | select(.author.login == "claude") | select(.body | contains("**verdict:"))] | sort_by(.createdAt) | last | .createdAt // ""')
-               if [[ -n "$last_verdict_ts" && "$last_verdict_ts" > "$commit_ts" ]]; then
-                 echo "[skip] verdict already posted for $GITHUB_SHA"
-                 exit 0
-               fi
-               ```
-               現在の HEAD commit より後に verdict comment が投稿済みなら **何もせず session 終了**。
-               request-changes 後に修正 push した場合はスキップされず再 review される。
+            - **fast path (機械的 bump)**: 変更が次の機械的更新 *のみ* の場合 ―
+              - `PKGBUILD` の `pkgrel` 行のみ (`pkgver` / `source` / `*sums` /
+                `prepare`/`build`/`package` / `depends`/`makedepends` は無変更)
+              - `.deps.lock` の version 行
+              - `.SRCINFO` の `pkgrel` / version 同期
+              - `REVIEW.md` の更新履歴行追記
+              → **追加で一切 read せず**、即 `verdict: approve` を 1 コメント。
+                本文は差分の要点 2-3 行で十分 (例: `cython 3.2.6-1 → 3.2.6-2`,
+                `pkgrel` +1)。
 
-            2. 上記 check で 0 件なら、 review 内容を markdown でまとめる
-               (= verdict 行 + 検証項目別の OK/NG 表 + 補足説明)。
+            - **deep path (実質変更)**: diff が次のいずれかを触る時 *だけ* 深く見る ―
+              `source=` / `sha256sums`/`sha512sums`/`b2sums` / `pkgver` /
+              `prepare()`/`build()`/`package()` / `depends`/`makedepends`/`optdepends` /
+              `*.install` / `bin/` 配下 / `.github/` 配下 / ファイルの新規追加・削除。
+              → **変更されたファイルだけ** read し、変更 hunk に絞って確認:
+              - `source` URL が upstream official path か (typosquat/spoof/mirror 無し)
+              - 全 external source に非 `SKIP` の checksum が pin されてるか
+                (git ref なら pinned commit SHA / signed tag を優先)
+              - `prepare/build/package` に source=() 外の network fetch /
+                `curl | sh` / 不透明 binary 実行 / 怪しい `eval`・動的コマンド構築が無いか
+              - `depends`/`makedepends`/`optdepends` が変更内容と整合するか
+              - 関連あれば AUR の現行 PKGBUILD と比較し、REVIEW.md に正当化の
+                無い乖離が無いか
+              - `bin/` script は injection (unquoted `$var` / `eval` / `IFS`) と
+                GPG secret / Tailscale state の扱いを確認
+              - diff に secret (private key/token/password/`.gpg`/ssh key) が無いか
+              変更と無関係な他 package / 既存コードは read しない。
 
-            3. 投稿: `gh pr comment "$PR_NUMBER" --body "<review markdown>"`
-               (1 回のみ)
+            ### 3. 投稿 (1 回のみ)
 
-            4. 1 行目に **verdict: approve / request-changes / block** の
-               いずれかを必ず入れる。
-
-            5. 投稿成功したら **即終了**。 追加 comment / review / 確認等は不要。
-               行依存の line comment (= `gh pr review --comment`) は
-               **本 task では使用禁止**。 全ての finding を 1 comment 内にまとめる。
+            `gh pr comment "$PR_NUMBER" --body "<markdown>"` を **正確に 1 回** 実行。
+            (過去に 1 PR へ 11 comment 付けたインシデントあり。2 回目呼び出し禁止、
+            user の Anthropic usage を無駄にするため。)
+            - 1 行目に **verdict: approve / request-changes / block** を必ず入れる。
+            - fast path は verdict 行 + 2-3 行要約で十分。deep path は検証項目別の
+              OK/NG を簡潔にまとめる。
+            - 行依存 line comment (`gh pr review --comment`) は使用禁止。全 finding を
+              1 comment にまとめる。
+            投稿成功したら **即終了**。追加の確認 read は不要。
 
             日本語で書くこと。
