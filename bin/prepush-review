@@ -1,0 +1,104 @@
+#!/usr/bin/env bash
+# prepush-review: deterministic supply-chain gate, run by .githooks/pre-push
+# before a branch is pushed. Replaces the retired claude-review.yml GitHub
+# Action.
+#
+# 役割分担: 機械的に検出できる supply-chain 問題だけをここで弾く
+# (= push 中止)。 source URL が「本当に upstream official か」 等の判断系
+# review は、 従来どおり PR 処理時に人間 (Claude review) が行う。 この script
+# は「人間 review に回す前に、 明らかな地雷で push させない」 deterministic
+# な最終 gate。
+#
+# Usage: bin/prepush-review [BASE [HEAD]]
+#   Reviews the diff BASE..HEAD. Defaults: BASE=origin/master, HEAD=HEAD.
+#
+# Checks (on the changed range):
+#   1. secret leak   : private keys / API tokens / tailscale keys in added lines
+#   2. SKIP checksum : a *sums entry newly set to SKIP in a changed PKGBUILD
+#   3. unsafe build  : curl / wget / pipe-to-shell / eval / pip-install
+#                      (without --no-index) newly added to a PKGBUILD
+#   4. REVIEW.md sync: a PKGBUILD's source= / *sums / pkgver changed but the
+#                      package's REVIEW.md was not updated in the same range
+#
+# Exit 1 (push aborted) if any BLOCK finding. Override: git push --no-verify.
+# Output is English (ASCII) per repo convention.
+
+set -u
+
+base="${1:-origin/master}"
+head="${2:-HEAD}"
+
+# Resolve base; if unknown (e.g. fresh clone without origin/master), fall
+# back to the empty tree so a brand-new branch still gets scanned.
+if ! git rev-parse --verify --quiet "$base^{commit}" >/dev/null 2>&1; then
+    base="$(git hash-object -t tree /dev/null)"
+fi
+
+fail=0
+note()  { printf '[prepush-review] %s\n' "$1" >&2; }
+block() { printf '[prepush-review][BLOCK] %s\n' "$1" >&2; fail=1; }
+
+changed_files="$(git diff --name-only "$base" "$head")"
+
+# --- 1. secret scan over all added lines -----------------------------------
+# Exclude this gate's own scripts: they contain the detection patterns as
+# literals and would otherwise self-match.
+added="$(git diff "$base" "$head" -- . \
+            ':(exclude)bin/prepush-review' \
+            ':(exclude).githooks/pre-push' \
+         | grep '^+' | grep -v '^+++')"
+secret_re='BEGIN (OPENSSH|RSA|EC|DSA|PGP) PRIVATE KEY|AKIA[0-9A-Z]{16}|ghp_[0-9A-Za-z]{36}|github_pat_[0-9A-Za-z_]{22,}|tskey-[0-9A-Za-z-]{10,}|xox[baprs]-[0-9A-Za-z-]{10,}'
+if printf '%s\n' "$added" | grep -nEi "$secret_re" >/dev/null 2>&1; then
+    block "possible secret in added lines:"
+    printf '%s\n' "$added" | grep -nEi "$secret_re" | sed 's/^/    /' >&2
+fi
+
+# --- per-PKGBUILD checks ---------------------------------------------------
+while IFS= read -r f; do
+    [ -n "$f" ] || continue
+    case "$f" in pkgs/*/PKGBUILD) ;; *) continue ;; esac
+    pkgdir="$(dirname "$f")"
+    pkg="$(basename "$pkgdir")"
+
+    # added (+) lines of this PKGBUILD, comments stripped
+    padd="$(git diff "$base" "$head" -- "$f" | grep '^+' | grep -v '^+++' \
+            | grep -vE '^\+[[:space:]]*#')"
+
+    # 2. SKIP checksum newly introduced
+    if printf '%s\n' "$padd" \
+         | grep -nE "(sha256sums|sha512sums|b2sums|md5sums|sha1sums)=.*SKIP|^\+[[:space:]]*['\"]?SKIP['\"]?[[:space:]]*\)?[[:space:]]*\$" \
+         >/dev/null 2>&1; then
+        block "$pkg: PKGBUILD introduces a SKIP checksum (pin the hash instead)"
+    fi
+
+    # 3. unsafe build patterns newly added
+    bad="$(printf '%s\n' "$padd" \
+           | grep -nEi 'curl |wget |\| *sh\b|\| *bash\b|eval |pip install' \
+           | grep -viE -- '--no-index')"
+    if [ -n "$bad" ]; then
+        block "$pkg: PKGBUILD adds unsafe build step(s):"
+        printf '%s\n' "$bad" | sed 's/^/    /' >&2
+    fi
+
+    # 4. REVIEW.md sync when source/sums/pkgver changed
+    if printf '%s\n' "$padd" \
+         | grep -qE '^\+[[:space:]]*(source|sha256sums|sha512sums|b2sums|pkgver)[[:space:]]*='; then
+        if ! printf '%s\n' "$changed_files" | grep -qx "$pkgdir/REVIEW.md"; then
+            block "$pkg: source/sums/pkgver changed but $pkgdir/REVIEW.md not updated"
+        fi
+        srcs="$(printf '%s\n' "$padd" | grep -E '^\+.*https?://')"
+        if [ -n "$srcs" ]; then
+            note "$pkg: human-review these added source URLs:"
+            printf '%s\n' "$srcs" | sed 's/^/    /' >&2
+        fi
+    fi
+done <<EOF
+$changed_files
+EOF
+
+if [ "$fail" -ne 0 ]; then
+    note "BLOCKED. Fix the above, or override with: git push --no-verify"
+    exit 1
+fi
+note "deterministic checks passed (do judgment review during PR processing)"
+exit 0
