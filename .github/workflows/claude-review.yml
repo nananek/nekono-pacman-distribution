@@ -76,7 +76,13 @@ jobs:
           # 投稿できるようにする。default では Bash tool が制限されてて、
           # action 内蔵の buffered inline comment 経路を Claude が選ばない
           # ため silent で終わる事案があった。
-          claude_args: '--allowed-tools Bash(gh pr comment:*),Bash(gh pr review:*),Bash(gh api:*)'
+          #
+          # Read/Grep/Glob/`gh pr diff` も明示 allow する。これが無いと
+          # claude-code-action@v1 (moving tag) の 2026-06 中旬の挙動変更後、
+          # review session が diff/PKGBUILD を読もうとして permission 拒否を
+          # 連発し (1 run で 22 denials 観測)、verdict comment を post せず
+          # silent に success 終了していた (= #240 以降 verdict 0 件)。
+          claude_args: '--allowed-tools Read,Grep,Glob,Bash(gh pr diff:*),Bash(gh pr comment:*),Bash(gh pr review:*),Bash(gh api:*)'
           prompt: |
             This repo (`nekono-pacman-distribution`) is a self-hosted pacman
             package distribution for Arch Linux. It contains PKGBUILDs forked
