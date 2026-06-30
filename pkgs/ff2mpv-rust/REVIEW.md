@@ -121,3 +121,5 @@ upstream の新 release (1.1.8 等) が出たら:
 | 日付 | release | review した PKGBUILD repo SHA | findings |
 |---|---|---|---|
 | 2026-05-25 | 1.1.7-1 | (初回 review) | AUR 純 fork、approve |
+
+<!-- claude-review fast-path selftest (throwaway, PR は close する) -->
