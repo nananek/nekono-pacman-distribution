@@ -77,7 +77,6 @@
 | `icecast`                 | from-source (C)          | HTTP audio streaming server |
 | `libigloo`                | from-source (C)          | Icecast 2.5.x 必須共通フレームワーク |
 | `shairport-sync-airplay2` | from-source (C)          | AirPlay 2 受信 (nqptp 連携) |
-| `nqptp`                   | from-source (C)          | AirPlay 2 timing/sync デーモン |
 | `voicevox-bin`            | -bin (Electron AppImage) | VOICEVOX エディタ GUI |
 | `voicevox-engine-cuda`    | -bin (CUDA bundle)       | VOICEVOX TTS エンジン (CUDA 版) |
 

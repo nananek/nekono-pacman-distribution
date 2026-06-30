@@ -148,14 +148,6 @@ github = "nananek/nekonopaw"
 use_max_tag = true
 prefix = "v"
 
-[nqptp]
-# shairport-sync-airplay2 が AirPlay 2 timing/sync で require する system
-# daemon (Mike Brady / shairport-sync 主開発者と同一作者)。 release tag は
-# 素の X.Y.Z 形式 (prefix 無し)。
-source = "github"
-github = "mikebrady/nqptp"
-use_latest_release = true
-
 [pam_pkcs11]
 # OpenSC は release tag に "pam_pkcs11-X.Y.Z" の prefix を付ける。
 source = "github"
