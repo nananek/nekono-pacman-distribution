@@ -1,7 +1,7 @@
 pkgbase = python-mcp
 	pkgdesc = Model Context Protocol SDK.
-	pkgver = 1.27.2
-	pkgrel = 8
+	pkgver = 1.28.1
+	pkgrel = 1
 	url = https://github.com/modelcontextprotocol/python-sdk
 	arch = any
 	license = MIT
@@ -27,9 +27,7 @@ pkgbase = python-mcp
 	depends = python-typing_extensions
 	depends = python-typing-inspection
 	depends = python-opentelemetry-api
-	source = mcp::git+https://github.com/modelcontextprotocol/python-sdk.git#tag=v1.27.2
-	source = 1834.patch
-	sha256sums = 9ddce6c327508adbbdf8e9013bb6160482c768de269776a48e89a54e49c64523
-	sha256sums = b0447596b4e75375c4a37759c088a867b2d7d3e64cb05b78d71762a90bceba0c
+	source = mcp::git+https://github.com/modelcontextprotocol/python-sdk.git#tag=v1.28.1
+	sha256sums = a8d51d4314ab1c9a05e5643d7d0dea4bbfd43ea486183fde901ef083a0b23f99
 
 pkgname = python-mcp
