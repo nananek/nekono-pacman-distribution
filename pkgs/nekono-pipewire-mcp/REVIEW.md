@@ -87,3 +87,4 @@ upstream で新 release (= v0.2.0 等) が出たら:
 | 2026-06-23 | 0.1.0-6 | (this PR) | — (pkgrel bump のみ) | `pkgrel` +1 (deps changed): python 3.14.5-1 → 3.14.6-1 |
 | 2026-06-24 | 0.1.0-7 | (this PR) | — (pkgrel bump のみ) | `pkgrel` +1 (cascade: [nekono] dep rebuilt): python-fastmcp 3.4.2-7 rebuild に追随 (build-all の cascade-warn 由来) |
 | 2026-06-25 | 0.1.0-8 | (this PR) | — (pkgrel bump のみ) | `pkgrel` +1 (cascade: [nekono] dep rebuilt): python-fastmcp 3.4.2-8 rebuild に追随 (build-all の cascade-warn 由来) |
+| 2026-07-01 | 0.1.0-9 | (this PR) | — (pkgrel bump のみ) | `pkgrel` +1 (cascade: [nekono] dep rebuilt): python-fastmcp 3.4.2-9 → 3.4.2-10 rebuild に追随 (build-all の cascade-warn 由来) |
