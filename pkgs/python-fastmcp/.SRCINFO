@@ -1,7 +1,7 @@
 pkgbase = python-fastmcp
 	pkgdesc = The fast, Pythonic way to build MCP servers and clients.
 	pkgver = 3.4.2
-	pkgrel = 9
+	pkgrel = 10
 	url = https://github.com/PrefectHQ/fastmcp
 	arch = any
 	license = Apache-2.0

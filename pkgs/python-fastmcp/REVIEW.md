@@ -94,3 +94,4 @@ upstream で新 release (= v3.2.5 等) が出たら:
 | 2026-06-24 | 3.4.2-7 | (this PR) | — (pkgrel bump のみ) | `pkgrel` +1 (cascade: [nekono] dep rebuilt): python-py-key-value-aio 0.4.4-10 rebuild に追随 (build-all の cascade-warn 由来) |
 | 2026-06-25 | 3.4.2-8 | (this PR) | — (pkgrel bump のみ) | `pkgrel` +1 (deps changed): python-opentelemetry-api 1.42.1-1 → 1.43.0-1 |
 | 2026-06-27 | 3.4.2-9 | (this PR) | — (pkgrel bump のみ) | `pkgrel` +1 (deps changed): python-anyio 4.14.0-1 → 4.14.1-1 |
+| 2026-07-01 | 3.4.2-10 | (this PR) | — (pkgrel bump のみ) | `pkgrel` +1 (cascade: [nekono] dep rebuilt): python-mcp 1.27.2-8 → 1.28.1-1 rebuild に追随 (build-all の cascade-warn 由来) |
