@@ -10,15 +10,12 @@
 #     宣言、 AUR は省略していたが upstream 準拠で組み込む。 Arch 公式 extra/python-opentelemetry-api
 #     1.41.1 で resolve OK)
 #
-# patch file (1834.patch) は AUR repo 同梱の upstream PR 1834 ("Support Python 3.14")
-# を pkg dir 内に local file として保持、 source[] で local 参照。
-#
 # python-fastmcp の直接依存。 fastmcp → mcp の transitive chain の核心。
 
 _name=mcp
 pkgname=python-$_name
-pkgver=1.27.2
-pkgrel=8
+pkgver=1.28.1
+pkgrel=1
 pkgdesc='Model Context Protocol SDK.'
 arch=('any')
 url='https://github.com/modelcontextprotocol/python-sdk'
@@ -49,16 +46,12 @@ makedepends=(
     'python-wheel'
     'git'                        # source は git+url の git clone のため
 )
-source=("$_name::git+$url.git#tag=v$pkgver"
-        "1834.patch")
-sha256sums=('9ddce6c327508adbbdf8e9013bb6160482c768de269776a48e89a54e49c64523'
-            'b0447596b4e75375c4a37759c088a867b2d7d3e64cb05b78d71762a90bceba0c')
+source=("$_name::git+$url.git#tag=v$pkgver")
+sha256sums=('a8d51d4314ab1c9a05e5643d7d0dea4bbfd43ea486183fde901ef083a0b23f99')
 
 prepare(){
   cd "$srcdir"/$_name
   git clean -fdx
-  # Fix compatibility with Python 3.14 (= upstream PR #1834、 未 merge / 未 release のため適用)
-  patch -Np1 -i ../1834.patch
   sed -i 's/timeout=20/timeout=None/' tests/client/test_config.py
 }
 
