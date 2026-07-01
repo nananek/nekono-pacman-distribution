@@ -5,7 +5,7 @@
 
 pkgname=pwvucontrol
 pkgver=0.5.2
-pkgrel=8
+pkgrel=9
 pkgdesc="Pipewire volume control for GNOME"
 url="https://github.com/saivert/pwvucontrol"
 arch=(x86_64)
