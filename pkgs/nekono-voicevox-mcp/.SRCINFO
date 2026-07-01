@@ -1,7 +1,7 @@
 pkgbase = nekono-voicevox-mcp
 	pkgdesc = MCP server bridging VOICEVOX engine HTTP API + pw-cat for TTS playback
 	pkgver = 0.1.0
-	pkgrel = 10
+	pkgrel = 11
 	url = https://github.com/nananek/nekono-voicevox-mcp
 	arch = any
 	license = MIT
