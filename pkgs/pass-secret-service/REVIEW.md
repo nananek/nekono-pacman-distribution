@@ -50,3 +50,4 @@ AUR の `pass-secret-service` PKGBUILD (pkgver=0.7.0, pkgrel=1) を fork。
 |---|---|---|---|---|
 | 2026-05-19 | 0.7.0-1 | `2b50d97` | `3f9e292` (v0.7.0) | 初回 add、AUR fork + 意図的改変 4 件 |
 | 2026-06-28 | 0.7.0-2 | bot PR #302 | — (pkgrel bump のみ) | `pkgrel` +1 (deps changed): gcc-libs 16.1.1+r12 → 16.1.1+r346、 glibc 2.43+r22 → 2.43+r37 |
+| 2026-07-02 | 0.7.1-1 | Issue #325 bump | `a1903a9` (v0.7.1, GPG 署名 tag `18859be` by grimsteel, verified) | pkgver 0.7.0→0.7.1。独立 review: 依存不変 (Cargo.toml/Cargo.lock は自 pkg version のみ)、変更は DH shared-secret/pubkey の zero-pad 修正 (`secret_transfer.rs`) + `read_alias()` の NotFound→EMPTY_PATH 修正 (`service.rs`) + unit test。build()/package() 不変、新 install hook 無し。b2sum 実測 `2a50e512…` / sha256 `59cb7013…` 一致。security fix ではなく正当性修正 |
