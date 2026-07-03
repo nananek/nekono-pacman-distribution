@@ -1,36 +1,26 @@
+# Caddy = 匿名 GET 専用 (pacman 向け)。 書き込み (publish) は別 service の
+# dufs (:8080) が担うので、 ここでは静的配信だけ。 volume は compose 側で
+# read-only mount されている。
 {
-	# tailnet 内向けなので既定は素の HTTP。 TLS を張るなら auto_https を
-	# 有効化し、 site address を `nekono-dist0.<tailnet>.ts.net` にして
-	# Tailscale の cert 機能を使う。
 	admin off
-	auto_https off
+	auto_https off        # tailnet 内 HTTP。 TLS を張るなら site address を
+	                      # `nekono-dist0.<tailnet>.ts.net` にして Tailscale cert を使う。
 }
 
-# :80 で配信。 本番は compose 側で Tailscale IP に bind する
-# (0.0.0.0 に晒さない。 詳細は deploy/dist/README.md)。
 :80 {
 	root * /srv/repo
 
-	# --- 書き込み系 (publish の rclone WebDAV) は basic_auth 必須 ---
-	# pacman は GET/HEAD しか投げないので、 これらの method は publish 専用。
-	@dav method PUT DELETE MKCOL COPY MOVE PROPFIND PROPPATCH LOCK UNLOCK
-	handle @dav {
-		basic_auth {
-			{$DAV_USER} {$DAV_HASH}
-		}
-		webdav
+	file_server {
+		browse            # ブラウザ閲覧用 index (pacman GET には不要だが便利)
 	}
 
-	# --- それ以外 (pacman の GET/HEAD) は匿名 static 配信 ---
-	# 署名は artifact に付随するので配信は土管でよい (信頼モデル参照)。
-	handle {
-		file_server {
-			hide .env* .git*
-		}
+	header {
+		X-Content-Type-Options nosniff
+		X-Frame-Options DENY
 	}
 
 	log {
-		output stdout
+		output stdout     # docker logs に出す (file 出力は volume 無しだと消えるため)
 		format console
 	}
 }

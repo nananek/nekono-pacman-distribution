@@ -164,24 +164,23 @@ bin/build-all
 
 既定ではビルドと配信を同一ホスト (nekono-pacman0) で行い、`bin/serve` の
 nginx が Tailscale 越しに `repo/` を配信する。配信を**別ホストに切り離す**
-場合の scaffold を `deploy/dist/` に用意している。
+compose 一式を `deploy/dist/` に用意している (nekono-dist0 でデプロイ済み)。
 
-- 配信ホストで Caddy + WebDAV を docker-compose 1 本で上げる
-  (匿名 GET = pacman 向け静的配信 / 認証 PUT = publish 用 WebDAV)。
-  ホスト側 nginx 設定も ssh+rsync も不要。
+- 配信ホストで docker-compose を上げると、tailscale sidecar で tailnet に
+  参加した上で 2 経路を出す:
+  - **匿名 GET** (pacman) = **Caddy** `:80`、volume は read-only mount
+  - **認証 PUT** (publish) = **dufs** WebDAV `:8080`、volume は read-write mount
+  - read 側の `:ro` mount が「配信は書けない土管」の security 境界。
 - build host は `bin/build-all` 後に **`bin/publish`** を叩く。ホストに
-  rclone を入れず、rclone コンテナで署名済み `repo/x86_64/` を WebDAV へ
-  sync する (`--copy-links` で `nekono.db` symlink を実体化、`--delay-updates`
-  で pkg→db の順序を保証)。
+  rclone を入れず、rclone コンテナで署名済み `repo/x86_64/` を dufs (`:8080`)
+  の WebDAV へ sync する (`--copy-links` で `nekono.db` symlink を実体化、
+  `--delay-updates` で pkg→db の順序を保証)。
 - **信頼モデルは不変**: `SigLevel=Required` で client が Nekono GPG を検証する
   ため、配信ホストは署名鍵を持たない土管でよい。
-- client は `Server` を配信ホストに向け替えるだけ。
+- client は `Server` を配信ホスト (Caddy `:80`) に向け替えるだけ。
 
 手順は `deploy/dist/README.md` 参照。配信ホストのプロビジョニングと client の
 `Server` URL 差し替えは ansible-nekonodesk 側で行う。
-
-> ⚠ 現状は未検証の scaffold。初回デプロイ時に Caddy webdav module ビルド・
-> rclone WebDAV 疎通を検証すること。
 
 ## License
 
