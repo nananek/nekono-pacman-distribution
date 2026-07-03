@@ -122,9 +122,18 @@ jobs:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
           # Issue 作成 / upstream fetch / diff / sha256 計算に必要な最小限
           # の bash サブセットを許可する。
+          #
+          # 重要: claude-code-action は claude_args を **whitespace で split** して
+          # argv 化する。そのため `Bash(...)` パターン内に **空白を含めてはいけない**。
+          # 例えば `Bash(gh issue create:*)` は `Bash(gh` / `issue` / `create:*)` の
+          # 3 token に千切られ、`gh issue create` が常に permission denied になって
+          # Issue が作られない (過去そのバグで大半の Issue 生成が silent fail した)。
+          # gh の subcommand は空白区切りなので、空白を避けるには `Bash(gh:*)` で
+          # gh 全体を許可するしかない (job の GITHUB_TOKEN は issues:write /
+          # contents:read のみなので scope は許容範囲)。
           claude_args: |
             --allowed-tools
-            Bash(gh issue create:*),Bash(gh api:*),Bash(gh release:*),
+            Bash(gh:*),
             Bash(curl:*),Bash(wget:*),Bash(git:*),Bash(tar:*),Bash(unzip:*),
             Bash(jq:*),Bash(diff:*),Bash(sha256sum:*),Bash(b2sum:*),
             Bash(ls:*),Bash(find:*),Bash(grep:*),Bash(cat:*),Bash(head:*),
