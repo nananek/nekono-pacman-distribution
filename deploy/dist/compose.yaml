@@ -1,22 +1,54 @@
-# 配信ホスト (nekono-dist0 等) 上で `docker compose up -d --build`。
-# GET(匿名, pacman) と PUT(WebDAV, 認証, publish) を 1 コンテナで完結。
-# このホストには build 道具も Nekono 署名鍵も無い (= ただの土管)。
+# 配信ホスト (nekono-dist0) 用スタック。 tailnet に tailscale sidecar で参加し、
+#   - 匿名 GET (pacman 向け)  = Caddy static, :80,   volume は read-only mount
+#   - 認証 PUT (publish 向け)  = dufs WebDAV, :8080, volume は read-write mount
+# の 2 経路を出す。 read 側 (Caddy) の :ro mount が「配信は書けない土管」の
+# security 境界。 このホストに build 道具も Nekono 署名鍵も無い。
+#
+# 事前に `cp .env.example .env` して TS_AUTHKEY / DUFS_USER / DUFS_PASS を埋め、
+#   docker compose up -d
 services:
-  repo:
-    build: .
-    image: nekono-repo-caddy
-    container_name: nekono-repo
-    restart: unless-stopped
-    env_file: .env
-    ports:
-      # 本番は Tailscale IP に bind すること (0.0.0.0 に晒さない):
-      #   - "100.x.y.z:80:80"
-      # tailnet 内限定なら Tailscale ACL でも絞れる。
-      - "80:80"
+  # tailnet 参加用 sidecar。 repo-get / dufs はこの netns を共有する。
+  tailscale:
+    image: tailscale/tailscale:latest
+    container_name: nekono-repo-tailscale
+    hostname: nekono-dist0
+    environment:
+      - TS_AUTHKEY=${TS_AUTHKEY}          # 初回 join 用 (tailnet auth key)
+      - TS_STATE_DIR=/var/lib/tailscale
+      - TS_EXTRA_ARGS=--ssh=false --advertise-exit-node=false
     volumes:
-      - repodata:/srv/repo
+      - ./volumes/ts_state:/var/lib/tailscale
+    devices:
+      - /dev/net/tun:/dev/net/tun
+    cap_add:
+      - NET_ADMIN
+      - NET_RAW
+    restart: unless-stopped
+
+  # 匿名 GET (pacman)。 volume は read-only。
+  repo-get:
+    image: caddy:2
+    container_name: nekono-repo-get
+    restart: unless-stopped
+    network_mode: "service:tailscale"
+    depends_on: [tailscale]
+    volumes:
+      - ./volumes/repodata:/srv/repo:ro
       - ./Caddyfile:/etc/caddy/Caddyfile:ro
 
-volumes:
-  # 署名済み .pkg.tar.zst / nekono.db* はここに publish 経由で入る。
-  repodata:
+  # 認証 PUT (publish の rclone WebDAV)。 volume は read-write。
+  # NOTE: dufs は auth rule の :rw だけでは書けない。 global の --allow-all
+  #       (または --allow-upload/--allow-delete) が無いと :rw が upload/delete を
+  #       許可しない仕様 (auth 権限は global permission に制限される)。
+  #       匿名 rule を置かないので :8080 は authed のみ (匿名 GET も 401)。
+  dufs:
+    image: sigoden/dufs:latest
+    container_name: nekono-repo-dufs
+    restart: unless-stopped
+    network_mode: "service:tailscale"
+    depends_on: [tailscale]
+    user: "65532:65532"                   # distroless nonroot。 volume を書ける uid に
+    command: ["/data", "--bind", "0.0.0.0", "--port", "8080",
+              "--allow-all", "--auth", "${DUFS_USER}:${DUFS_PASS}@/:rw"]
+    volumes:
+      - ./volumes/repodata:/data
