@@ -20,8 +20,8 @@
 
 pkgname=shairport-sync-airplay2
 _upstream=shairport-sync
-pkgver=5.0.4
-pkgrel=16
+pkgver=5.1
+pkgrel=1
 pkgdesc='Emulates an AirPort Express; built with AirPlay 2 receiver support (requires nqptp)'
 url='https://github.com/mikebrady/shairport-sync'
 arch=(x86_64)
@@ -36,7 +36,7 @@ replaces=(shairport-sync)
 source=("$_upstream-$pkgver.tar.gz::https://github.com/mikebrady/shairport-sync/archive/$pkgver.tar.gz"
         shairport-sync.sysusers
         remove_useradd.patch)
-sha256sums=('b89d4af74cffadd83d1be6eaf4e967180aa5a6aed32f561c937ae1d787909c25'
+sha256sums=('d85b5ad26449f3777518c4bfafeff0e4a6ebfb8333187df0ef462c199a4aba83'
             'bc2d92254910996e837d1c4c7dd81eddfb96a9f5f0cb2faad9fcb0414ea79a1d'
             '38f5c7aa7a35d1fd1a591b28d50293798cb29c3d9c600c0a750cb4209aed42f1')
 
