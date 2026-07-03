@@ -78,6 +78,15 @@ upstream の新 release (2.1.143 等) が出たら:
 
 ## 更新履歴
 
+- **2026-07-03 / 2.1.199** — approve。Issue #330 調査済み (release author `ashwin-ant` = 過去 release と同一、source URL `downloads.claude.ai` 不変、npm 側 maintainer 13 名・署名 keyid 不変)。
+  `2.1.178 → 2.1.199` の 22 version 分をまとめて追従 (cron 検知間隔が空いたための累積差分)。 v2.1.196 に **security fix 明記** (信頼していない workspace の `.mcp.json` server が自己承認で spawn される問題を修正、`⏸ Pending approval` 表示に変更)、
+  v2.1.178/183/187 も auto mode / sandbox credentials 周りのセキュリティ強化。 v2.1.197 で Claude Sonnet 5 が default に。 v2.1.178 で `TeamCreate`/`TeamDelete` tool 削除、 v2.1.198 で `/agents` wizard 削除 (いずれも実験的機能、 nekono の build/package には無関係)。
+  build script / depends / package() / wrapper script / `options=('!strip')` の変更なし。 npm `dependencies: {}` (外部依存なし) / `optionalDependencies` は platform binary の version 同期のみで新規 typosquat なし。 新規 install hook なし。
+  sha256 は raw binary を直接 download + `sha256sum` で **独立再計測** (Issue #330 記載値・GitHub Release cross-check と一致):
+  - x86_64: `b31dfd5e3dee23b51c42e0d8ddb405148978237d3aabc8cbbf77c5cf83367e27`
+  - aarch64: `14851b5170b154b01baca09bba970172e70cdd768b5a012bf347ba0f594b4ad3`
+  PKGBUILD 改変は `pkgver` + 2 sha256 の 3 値のみ。 Closes #330。
+
 - **2026-06-13 / 2.1.177** — approve。Issue #215 調査済み (release author `ashwin-ant` = 過去 release と同一、source URL `downloads.claude.ai` 不変)。
   `2.1.174 → 2.1.175 → 2.1.176 → 2.1.177` の連続リリース (スキップなし)。 v2.1.176 に **セキュリティ強化** あり (hook `if` 条件の
   ファイルパスパターン `Edit(src/**)` / `Read(~/.ssh/**)` / `Read(.env)` 等がドキュメント通り機能していなかった問題の修正、
