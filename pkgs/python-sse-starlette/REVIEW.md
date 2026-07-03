@@ -70,3 +70,4 @@ upstream で新 release (= 3.3.5 等) が出たら:
 | 2026-05-21 | 3.4.4 | (this PR) | `v3.4.4` | safe-to-bump: depends 変化なし、sha256 Issue #75 確認済み。Starlette parity + anyio v4 ExceptionGroup 対応。Closes #75 |
 | 2026-05-19 | 3.3.4 | `31116c43b87e9f3524fa9295e206397cde846878` | `c938db3f6ea262f5f087c75d8631c3aab9cbf0ad` | 初回 add、 純 fork (= check() 削除 + Maintainer 書換) |
 | 2026-06-27 | 3.4.4-6 | (this PR) | — (pkgrel bump のみ) | `pkgrel` +1 (deps changed): python-anyio 4.14.0-1 → 4.14.1-1 |
+| 2026-07-03 | 3.4.5-1 | (this PR) | `v3.4.5` (`d45e48299bcaba9a7d17c5baa0ff4108cd534039`) | safe-to-bump (Issue #333)。 patch メンテナンスリリース。 runtime deps (`starlette`, `anyio`) 不変、 変化は dev/test の dependabot bump (uv.lock のみ、 PKGBUILD は uv 不使用) + test 修正。 sha256 独立検証済み (GitHub archive 実測)。 pkgrel reset 6→1 |
