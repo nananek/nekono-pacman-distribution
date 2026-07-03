@@ -1,0 +1,22 @@
+# 配信ホスト (nekono-dist0 等) 上で `docker compose up -d --build`。
+# GET(匿名, pacman) と PUT(WebDAV, 認証, publish) を 1 コンテナで完結。
+# このホストには build 道具も Nekono 署名鍵も無い (= ただの土管)。
+services:
+  repo:
+    build: .
+    image: nekono-repo-caddy
+    container_name: nekono-repo
+    restart: unless-stopped
+    env_file: .env
+    ports:
+      # 本番は Tailscale IP に bind すること (0.0.0.0 に晒さない):
+      #   - "100.x.y.z:80:80"
+      # tailnet 内限定なら Tailscale ACL でも絞れる。
+      - "80:80"
+    volumes:
+      - repodata:/srv/repo
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+
+volumes:
+  # 署名済み .pkg.tar.zst / nekono.db* はここに publish 経由で入る。
+  repodata:

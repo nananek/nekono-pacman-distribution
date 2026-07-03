@@ -1,0 +1,55 @@
+#!/usr/bin/env bash
+# publish: push the signed repo/x86_64/ to the distribution host's WebDAV
+# endpoint (Caddy, see deploy/dist/). Runs rclone in a container so the build
+# host needs no host-level rclone/ssh/rsync. Credentials come from env vars and
+# are never committed. Independent of build-all; run it after a build.
+#
+# Required env (source from a local, gitignored file on the build host):
+#   NEKONO_DAV_URL   e.g. http://nekono-dist0.<tailnet>.ts.net
+#   NEKONO_DAV_USER  must match DAV_USER in the dist host's .env
+#   NEKONO_DAV_PASS  the plaintext behind that host's DAV_HASH
+#
+# Usage:
+#   export NEKONO_DAV_URL=... NEKONO_DAV_USER=... NEKONO_DAV_PASS=...
+#   bin/publish
+set -euo pipefail
+
+REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+REPO_DIR="$REPO_ROOT/repo/x86_64"
+RCLONE_IMAGE="${RCLONE_IMAGE:-rclone/rclone:latest}"
+
+: "${NEKONO_DAV_URL:?set NEKONO_DAV_URL (e.g. http://nekono-dist0.<tailnet>.ts.net)}"
+: "${NEKONO_DAV_USER:?set NEKONO_DAV_USER}"
+: "${NEKONO_DAV_PASS:?set NEKONO_DAV_PASS}"
+
+if [[ ! -f "$REPO_DIR/nekono.db.tar.gz" ]]; then
+    echo "[ERROR] $REPO_DIR/nekono.db.tar.gz not found. Run bin/build-all first." >&2
+    exit 1
+fi
+
+if ! command -v docker >/dev/null; then
+    echo "[ERROR] docker not found (publish runs rclone in a container)." >&2
+    exit 1
+fi
+
+# rclone stores WebDAV passwords obscured; obscure it via the same image.
+echo "[*] Obscuring WebDAV password"
+obsc="$(docker run --rm "$RCLONE_IMAGE" obscure "$NEKONO_DAV_PASS")"
+
+# --copy-links     : upload nekono.db (a symlink -> nekono.db.tar.gz) as a real
+#                    object (WebDAV/S3 cannot store symlinks)
+# --delay-updates  : land all packages first, swap the db last -> clients never
+#                    see a db referencing a not-yet-uploaded package
+echo "[*] Publishing $REPO_DIR -> $NEKONO_DAV_URL/x86_64 (WebDAV)"
+docker run --rm \
+    -v "$REPO_DIR":/data/x86_64:ro \
+    -e RCLONE_CONFIG_DIST_TYPE=webdav \
+    -e RCLONE_CONFIG_DIST_URL="$NEKONO_DAV_URL" \
+    -e RCLONE_CONFIG_DIST_VENDOR=other \
+    -e RCLONE_CONFIG_DIST_USER="$NEKONO_DAV_USER" \
+    -e RCLONE_CONFIG_DIST_PASS="$obsc" \
+    "$RCLONE_IMAGE" \
+    sync --copy-links --delay-updates --checkers 4 --transfers 4 -v \
+    /data/x86_64 dist:x86_64
+
+echo "[OK] publish complete"
