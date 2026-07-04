@@ -78,6 +78,14 @@ upstream の新 release (2.1.143 等) が出たら:
 
 ## 更新履歴
 
+- **2026-07-04 / 2.1.201** — approve。Issue #344 調査済み (release author `ashwin-ant` = 過去 release と同一、source URL `downloads.claude.ai` 不変、npm `dependencies: {}` 空・maintainer 13 名不変・新規 typosquat 依存なし)。
+  `2.1.199 → 2.1.200 → 2.1.201` の連続リリース。 v2.1.200 で **デフォルト permission mode が `default` → `Manual` に変更** (挙動変更だが破壊的ではない、`--permission-mode manual` / `"defaultMode": "manual"` は後方互換で受理) + background/daemon 系のバグ修正多数 (`disabledMcpServers` non-array 時の crash 修正、stale `daemon.lock` PID 再利用問題、socket auth token 消失等)。 v2.1.201 は Sonnet 5 harness reminder の内部実装変更。 CHANGELOG に security/CVE/removed/deprecated/breaking の記載なし。
+  build script / depends / package() / wrapper script / `options=('!strip')` の変更なし。 upstream repo に build script は存在せず (closed-source CLI、prebuilt binary 配布のみ)、 package() は raw binary を `install -Dm755` するだけ。 新規 install hook なし。
+  sha256 は **二重に独立検証** (完全一致): (1) `downloads.claude.ai/.../linux-{x64,arm64}/claude` を直接 `curl | sha256sum`、 (2) GitHub Release `v2.1.201` の `claude-linux-{x64,arm64}.tar.gz` (署名済み `SHASUMS256.txt` の値 `0664deaf…` / `9af73a10…` と一致) を展開した inner binary の sha256 が (1) と byte 一致:
+  - x86_64: `a34809a6839fdefff21b9347d7fb5b6b58e6a9cc208a5e62853f29c83eb107a3`
+  - aarch64: `86b2eab34d382c7b428fc2e9f4c97f04e46805e950582472a13eb7d48de60516`
+  PKGBUILD 改変は `pkgver` + 2 sha256 の 3 値のみ。 Closes #344。
+
 - **2026-07-03 / 2.1.199** — approve。Issue #330 調査済み (release author `ashwin-ant` = 過去 release と同一、source URL `downloads.claude.ai` 不変、npm 側 maintainer 13 名・署名 keyid 不変)。
   `2.1.178 → 2.1.199` の 22 version 分をまとめて追従 (cron 検知間隔が空いたための累積差分)。 v2.1.196 に **security fix 明記** (信頼していない workspace の `.mcp.json` server が自己承認で spawn される問題を修正、`⏸ Pending approval` 表示に変更)、
   v2.1.178/183/187 も auto mode / sandbox credentials 周りのセキュリティ強化。 v2.1.197 で Claude Sonnet 5 が default に。 v2.1.178 で `TeamCreate`/`TeamDelete` tool 削除、 v2.1.198 で `/agents` wizard 削除 (いずれも実験的機能、 nekono の build/package には無関係)。
