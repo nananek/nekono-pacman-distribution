@@ -12,6 +12,22 @@
 # Usage:
 #   export NEKONO_DAV_URL=... NEKONO_DAV_USER=... NEKONO_DAV_PASS=...
 #   bin/publish
+#
+# WHY TWO PASSES (important, do not "simplify" back to one sync):
+#   dufs WebDAV cannot store a client-set mtime, so rclone treats ModTime as
+#   unwritable and falls back to SIZE-ONLY change detection for `sync`. Package
+#   files are immutable-by-filename (a given <name>-<ver> filename never changes
+#   content), so size-only is safe for them and for deletions. But the repo db
+#   metadata mutates IN PLACE every build: nekono.db{,.tar.gz}, nekono.files
+#   {,.tar.gz}, and crucially their detached signatures — every *.sig is exactly
+#   119 bytes, so a NEW signature over a NEW db has the SAME size as the old one
+#   and `sync` SKIPS it. That silently leaves yesterday's nekono.db.sig over
+#   today's nekono.db, and every client `pacman -Sy` fails SigLevel=Required db
+#   verification (BAD signature). So:
+#     pass 1: `sync`  -> uploads new packages, deletes retired ones (size-only OK)
+#     pass 2: `copy --ignore-times` scoped to nekono.* -> force-refresh the db
+#             metadata + sigs so the published sig always matches the published db
+#   (Regression history: claude-code 2.1.201 publish, 2026-07-04.)
 set -euo pipefail
 
 REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
@@ -36,18 +52,30 @@ fi
 echo "[*] Obscuring WebDAV password"
 obsc="$(docker run --rm "$RCLONE_IMAGE" obscure "$NEKONO_DAV_PASS")"
 
-# --copy-links     : upload nekono.db (a symlink -> nekono.db.tar.gz) as a real
-#                    object (WebDAV/S3 cannot store symlinks)
-echo "[*] Publishing $REPO_DIR -> $NEKONO_DAV_URL/x86_64 (WebDAV)"
-docker run --rm \
-    -v "$REPO_DIR":/data/x86_64:ro \
-    -e RCLONE_CONFIG_DIST_TYPE=webdav \
-    -e RCLONE_CONFIG_DIST_URL="$NEKONO_DAV_URL" \
-    -e RCLONE_CONFIG_DIST_VENDOR=other \
-    -e RCLONE_CONFIG_DIST_USER="$NEKONO_DAV_USER" \
-    -e RCLONE_CONFIG_DIST_PASS="$obsc" \
-    "$RCLONE_IMAGE" \
-    sync --copy-links --checkers 4 --transfers 4 -v \
+# Shared rclone container invocation. --copy-links uploads nekono.db (a symlink
+# -> nekono.db.tar.gz) as a real object (WebDAV cannot store symlinks).
+rclone_run() {
+    docker run --rm \
+        -v "$REPO_DIR":/data/x86_64:ro \
+        -e RCLONE_CONFIG_DIST_TYPE=webdav \
+        -e RCLONE_CONFIG_DIST_URL="$NEKONO_DAV_URL" \
+        -e RCLONE_CONFIG_DIST_VENDOR=other \
+        -e RCLONE_CONFIG_DIST_USER="$NEKONO_DAV_USER" \
+        -e RCLONE_CONFIG_DIST_PASS="$obsc" \
+        "$RCLONE_IMAGE" "$@"
+}
+
+# Pass 1: bulk sync (uploads new packages, deletes retired ones). Size-only
+# comparison is fine here because package filenames are immutable-by-version.
+echo "[*] Publishing (pass 1/2: sync packages) $REPO_DIR -> $NEKONO_DAV_URL/x86_64"
+rclone_run sync --copy-links --checkers 4 --transfers 4 -v \
+    /data/x86_64 dist:x86_64
+
+# Pass 2: force-refresh the in-place-mutating db metadata + signatures. Without
+# --ignore-times the same-size *.sig files are skipped and the published sig no
+# longer matches the published db (see header). `copy` never deletes.
+echo "[*] Publishing (pass 2/2: force db metadata + sigs)"
+rclone_run copy --copy-links --ignore-times --include "nekono.*" -v \
     /data/x86_64 dist:x86_64
 
 echo "[OK] publish complete"
