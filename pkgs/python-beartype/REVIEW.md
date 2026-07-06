@@ -66,3 +66,4 @@ upstream で新 release が出たら nvchecker (= `[python-beartype]` section) �
 | 2026-06-15 | 0.22.9-5 | (this PR) | (同上) | `pkgrel` +1 (deps changed): python-hatchling 1.29.0-1 → 1.30.1-1 |
 | 2026-06-21 | 0.22.9-6 | (this PR) | (同上) | `pkgrel` +1 (deps changed): python 3.14.5-1 → 3.14.6-1 |
 | 2026-06-24 | 0.22.9-7 | bot PR #275 | (同上) | `pkgrel` +1 (deps changed): python-numpy 2.4.6-1 → 2.5.0-1 |
+| 2026-07-06 | 0.22.9-8 | bot PR #347 | (同上) | `pkgrel` +1 (deps changed): python-numpy 2.5.0-1 → 2.5.1-1 |
