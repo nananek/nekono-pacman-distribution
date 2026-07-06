@@ -1,7 +1,7 @@
 pkgbase = python-cyclopts
 	pkgdesc = A modern, intuitive command line interface framework for Python
 	pkgver = 4.20.0
-	pkgrel = 1
+	pkgrel = 2
 	url = https://github.com/BrianPugh/cyclopts
 	arch = any
 	license = Apache-2.0
