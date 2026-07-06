@@ -172,3 +172,4 @@ AUR の `voicevox-engine` PKGBUILD (pkgver=0.24.1, pkgrel=1) を fork、 CUDA
 | 2026-06-29 | 0.25.2-15 | bot PR #308 | — (pkgrel bump のみ) | `pkgrel` +1 (deps changed): python-fastapi 0.138.0-1 → 0.138.1-1 |
 | 2026-06-30 | 0.25.2-16 | bot PR #309 | — (pkgrel bump のみ) | `pkgrel` +1 (deps changed): cython 3.2.6-1 → 3.2.6-2 |
 | 2026-07-01 | 0.25.2-17 | bot PR #319 | — (pkgrel bump のみ) | `pkgrel` +1 (deps changed): cython 3.2.6-2 → 3.2.8-1 |
+| 2026-07-06 | 0.25.2-18 | bot PR #348 | — (pkgrel bump のみ) | `pkgrel` +1 (deps changed): python-fastapi 0.138.1-1 → 0.139.0-1, python-numpy 2.5.0-1 → 2.5.1-1 |
