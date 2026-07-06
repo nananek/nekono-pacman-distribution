@@ -3,7 +3,7 @@
 # Contributor: Rafael Baboni Dominiquini <rafaeldominiquini AT gmail DOT com>
 pkgname=python-rich-rst
 _name=rich_rst
-pkgver=2.0.2
+pkgver=2.1.0
 pkgrel=1
 pkgdesc="A reStructuredText renderer for rich "
 arch=('any')
@@ -12,7 +12,7 @@ license=('MIT')
 depends=('python-pygments' 'python-rich')
 makedepends=('python-build' 'python-installer' 'python-setuptools' 'python-wheel')
 source=("https://github.com/wasi-master/rich-rst/releases/download/v$pkgver/$_name-$pkgver.tar.gz")
-sha256sums=('664a669801695c5a126151338f309ce3ea3e0ea081c89a4130b8a4f659911ed9')
+sha256sums=('134f8d18e1391795fa32154af984202cb088738e6f75b26b8e0324996265fe5b')
 
 build() {
 	cd "$_name-$pkgver"
