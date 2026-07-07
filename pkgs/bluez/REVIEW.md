@@ -146,3 +146,4 @@ import が必要: `gpg --recv-keys E932D120BC2AEC444E558F0106CA9F5D1DCF2659`
 | 2026-06-27 | 5.86-12.1 | (this PR) | — (pkgrel bump のみ) | `pkgrel` +1 (deps changed): glib2 2.88.1-1 → 2.88.2-1 |
 | 2026-06-28 | 5.86-13.1 | bot PR #298 | — (pkgrel bump のみ) | `pkgrel` +1 (deps changed): systemd / systemd-libs 261-1 → 261.1-1、 glibc 2.43+r22 → 2.43+r37 |
 | 2026-06-29 | 5.86-14.1 | bot PR #306 | — (pkgrel bump のみ) | `pkgrel` +1 (deps changed): json-c 0.18-2 → 0.19-1 |
+| 2026-07-07 | 5.86-15.1 | bot PR #358 | — (pkgrel bump のみ) | `pkgrel` +1 (deps changed): libical 4.0.3-2 → 4.0.3-3 |
