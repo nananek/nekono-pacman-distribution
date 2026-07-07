@@ -78,6 +78,14 @@ upstream の新 release (2.1.143 等) が出たら:
 
 ## 更新履歴
 
+- **2026-07-07 / 2.1.202** — approve。Issue #361 調査済み (release author `ashwin-ant` = 過去 release と同一、source URL `downloads.claude.ai` 不変、npm `dependencies: {}` 空・`optionalDependencies` は platform binary の version 同期のみ・maintainer 13 名不変・新規 typosquat 依存なし)。
+  `2.1.201 → 2.1.202` の単一リリース。 `/config` に "Dynamic workflow size" 設定 (advisory) + workflow telemetry OTel attribute 追加、 残りは bug fix 多数 (Ctrl+R history search クラッシュ、mTLS 証明書ローテ handshake、Remote Control コマンド/画像 drop、SSH 折返し時の login URL hyperlink 化、workflow script の unicode quote 破損等)。 `/review <pr>` を single-pass に戻し multi-agent は `/code-review` に分離。 CHANGELOG に security/CVE/removed/deprecated/breaking の記載なし。
+  build script / depends / package() / wrapper script / `options=('!strip')` の変更なし。 upstream repo に build script は存在せず (closed-source CLI、prebuilt binary 配布のみ)、 package() は raw binary を `install -Dm755` するだけ。 新規 install hook なし。
+  sha256 は raw binary を `downloads.claude.ai/.../linux-{x64,arm64}/claude` から直接 download + `sha256sum` で **独立再計測** (Issue #361 記載値と byte 一致):
+  - x86_64: `71590202249892db3805ecd5b867f831f04b8129eaabd3f9a5bd4ba16b52c839`
+  - aarch64: `de5e0bb28e2b32409444ed4c1431e2931001c05ed270a3dc96c6706b0693867f`
+  PKGBUILD 改変は `pkgver` + 2 sha256 の 3 値のみ。 Closes #361。
+
 - **2026-07-04 / 2.1.201** — approve。Issue #344 調査済み (release author `ashwin-ant` = 過去 release と同一、source URL `downloads.claude.ai` 不変、npm `dependencies: {}` 空・maintainer 13 名不変・新規 typosquat 依存なし)。
   `2.1.199 → 2.1.200 → 2.1.201` の連続リリース。 v2.1.200 で **デフォルト permission mode が `default` → `Manual` に変更** (挙動変更だが破壊的ではない、`--permission-mode manual` / `"defaultMode": "manual"` は後方互換で受理) + background/daemon 系のバグ修正多数 (`disabledMcpServers` non-array 時の crash 修正、stale `daemon.lock` PID 再利用問題、socket auth token 消失等)。 v2.1.201 は Sonnet 5 harness reminder の内部実装変更。 CHANGELOG に security/CVE/removed/deprecated/breaking の記載なし。
   build script / depends / package() / wrapper script / `options=('!strip')` の変更なし。 upstream repo に build script は存在せず (closed-source CLI、prebuilt binary 配布のみ)、 package() は raw binary を `install -Dm755` するだけ。 新規 install hook なし。
