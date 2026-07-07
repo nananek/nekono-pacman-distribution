@@ -96,3 +96,4 @@ upstream で新 release (= v0.2.0 等) が出たら:
 | 2026-06-17 | 0.2.1-3 | (this PR) | (同上) | `pkgrel` +1 (cascade: [nekono] dep rebuilt): bluez 5.86-8.1 rebuild に追随 (build-all の cascade-warn 由来) |
 | 2026-06-21 | 0.2.1-4 | (this PR) | (同上) | `pkgrel` +1 (deps changed): python 3.14.5-1 → 3.14.6-1 |
 | 2026-06-25 | 0.2.1-5 | (this PR) | (同上) | `pkgrel` +1 (cascade: [nekono] dep rebuilt): bluez 5.86-11.1 rebuild に追随 (build-all の cascade-warn 由来) |
+| 2026-07-07 | 0.2.1-6 | bot PR #351 | (同上) | `pkgrel` +1 (deps changed): bluez 5.86-6 → 5.87-2 (Arch 公式 .deps.lock 追随) |
