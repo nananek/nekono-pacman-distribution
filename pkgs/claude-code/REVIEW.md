@@ -2,7 +2,7 @@
 
 ## 状態
 
-**review 済み、approve** (最新: 2026-06-13 / 2.1.177)
+**review 済み、approve** (最新: 2026-07-09 / 2.1.204)
 
 AUR の `claude-code` PKGBUILD を fork。改変なし。各 release の review 履歴は
 本ファイル末尾の「更新履歴」 section 参照。
@@ -77,6 +77,14 @@ upstream の新 release (2.1.143 等) が出たら:
    1 行追記
 
 ## 更新履歴
+
+- **2026-07-09 / 2.1.204** — approve。Issue #369 調査済み (release author `ashwin-ant` = 過去 release と同一、source URL `downloads.claude.ai` 不変、npm `dependencies: {}` 空・`optionalDependencies` は platform binary の version 同期のみ・maintainer 13 名不変、`install.cjs`/`cli-wrapper.cjs` は 2.1.202 と byte-identical・新規 postinstall / typosquat 依存なし)。
+  `2.1.202 → 2.1.203 → 2.1.204` の連続リリース。 v2.1.203 に **`ANTHROPIC_BASE_URL` drop 修正** (background/agent-view session が shell export した base URL を落として API key が default endpoint に送られ 401 になる問題の hardening、CVE 番号なし) + background/worktree/daemon 系のバグ修正多数 + bundled dependency の lazy load 化で binary size / 起動時メモリを各 ~7MB 削減。 v2.1.204 は headless session の `SessionStart` hook streaming 修正 1 件のみ。 CHANGELOG に CVE/removed/deprecated/breaking の記載なし。
+  build script / depends / package() / wrapper script / `options=('!strip')` の変更なし。 upstream repo に build script は存在せず (closed-source CLI、prebuilt binary 配布のみ)、 package() は raw binary を `install -Dm755` するだけ。 新規 install hook なし。
+  sha256 は **二重に独立検証** (完全一致): (1) `downloads.claude.ai/.../linux-{x64,arm64}/claude` を直接 `curl | sha256sum`、 (2) GitHub Release `v2.1.204` の署名済み `SHASUMS256.txt` に載る `claude-linux-{x64,arm64}.tar.gz` の値 (`f85e3e65…` / `cb6d5fd4…`) と download 実測が一致し、 展開した inner binary の sha256 が (1) と byte 一致:
+  - x86_64: `c8ee1ea69154533c691a68f46abb645196fe7339d26e6fc204cc7f08220139d3`
+  - aarch64: `c37256a8c3998b8675e8385f1ae4677d69bdff1e717c389296eec70e02e317ef`
+  PKGBUILD 改変は `pkgver` + 2 sha256 の 3 値のみ。 Closes #369。
 
 - **2026-07-07 / 2.1.202** — approve。Issue #361 調査済み (release author `ashwin-ant` = 過去 release と同一、source URL `downloads.claude.ai` 不変、npm `dependencies: {}` 空・`optionalDependencies` は platform binary の version 同期のみ・maintainer 13 名不変・新規 typosquat 依存なし)。
   `2.1.201 → 2.1.202` の単一リリース。 `/config` に "Dynamic workflow size" 設定 (advisory) + workflow telemetry OTel attribute 追加、 残りは bug fix 多数 (Ctrl+R history search クラッシュ、mTLS 証明書ローテ handshake、Remote Control コマンド/画像 drop、SSH 折返し時の login URL hyperlink 化、workflow script の unicode quote 破損等)。 `/review <pr>` を single-pass に戻し multi-agent は `/code-review` に分離。 CHANGELOG に security/CVE/removed/deprecated/breaking の記載なし。
