@@ -2,7 +2,7 @@
 
 ## 状態
 
-**review 済み、approve** (最新: 2026-07-09 / 2.1.204)
+**review 済み、approve** (最新: 2026-07-10 / 2.1.205)
 
 AUR の `claude-code` PKGBUILD を fork。改変なし。各 release の review 履歴は
 本ファイル末尾の「更新履歴」 section 参照。
@@ -77,6 +77,14 @@ upstream の新 release (2.1.143 等) が出たら:
    1 行追記
 
 ## 更新履歴
+
+- **2026-07-10 / 2.1.205** — approve。Issue #377 調査済み (release author `ashwin-ant` 系 = 過去 release と同経路、source URL `downloads.claude.ai` 不変、npm `dependencies: {}` 空・maintainer 不変・新規 postinstall / typosquat 依存なし)。
+  `2.1.204 → 2.1.205` の単一リリース。 npm `install.cjs` / `cli-wrapper.cjs` の diff は **FreeBSD 向け (未公開だった) platform map entry を削除し明示的な非対応メッセージを出すのみ**で、`linux-x64` / `linux-arm64` の解決ロジックに変更なし。 CHANGELOG に CVE/removed/deprecated/breaking の記載なし。
+  build script / depends / package() / wrapper script / `options=('!strip')` の変更なし。 upstream repo に build script は存在せず (closed-source CLI、prebuilt binary 配布のみ)、 package() は raw binary を `install -Dm755` するだけ。 新規 install hook なし。
+  sha256 は raw binary を `downloads.claude.ai/.../linux-{x64,arm64}/claude` から直接 `curl | sha256sum` で **独立再計測** (Issue #377 記載値と byte 一致):
+  - x86_64: `dd8734c0b6a503fe1d17425184e57b397c30bb0337a33f1470d9985febfe5b09`
+  - aarch64: `c1874c85bcd3a88b70439fd50ff5910b7e6ac5371c14dd49d4ccc2878a592d09`
+  PKGBUILD 改変は `pkgver` + 2 sha256 の 3 値のみ。 Closes #377。
 
 - **2026-07-09 / 2.1.204** — approve。Issue #369 調査済み (release author `ashwin-ant` = 過去 release と同一、source URL `downloads.claude.ai` 不変、npm `dependencies: {}` 空・`optionalDependencies` は platform binary の version 同期のみ・maintainer 13 名不変、`install.cjs`/`cli-wrapper.cjs` は 2.1.202 と byte-identical・新規 postinstall / typosquat 依存なし)。
   `2.1.202 → 2.1.203 → 2.1.204` の連続リリース。 v2.1.203 に **`ANTHROPIC_BASE_URL` drop 修正** (background/agent-view session が shell export した base URL を落として API key が default endpoint に送られ 401 になる問題の hardening、CVE 番号なし) + background/worktree/daemon 系のバグ修正多数 + bundled dependency の lazy load 化で binary size / 起動時メモリを各 ~7MB 削減。 v2.1.204 は headless session の `SessionStart` hook streaming 修正 1 件のみ。 CHANGELOG に CVE/removed/deprecated/breaking の記載なし。
