@@ -58,6 +58,7 @@
 | package | source 方針 | 役割 |
 |---|---|---|
 | `moonlight-qt`   | from-source (Qt6/FFmpeg/SDL2) | NVIDIA GameStream / Sunshine client |
+| `sunshine-bin`   | -bin (LizardByte 公式 pkg)    | Sunshine 配信ホスト (本機を Moonlight でリモート操作) |
 | `nekono-btkeycast` | from-source (Python)        | キーボードを BLE HOGP で iPad へ転送 |
 | `qview`          | from-source (Qt6)             | 画像ビューア |
 | `localsend-bin`  | -bin (Flutter prebuilt)       | AirDrop 代替 (LAN ファイル転送) |
