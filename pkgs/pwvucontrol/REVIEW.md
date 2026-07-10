@@ -83,3 +83,4 @@ upstream の新 release (0.5.3 等) が出たら:
 | 2026-06-27 | 0.5.2-7 | (this PR) | — (pkgrel bump のみ) | `pkgrel` +1 (deps changed): glib2 2.88.1-1 → 2.88.2-1 |
 | 2026-06-29 | 0.5.2-8 | bot PR #307 | — (pkgrel bump のみ) | `pkgrel` +1 (deps changed): libadwaita 1:1.9.1-1 → 1:1.9.2-1 |
 | 2026-07-01 | 0.5.2-9 | bot PR #316 | — (pkgrel bump のみ) | `pkgrel` +1 (deps changed): rust 1:1.96.0-1 → 1:1.96.1-1 |
+| 2026-07-10 | 0.5.3-1 | upstream tag `0.5.3` | upstream tag `0.5.3` | pkgver bump 0.5.2 → 0.5.3 (Issue #375, safe-to-bump)。system color scheme 追従 fix (`gtk::init()` → `adw::init()`)。build()/package()・depends 無変更、b2sums 差し替えのみ。makepkg --verifysource で b2 検証済み |
