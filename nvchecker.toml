@@ -105,6 +105,16 @@ github = "moonlight-stream/moonlight-qt"
 use_latest_release = true
 prefix = "v"
 
+[sunshine-bin]
+# Sunshine (LizardByte) = Moonlight 用セルフホスト配信ホスト。moonlight-qt の対
+# (本機自身を配信ホスト化してリモート操作)。release tag は "v<CalVer>" 形式
+# (例: v2026.516.143833) なので prefix "v" を strip。upstream release に公式
+# Arch pkg.tar.zst が同梱されるため -bin 化。
+source = "github"
+github = "LizardByte/Sunshine"
+use_latest_release = true
+prefix = "v"
+
 [nekono-btkeycast]
 # 自家 package。 キーボードを BLE HID-over-GATT (HOGP) で iPad へ転送する
 # 常駐デーモン + waybar モジュール。 release tag は vX.Y.Z 形式 (prefix "v")。

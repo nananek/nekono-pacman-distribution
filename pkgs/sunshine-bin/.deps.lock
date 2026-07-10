@@ -1,0 +1,28 @@
+# Snapshot of Arch official repo versions for depends + makedepends of sunshine-bin.
+# Auto-generated and updated by .github/workflows/dep-version-pr.yml.
+# Source: pkgs/sunshine-bin/.SRCINFO (depends + makedepends entries).
+# Format: 1 line per package: <name>=<full-version>
+
+avahi=1:0.9rc5-1
+curl=8.21.0-1
+libayatana-appindicator=0.6.0-1
+libcap=2.78-1
+libdrm=2.4.134-1
+libevdev=1.13.6-1
+libmfx=23.2.2-6
+libnotify=0.8.8-1
+libpipewire=1:1.6.7-1
+libpulse=17.0+r98+gb096704c0-1
+libva=2.24.1-1
+libx11=1.8.13-1
+libxcb=1.17.0-1
+libxfixes=6.0.2-1
+libxrandr=1.5.5-1
+libxtst=1.2.5-1
+miniupnpc=2.3.3-3
+numactl=2.0.19-1
+openssl=3.6.3-1
+opus=1.6.1-1
+# MISSING udev  (systemd が provide、公式 repo に単体 package 無し = 監視対象外)
+vulkan-icd-loader=1.4.350.1-1
+which=2.25-1
