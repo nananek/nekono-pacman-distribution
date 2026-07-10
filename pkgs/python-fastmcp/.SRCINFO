@@ -1,7 +1,7 @@
 pkgbase = python-fastmcp
 	pkgdesc = The fast, Pythonic way to build MCP servers and clients.
-	pkgver = 3.4.3
-	pkgrel = 2
+	pkgver = 3.4.4
+	pkgrel = 1
 	url = https://github.com/PrefectHQ/fastmcp
 	arch = any
 	license = Apache-2.0
@@ -43,9 +43,9 @@ pkgbase = python-fastmcp
 	depends = python-griffelib
 	depends = python-multipart
 	depends = python-joserfc
-	source = https://files.pythonhosted.org/packages/source/f/fastmcp_slim/fastmcp_slim-3.4.3.tar.gz
-	source = https://files.pythonhosted.org/packages/source/f/fastmcp/fastmcp-3.4.3.tar.gz
-	sha256sums = e3e12ac1e87c5195fa59a1c3cd2d31b487a463c269089fb4020b7571cbb57b29
-	sha256sums = 31e212ae9ff223876c6d7af2082e73f90bc692460e7a054568dfa88719f075ff
+	source = https://files.pythonhosted.org/packages/source/f/fastmcp_slim/fastmcp_slim-3.4.4.tar.gz
+	source = https://files.pythonhosted.org/packages/source/f/fastmcp/fastmcp-3.4.4.tar.gz
+	sha256sums = dcaa3e0be2127d7eacdce592c2ef0039204923dc0ec396454615cb4a3275b078
+	sha256sums = 378202e26ec15b23819d9a1c0d1b0ebda096bc712720532010a0b82a45c2b1df
 
 pkgname = python-fastmcp
