@@ -78,6 +78,14 @@ upstream の新 release (2.1.143 等) が出たら:
 
 ## 更新履歴
 
+- **2026-07-13 / 2.1.207** — approve。Issue #386 調査済み (release author `ashwin-ant` = 過去 release と同一、source URL `downloads.claude.ai` 不変、npm `dependencies: {}` 空・maintainer 不変・`install.cjs`/`cli-wrapper.cjs` は 2.1.205 と byte-identical・新規 postinstall / typosquat 依存なし)。
+  `2.1.205 → 2.1.206 → 2.1.207` の連続リリースを直接 2.1.207 へ bump (Issue #384 = 2.1.206 は本 bump に吸収され supersede、close)。
+  `2.1.206` は `/cd` path suggestion 等の UX 改善、`2.1.207` は non-interactive 実行時の managed settings 同意永続化バグ + plugin hooks/monitors/headersHelper の `${user_config.*}` shell-injection 修正 (security fix 2 件) を含むが、いずれも upstream 内部挙動の修正で [nekono] の配布物 (prebuilt binary の install のみ) には影響しない。CVE 番号記載なし、breaking change なし。
+  build script / depends / package() / wrapper script / `options=('!strip')` の変更なし。 sha256 は raw binary 直接実測 + GitHub Release `SHASUMS256.txt` 展開後 binary との byte 一致で二重検証:
+  - x86_64: `85e7e988a392d859f90802ca21fb26e89d3c9ab527f5ed0b08df3955e34d5c83`
+  - aarch64: `8bc14a284065383460f37981d724b8f7aa7ca93c9849d2fe367e08f03383f454`
+  PKGBUILD 改変は `pkgver` + 2 sha256 の 3 値のみ。 Closes #386, #384。
+
 - **2026-07-10 / 2.1.205** — approve。Issue #377 調査済み (release author `ashwin-ant` 系 = 過去 release と同経路、source URL `downloads.claude.ai` 不変、npm `dependencies: {}` 空・maintainer 不変・新規 postinstall / typosquat 依存なし)。
   `2.1.204 → 2.1.205` の単一リリース。 npm `install.cjs` / `cli-wrapper.cjs` の diff は **FreeBSD 向け (未公開だった) platform map entry を削除し明示的な非対応メッセージを出すのみ**で、`linux-x64` / `linux-arm64` の解決ロジックに変更なし。 CHANGELOG に CVE/removed/deprecated/breaking の記載なし。
   build script / depends / package() / wrapper script / `options=('!strip')` の変更なし。 upstream repo に build script は存在せず (closed-source CLI、prebuilt binary 配布のみ)、 package() は raw binary を `install -Dm755` するだけ。 新規 install hook なし。
