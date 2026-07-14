@@ -1,0 +1,51 @@
+# Maintainer: Nekono Nana KAKKO KARI <3267314+nananek@users.noreply.github.com>
+# nekono-pacman-distribution オリジナル PKGBUILD (AUR に aria / aria-bin は存在しない):
+#   - aria の fork元である miria (AUR: miria-bin, maintainer 4sterisk) の
+#     「release artifact を bsdtar で展開するだけ」という設計を参考にした。
+#   - ただし aria の Linux release は miria と違い .deb ではなく self-contained
+#     tar.gz のため、.desktop / icon / appstream metainfo は upstream の
+#     flatpak/ ディレクトリから同一 tag の raw file を個別に source[] へ
+#     vendor + sha256 pin している (= upstream 公式ファイルそのもの、自前生成
+#     ではない)。
+#   - miria-bin は 'mpv' に depends するが、aria は libmdk / bundled ffmpeg を
+#     同梱した fvp プラグインを使うため system mpv は不要。代わりに実 binary の
+#     ldd 結果から gst-plugins-base-libs (gstreamer audio backend) を明示。
+
+pkgname=aria-bin
+pkgver=1.5.8
+pkgrel=1
+pkgdesc='A cross-platform Misskey client built with Flutter'
+arch=('x86_64' 'aarch64')
+url='https://github.com/poppingmoon/aria'
+license=('AGPL-3.0-only')
+depends=('gtk3' 'libsecret' 'gst-plugins-base-libs')
+options=(!strip !debug)
+
+_tag="v${pkgver}"
+_pkgdesktop='com.poppingmoon.aria.desktop'
+_pkgicon='com.poppingmoon.aria.png'
+_pkgmetainfo='com.poppingmoon.aria.metainfo.xml'
+
+source=("${_pkgdesktop}::https://raw.githubusercontent.com/poppingmoon/aria/${_tag}/flatpak/${_pkgdesktop}"
+        "${_pkgicon}::https://raw.githubusercontent.com/poppingmoon/aria/${_tag}/flatpak/${_pkgicon}"
+        "${_pkgmetainfo}::https://raw.githubusercontent.com/poppingmoon/aria/${_tag}/flatpak/${_pkgmetainfo}")
+source_x86_64=("${url}/releases/download/${_tag}/aria-${_tag}-linux-x64.tar.gz")
+source_aarch64=("${url}/releases/download/${_tag}/aria-${_tag}-linux-arm64.tar.gz")
+
+sha256sums=('b774b7ea50393e78016c3a8bfa0b26b480d3a32de8121c9694e97aaccb7e2342'
+            '878b0a27b7706036a2ddcb41bab05bf65ba9dd4718cabc25961f45daa5ab8ace'
+            '872b20c997e2ea35dbcdd106c97be92852fbd83a41b547b7618a0d55d11aa358')
+sha256sums_x86_64=('42c1652bf5a3ccae63477079794d266d7e9e38525b8d0cda1aaa942ba5f1c005')
+sha256sums_aarch64=('ed22aeb6e3aed0ad5b0dafa04cf5fb4e49d300d64be9a8e21c29aabc1a35fd04')
+
+package() {
+	install -dm755 "${pkgdir}/opt/${pkgname%-*}"
+	cp -a "${srcdir}/aria" "${srcdir}/data" "${srcdir}/lib" "${pkgdir}/opt/${pkgname%-*}/"
+
+	install -dm755 "${pkgdir}/usr/bin"
+	ln -s "/opt/${pkgname%-*}/aria" "${pkgdir}/usr/bin/${pkgname%-*}"
+
+	install -Dm644 "${srcdir}/${_pkgdesktop}" "${pkgdir}/usr/share/applications/${_pkgdesktop}"
+	install -Dm644 "${srcdir}/${_pkgicon}" "${pkgdir}/usr/share/icons/hicolor/512x512/apps/${_pkgicon}"
+	install -Dm644 "${srcdir}/${_pkgmetainfo}" "${pkgdir}/usr/share/metainfo/${_pkgmetainfo}"
+}

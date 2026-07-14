@@ -1,0 +1,25 @@
+pkgbase = aria-bin
+	pkgdesc = A cross-platform Misskey client built with Flutter
+	pkgver = 1.5.8
+	pkgrel = 1
+	url = https://github.com/poppingmoon/aria
+	arch = x86_64
+	arch = aarch64
+	license = AGPL-3.0-only
+	depends = gtk3
+	depends = libsecret
+	depends = gst-plugins-base-libs
+	options = !strip
+	options = !debug
+	source = com.poppingmoon.aria.desktop::https://raw.githubusercontent.com/poppingmoon/aria/v1.5.8/flatpak/com.poppingmoon.aria.desktop
+	source = com.poppingmoon.aria.png::https://raw.githubusercontent.com/poppingmoon/aria/v1.5.8/flatpak/com.poppingmoon.aria.png
+	source = com.poppingmoon.aria.metainfo.xml::https://raw.githubusercontent.com/poppingmoon/aria/v1.5.8/flatpak/com.poppingmoon.aria.metainfo.xml
+	sha256sums = b774b7ea50393e78016c3a8bfa0b26b480d3a32de8121c9694e97aaccb7e2342
+	sha256sums = 878b0a27b7706036a2ddcb41bab05bf65ba9dd4718cabc25961f45daa5ab8ace
+	sha256sums = 872b20c997e2ea35dbcdd106c97be92852fbd83a41b547b7618a0d55d11aa358
+	source_x86_64 = https://github.com/poppingmoon/aria/releases/download/v1.5.8/aria-v1.5.8-linux-x64.tar.gz
+	sha256sums_x86_64 = 42c1652bf5a3ccae63477079794d266d7e9e38525b8d0cda1aaa942ba5f1c005
+	source_aarch64 = https://github.com/poppingmoon/aria/releases/download/v1.5.8/aria-v1.5.8-linux-arm64.tar.gz
+	sha256sums_aarch64 = ed22aeb6e3aed0ad5b0dafa04cf5fb4e49d300d64be9a8e21c29aabc1a35fd04
+
+pkgname = aria-bin
