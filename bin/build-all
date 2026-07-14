@@ -173,6 +173,20 @@ done
 extract_full_ver() {
     local pkgbuild="$1"
     (
+        # makepkg.conf を先に source して CARCH 等を用意 (= makepkg 自身が
+        # PKGBUILD を評価する前に必ず行うのと同じ順序)。 これが無いと、
+        # `noextract=("...${CARCH}...")` のように top-level array で $CARCH
+        # を参照する PKGBUILD (= 多くの -bin 系 AUR PKGBUILD の慣習) を
+        # `set -u` 下で source した瞬間に "unbound variable" で本 subshell
+        # ごと即死し、 `|| true` は effectively 効かず (nounset 違反は通常の
+        # コマンド失敗と異なり shell 自体を即終了させる)、 呼び出し元の
+        # `full_ver=$(...)` が空文字のまま script 全体が `set -e` で無言
+        # 停止する (= electron37-bin 追加時に発覚、 diagnostic 皆無で
+        # 原因特定に時間を要した)。
+        # shellcheck disable=SC1091
+        source /etc/makepkg.conf 2>/dev/null || true
+        # shellcheck disable=SC1091
+        [[ -f "$HOME/.makepkg.conf" ]] && source "$HOME/.makepkg.conf" 2>/dev/null || true
         unset pkgver pkgrel epoch
         # shellcheck disable=SC1090
         source "$pkgbuild" 2>/dev/null || true
