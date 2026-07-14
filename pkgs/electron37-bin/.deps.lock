@@ -1,0 +1,8 @@
+# Snapshot of Arch official repo versions for depends + makedepends of electron37-bin.
+# Auto-generated and updated by .github/workflows/dep-version-pr.yml.
+# Source: pkgs/electron37-bin/.SRCINFO (depends + makedepends entries).
+# Format: 1 line per package: <name>=<full-version>
+
+alsa-lib=1.2.16.1-1
+gtk3=1:3.24.52-1
+nss=3.125-1

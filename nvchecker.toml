@@ -317,10 +317,27 @@ source = "github"
 github = "mikebrady/shairport-sync"
 use_latest_release = true
 
+[electron37-bin]
+# voicevox-bin の depends=(electron37) を満たす prebuilt electron。 Arch 公式
+# extra が electron37 を rolling で落としたため (37.10.3 で追跡開始時点)、
+# electron/electron 公式 GitHub Release の prebuilt zip を [nekono] で
+# self-host。 release tag は "vX.Y.Z" 形式。
+#
+# **major を 37 に固定監視** (= voicevox-bin 側が VOICEVOX package.json で
+# electron 37.7.1 に pin されており、 major を跨ぐ bump は Node ABI / Electron
+# API 非互換のリスクがあるため追従しない)。 tag 一覧から semver 最大を取る
+# use_max_tag + include_regex で v37.* のみに絞り込む。
+source = "github"
+github = "electron/electron"
+use_max_tag = true
+include_regex = "v37\\..*"
+prefix = "v"
+
 [voicevox-bin]
 # VOICEVOX editor (= Electron 製 GUI)。 release tag は素の X.Y.Z 形式
 # (prefix 無し)。 [nekono] には CPU AppImage 1 variant のみ (= system electron37
-# 経由で起動する voicevox-bin) を投入している。
+# 経由で起動する voicevox-bin、 electron37 は [nekono] 自家 electron37-bin
+# package で提供) を投入している。
 source = "github"
 github = "VOICEVOX/voicevox"
 use_latest_release = true
