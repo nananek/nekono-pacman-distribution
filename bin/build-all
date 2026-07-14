@@ -342,8 +342,18 @@ if [[ ${#packages[@]} -gt 0 ]]; then
 
         pushd "$pkg_dir" >/dev/null
 
+        # このビルドが実際に作る package file 名を PKGBUILD 評価だけで確定
+        # (source 未取得でも pkgname/pkgver/pkgrel/arch から計算可能)。
+        # `*.pkg.tar.zst` の素の glob で代用すると、 PKGBUILD の source[] が
+        # 前段の release tarball としてたまたま `*.pkg.tar.zst` を使っている
+        # 場合 (= sunshine-bin が upstream の prebuilt sunshine パッケージを
+        # source[] に持つ) に、 SRCDEST 未設定の build host では downloaded
+        # source がこの pkg dir に降ってきて glob に混ざり、 未 review の
+        # upstream 生成物がそのまま [nekono] db に登録される事故になる。
+        mapfile -t _expected_pkgfiles < <(makepkg --packagelist)
+
         # 既存の同一 package version の中間物 / sig は掃除して再現性確保
-        rm -f -- *.pkg.tar.zst *.pkg.tar.zst.sig
+        rm -f -- "${_expected_pkgfiles[@]}" "${_expected_pkgfiles[@]/%/.sig}"
 
         # makepkg: deps install + tarball verify + build + package。
         # -s で deps を pacman -S、-c で build 後 src/pkg を clean。
@@ -352,8 +362,9 @@ if [[ ${#packages[@]} -gt 0 ]]; then
         # 流れて "wrong card" になる事故防止、詳細は bin/update-repo コメント参照)。
         makepkg -sc --noconfirm --sign --key "${NEKONO_GPG_FP}!"
 
-        # 生成物 (.pkg.tar.zst + .sig) を repo/x86_64/ に移動
-        mv -- *.pkg.tar.zst *.pkg.tar.zst.sig "$REPO_DIR/"
+        # 生成物 (.pkg.tar.zst + .sig) だけを repo/x86_64/ に移動 (= 上記の
+        # 期待 file 一覧のみ、 downloaded source 等の巻き込みを防ぐ)
+        mv -- "${_expected_pkgfiles[@]}" "${_expected_pkgfiles[@]/%/.sig}" "$REPO_DIR/"
 
         popd >/dev/null
     done
