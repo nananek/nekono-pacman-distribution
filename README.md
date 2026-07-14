@@ -78,6 +78,7 @@
 
 | package | source 方針 | 役割 |
 |---|---|---|
+| `electron37-bin`          | -bin (prebuilt zip)      | voicevox-bin 用 electron37 (Arch 公式 extra が rolling で落としたため自家配布) |
 | `icecast`                 | from-source (C)          | HTTP audio streaming server |
 | `libigloo`                | from-source (C)          | Icecast 2.5.x 必須共通フレームワーク |
 | `shairport-sync-airplay2` | from-source (C)          | AirPlay 2 受信 (nqptp 連携) |

@@ -40,7 +40,9 @@ AUR の `voicevox-bin` PKGBUILD (pkgver=0.25.2, pkgrel=1) を fork。 意図的
   - `.desktop` の Exec を `voicevox` に固定 (= /usr/bin/voicevox 経由)
   - シェル injection・eval・curl・wget なし
 - [x] `package()`: `install` のみ、 ネットワーク操作なし
-- [x] depends: 7zip / bash / electron37 — 全て妥当
+- [x] depends: 7zip / bash / electron37 — 全て妥当。electron37 は Arch 公式
+      extra から rolling で落ちたため (2026-07-14 発覚)、[nekono] 自家の
+      `electron37-bin` package (provides=electron37) が満たす
 - [x] optdepends: voicevox-engine — voicevox-engine-cuda (`provides=voicevox-engine`)
   が満たす。 ayaka 単独 install 時は network 経由 (Tailscale 100.117.10.53:50021)
   で remote engine を指定する運用
@@ -65,6 +67,7 @@ ayaka 側にも [nekono] 経由で `pacman -S voicevox-bin` で入れて editor 
 | 日付 | release | review した PKGBUILD repo SHA | upstream tag commit | findings |
 |---|---|---|---|---|
 | 2026-05-19 | 0.25.2 (build fix) | (本 PR の commit SHA を merge 時に追記) | — | prepare() を 2-step `7z x` に分割。 7zip 26.01 が split merge 後に nested .7z まで自動で降りない挙動差異への対応。 build host (nekono-pacman0) の実 build で発覚 |
+| 2026-07-14 | 0.25.2 (dep fix, PKGBUILD 無改変) | (this commit) | — | Arch 公式 extra が electron37 を rolling で落としており build 不能になっていた (nekono-pacman0 退役 + build host migration で発覚)。 upstream (VOICEVOX package.json) は electron 37.7.1 に pin 済みで新 major への追従不可のため、[nekono] 自家 `electron37-bin` (electron 公式 GitHub Release prebuilt、provides=electron37) を新規 add して解決。voicevox-bin 自体の PKGBUILD/sha256/pkgver は無変更 |
 | 2026-05-19 | 0.25.2 | (本 PR の commit SHA を merge 時に追記) | `823a760f632d63d23522eb2cee6992b9b42119a5` | 初回 add、 split package 解消 + GPU 動的切替の supply-chain 欠陥を除去 |
 | 2026-06-06 | 0.25.2-2 | (this PR) | — (pkgrel bump のみ) | `pkgrel` +1 (deps changed): bash 5.3.9-1 → 5.3.12-1 |
 | 2026-06-12 | 0.25.2-3 | bot PR #202 | — (pkgrel bump のみ) | `pkgrel` +1 (deps changed): bash 5.3.12-1 → 5.3.15-1 |
