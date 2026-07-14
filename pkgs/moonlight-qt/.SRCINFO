@@ -5,6 +5,7 @@ pkgbase = moonlight-qt
 	url = https://moonlight-stream.org
 	arch = x86_64
 	license = GPL-3.0-or-later
+	makedepends = vulkan-headers
 	depends = qt6-base
 	depends = qt6-declarative
 	depends = qt6-svg

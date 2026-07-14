@@ -72,3 +72,4 @@ upstream の新 release (v6.1.1 等) が出たら:
 | 2026-06-21 | 6.1.0-9 | (this PR) | `pkgrel` +1 (deps changed): ffmpeg 2:8.1.2-1 → 2:8.1.2-6 |
 | 2026-06-27 | 6.1.0-10 | (this PR) | `pkgrel` +1 (deps changed): ffmpeg 2:8.1.2-6 → 2:8.1.2-7 |
 | 2026-07-13 | 6.1.0-11 | (this PR) | `pkgrel` +1 (deps changed): ffmpeg 2:8.1.2-7 → 2:8.1.2-10 |
+| 2026-07-14 | 6.1.0-11 (build fix) | (this commit) | `makedepends=('vulkan-headers')` を追加。従来 makedepends 自体が空で、fresh build host では ffmpeg の libplacebo-vulkan renderer 経由で `streaming/video/ffmpeg.cpp` が `libplacebo/vulkan.h` → `vulkan/vulkan.h` を include し build 失敗 (`vulkan-headers` が偶然 build host に入ってないと踏まない潜在バグ)。pkgver/pkgrel/source/sha512sums は無変更 |
