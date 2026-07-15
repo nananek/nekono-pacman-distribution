@@ -2,7 +2,7 @@
 
 ## 状態
 
-**review 済み、approve** (最新: 2026-07-15 / 2.1.208)
+**review 済み、approve** (最新: 2026-07-15 / 2.1.210)
 
 AUR の `claude-code` PKGBUILD を fork。改変なし。各 release の review 履歴は
 本ファイル末尾の「更新履歴」 section 参照。
@@ -77,6 +77,14 @@ upstream の新 release (2.1.143 等) が出たら:
    1 行追記
 
 ## 更新履歴
+
+- **2026-07-15 / 2.1.210** — approve。Issue #399 調査済み (release author `ashwin-ant` = v2.1.208/2.1.209/2.1.210 いずれも過去 release と同一、source URL `downloads.claude.ai` 不変、npm `dependencies: {}` 空・maintainer 13 名不変、`install.cjs`/`cli-wrapper.cjs` は 2.1.207 と byte-identical・新規 postinstall / typosquat 依存なし)。
+  `2.1.207 → 2.1.208 → 2.1.209 → 2.1.210` の連続リリースを直接 2.1.210 へ bump (Issue #389 = 2.1.208 単独 bump は本 Issue に吸収され supersede、close)。
+  v2.1.208 は screen reader mode 等の新機能 + command substitution permission bypass hardening、v2.1.209 は background session dialog block の単発修正、v2.1.210 は `isolation: 'worktree'` escape 修正 / `ultracode` indirect prompt injection 修正 / Agent tool の indirect prompt injection hardening / `.claude/*` symlink sandbox bypass 修正 (いずれも CVE 番号記載なし、upstream CLI 内部挙動の修正) を含むが、[nekono] の配布物 (prebuilt binary の install のみ) には影響しない。breaking change なし。
+  build script / depends / package() / wrapper script / `options=('!strip')` の変更なし。sha256 は raw binary 直接実測 + GitHub Release `SHASUMS256.txt` 展開後 binary との byte 一致で二重検証:
+  - x86_64: `e7d2ceb53ed4c2ced1fe7fc1c6331c98dc5f7b4c9b2722d9c5fa3dd5dff6f719`
+  - aarch64: `84feb193c1d91f3b5eba836ed47c0e4dee953195abba950917c3e101eff174e8`
+  PKGBUILD 改変は `pkgver` + 2 sha256 の 3 値のみ。Closes #399 (#389 は 2.1.208 単独 bump として既に別 PR で処理・close 済み)。
 
 - **2026-07-15 / 2.1.208** — approve。Issue #389 調査済み (release author `ashwin-ant` = 過去 release と同一、source URL `downloads.claude.ai` 不変、npm `dependencies: {}` 空・`optionalDependencies` は platform binary の version 同期のみ・maintainer 13 名不変 (`_npmUser` `wolffiex` 不変)、`install.cjs`/`cli-wrapper.cjs` は 2.1.207 と byte-identical・新規 postinstall / typosquat 依存なし)。
   `2.1.207 → 2.1.208` の単一リリース (連続 skip なし)。screen reader mode / `vimInsertModeRemaps` / `CLAUDE_CODE_PROCESS_WRAPPER` 等の新機能、command substitution (`$(…)` 等) を使った permission bypass の hardening (CVE 番号記載なし)、多数のバグ修正 + パフォーマンス改善 (permission rule matcher / MCP tool pool / transcript size) を含むが、いずれも upstream 内部挙動の変更で [nekono] の配布物 (prebuilt binary の install のみ) には影響しない。breaking change なし。
