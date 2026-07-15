@@ -99,7 +99,7 @@
 `python-rich-rst` / `python-docstring-parser` / `python-sse-starlette` /
 `python-httpx-sse` / `python-openapi-pydantic` / `python-jsonschema-path` /
 `python-jsonref` / `python-pdm-pep517` / `python-py-key-value-aio` /
-`python-uv-dynamic-versioning` / `python-uncalled-for`
+`python-uncalled-for`
 
 ### 辞書
 

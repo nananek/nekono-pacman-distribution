@@ -292,12 +292,6 @@ source = "github"
 github = "chrisguidry/uncalled-for"
 use_latest_release = true
 
-[python-uv-dynamic-versioning]
-# python-mcp の makedepends (= hatchling 動的 versioning plugin)、 AUR
-# python-uv-dynamic-versioning を fork。 release tag は v X.Y.Z 形式 (prefix "v")。
-source = "github"
-github = "ninoseki/uv-dynamic-versioning"
-use_latest_release = true
 prefix = "v"
 
 [qview]
