@@ -2,7 +2,7 @@
 
 ## 状態
 
-**review 済み、approve** (最新: 2026-07-10 / 2.1.205)
+**review 済み、approve** (最新: 2026-07-15 / 2.1.208)
 
 AUR の `claude-code` PKGBUILD を fork。改変なし。各 release の review 履歴は
 本ファイル末尾の「更新履歴」 section 参照。
@@ -77,6 +77,13 @@ upstream の新 release (2.1.143 等) が出たら:
    1 行追記
 
 ## 更新履歴
+
+- **2026-07-15 / 2.1.208** — approve。Issue #389 調査済み (release author `ashwin-ant` = 過去 release と同一、source URL `downloads.claude.ai` 不変、npm `dependencies: {}` 空・`optionalDependencies` は platform binary の version 同期のみ・maintainer 13 名不変 (`_npmUser` `wolffiex` 不変)、`install.cjs`/`cli-wrapper.cjs` は 2.1.207 と byte-identical・新規 postinstall / typosquat 依存なし)。
+  `2.1.207 → 2.1.208` の単一リリース (連続 skip なし)。screen reader mode / `vimInsertModeRemaps` / `CLAUDE_CODE_PROCESS_WRAPPER` 等の新機能、command substitution (`$(…)` 等) を使った permission bypass の hardening (CVE 番号記載なし)、多数のバグ修正 + パフォーマンス改善 (permission rule matcher / MCP tool pool / transcript size) を含むが、いずれも upstream 内部挙動の変更で [nekono] の配布物 (prebuilt binary の install のみ) には影響しない。breaking change なし。
+  build script / depends / package() / wrapper script / `options=('!strip')` の変更なし。sha256 は raw binary 直接実測 + GitHub Release `SHASUMS256.txt` 展開後 binary との byte 一致で二重検証:
+  - x86_64: `125372839bc827ca24dd72382627b291fbca615408d732fe3291bc16723ce7f3`
+  - aarch64: `81e5dd48377bfd3cb733820e4e23f2294c925cba1e52dbeada69f46929f0c4a6`
+  PKGBUILD 改変は `pkgver` + 2 sha256 の 3 値のみ。Closes #389。
 
 - **2026-07-13 / 2.1.207** — approve。Issue #386 調査済み (release author `ashwin-ant` = 過去 release と同一、source URL `downloads.claude.ai` 不変、npm `dependencies: {}` 空・maintainer 不変・`install.cjs`/`cli-wrapper.cjs` は 2.1.205 と byte-identical・新規 postinstall / typosquat 依存なし)。
   `2.1.205 → 2.1.206 → 2.1.207` の連続リリースを直接 2.1.207 へ bump (Issue #384 = 2.1.206 は本 bump に吸収され supersede、close)。
