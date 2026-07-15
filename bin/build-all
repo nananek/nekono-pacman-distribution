@@ -376,9 +376,25 @@ if [[ ${#packages[@]} -gt 0 ]]; then
         # 流れて "wrong card" になる事故防止、詳細は bin/update-repo コメント参照)。
         makepkg -sc --noconfirm --sign --key "${NEKONO_GPG_FP}!"
 
+        # makepkg --packagelist は makepkg.conf の OPTIONS=(... debug ...) から
+        # <pkgbase>-debug の存在を機械的に予測するだけで、 実際に debug symbol
+        # が抽出されたかは見ない。 arch=('any') の pure Python pkg 等、 strip
+        # 対象の ELF が無い build では debug package が実際には生成されず、
+        # 期待 file 一覧との差分が生まれる (= nekono-voicevox-mcp で実発生)。
+        # debug package の欠落は許容し、 それ以外の欠落は build 異常として fail。
+        _pkgfiles_to_move=()
+        for _f in "${_expected_pkgfiles[@]}"; do
+            if [[ -f "$_f" ]]; then
+                _pkgfiles_to_move+=("$_f" "$_f.sig")
+            elif [[ "$_f" != *-debug-* ]]; then
+                echo "[FATAL] expected package file missing after build: $_f" >&2
+                exit 1
+            fi
+        done
+
         # 生成物 (.pkg.tar.zst + .sig) だけを repo/x86_64/ に移動 (= 上記の
         # 期待 file 一覧のみ、 downloaded source 等の巻き込みを防ぐ)
-        mv -- "${_expected_pkgfiles[@]}" "${_expected_pkgfiles[@]/%/.sig}" "$REPO_DIR/"
+        mv -- "${_pkgfiles_to_move[@]}" "$REPO_DIR/"
 
         popd >/dev/null
     done
