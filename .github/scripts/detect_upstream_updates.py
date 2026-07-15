@@ -30,7 +30,13 @@ def pkgver_of(pkgbuild: Path) -> str:
     for line in pkgbuild.read_text().splitlines():
         m = PKGVER_RE.match(line)
         if m:
-            return m.group(1).strip().strip('"').strip("'")
+            value = m.group(1).strip().strip('"').strip("'")
+            # Indirect variable references (e.g. pkgver="${_pkgver}") can't be
+            # resolved by this line-based scan; skip rather than compare the
+            # unexpanded literal against nvchecker's version and false-positive.
+            if "$" in value:
+                return ""
+            return value
     return ""
 
 
