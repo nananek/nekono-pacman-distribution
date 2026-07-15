@@ -204,14 +204,6 @@ github = "PrefectHQ/fastmcp"
 use_latest_release = true
 prefix = "v"
 
-[python-httpx-sse]
-# fastmcp 依存 chain transitive (= fastmcp → mcp → httpx-sse)、 AUR
-# python-httpx-sse を fork。 release tag は素の X.Y.Z 形式 (prefix 無し)。
-# (= PR #55 で merge し忘れた entry を本 PR の sweep として retroactive 追加)
-source = "github"
-github = "florimondmanca/httpx-sse"
-use_latest_release = true
-
 [python-jsonschema-path]
 # fastmcp 依存 chain (= fastmcp → mcp → openapi-pydantic → jsonschema-path)。
 # Arch 公式 + AUR 不在で [nekono] 自家 PyPI sdist vendor。 source = github、
