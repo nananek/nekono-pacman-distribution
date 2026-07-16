@@ -3,6 +3,6 @@
 # Source: pkgs/aria-bin/.SRCINFO (depends + makedepends entries).
 # Format: 1 line per package: <name>=<full-version>
 
+gst-plugins-base-libs=1.28.5-2
 gtk3=1:3.24.52-1
-gst-plugins-base-libs=1.28.5-1
 libsecret=0.21.7-1

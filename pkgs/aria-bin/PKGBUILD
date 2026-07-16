@@ -13,7 +13,7 @@
 
 pkgname=aria-bin
 pkgver=1.5.8
-pkgrel=1
+pkgrel=2
 pkgdesc='A cross-platform Misskey client built with Flutter'
 arch=('x86_64' 'aarch64')
 url='https://github.com/poppingmoon/aria'
