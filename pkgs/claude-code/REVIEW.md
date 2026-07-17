@@ -78,6 +78,19 @@ upstream の新 release (2.1.143 等) が出たら:
 
 ## 更新履歴
 
+- **2026-07-17 / 2.1.211** — approve。Issue #407 調査済み (release author `ashwin-ant` = 過去 release と同一、source URL `downloads.claude.ai` 不変、npm `_npmUser` `wolffiex@anthropic.com` 不変・maintainer 13 名不変、`dependencies: {}` 空・`optionalDependencies` は platform binary の version 同期のみ・`install.cjs`/`cli-wrapper.cjs` は 2.1.210 と byte-identical・新規 postinstall / typosquat 依存なし)。
+  `2.1.210 → 2.1.211` の単一リリース (skip なし)。新機能 `--forward-subagent-text` フラグ、
+  permission preview の bidirectional-override / zero-width / look-alike quote 正規化、
+  auto mode の unsandboxed Bash に対する PreToolUse hook `ask` floor 化、ファイルアップロード検証強化、
+  `.claude/rules/*.md` nested file の setting sources 除外バグ修正等 (いずれも CVE 番号記載なし、
+  upstream CLI 内部挙動の修正で [nekono] の配布物には影響しない)。breaking change なし。
+  build script / depends / package() / wrapper script / `options=('!strip')` の変更なし。sha256 は
+  `downloads.claude.ai` raw binary 直接実測 + GitHub Release `SHASUMS256.txt` (GPG 署名確認可能)
+  展開後 binary との byte 一致で二重検証:
+  - x86_64: `8272c8a474ac9ea1bc35f19b9f7c7e7dc4dc4eb6d5ad3e484b19335ac72446b2`
+  - aarch64: `1fff7e8f947c07b19d10b1fbf714b7e547e9536253b9b58230d8adbc4624f867`
+  PKGBUILD 改変は `pkgver` + 2 sha256 の 3 値のみ。Closes #407。
+
 - **2026-07-15 / 2.1.210** — approve。Issue #399 調査済み (release author `ashwin-ant` = v2.1.208/2.1.209/2.1.210 いずれも過去 release と同一、source URL `downloads.claude.ai` 不変、npm `dependencies: {}` 空・maintainer 13 名不変、`install.cjs`/`cli-wrapper.cjs` は 2.1.207 と byte-identical・新規 postinstall / typosquat 依存なし)。
   `2.1.207 → 2.1.208 → 2.1.209 → 2.1.210` の連続リリースを直接 2.1.210 へ bump (Issue #389 = 2.1.208 単独 bump は本 Issue に吸収され supersede、close)。
   v2.1.208 は screen reader mode 等の新機能 + command substitution permission bypass hardening、v2.1.209 は background session dialog block の単発修正、v2.1.210 は `isolation: 'worktree'` escape 修正 / `ultracode` indirect prompt injection 修正 / Agent tool の indirect prompt injection hardening / `.claude/*` symlink sandbox bypass 修正 (いずれも CVE 番号記載なし、upstream CLI 内部挙動の修正) を含むが、[nekono] の配布物 (prebuilt binary の install のみ) には影響しない。breaking change なし。
