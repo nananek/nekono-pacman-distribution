@@ -137,6 +137,15 @@ upstream の新 release (docker 29.5.x 等) が出たら:
 
 ## 更新履歴
 
+- **2026-07-17 / 29.6.2** — approve (Issue #410)。Docker Engine v29.6.2 (release 2026-07-16、by `vvoland`)
+  への sync。upstream tag commit: `3d80467678f6e36325fa9ae3dd486fe91e5652e3`。
+  **security release**: BuildKit の脆弱性 5 件を修正 (CVE-2026-15788/15789/15791/15792/15793)、
+  containerd v2.2.6 / Go 1.26.5 / RootlessKit v3.0.2 (docker 内部 packaging note、Arch 公式
+  `rootlesskit` package の追従とは別軸)。CVE 群は BuildKit 側の fix であり、本 pkg が取得する
+  rootless スクリプト群 (`dockerd-rootless.sh` + `dockerd-rootless-setuptool.sh`) の中身は v29.6.1 と
+  **完全同一** (= sha256 4 値すべて不変、byte 単位で一致確認)。PKGBUILD 改変は `pkgver=29.6.2` の 1 行のみ。
+  sha256 独立再検証済み (moby/moby docker-v29.6.2 の raw fetch + 実測)。Closes #410。
+
 - **2026-07-03 / 29.6.1** — approve (Issue #331)。Docker Engine v29.6.1 (release 2026-06-26、by `vvoland`)
   への sync (途中の v29.6.0 も含めまとめて追従)。upstream tag commit: `8ec5ab355a34b2a0e2b3238d67bdefe77fefa982`。
   **security release**: 悪意ある image による /etc/passwd・/etc/group パーサの OOM (GHSA-mjcv-p78q-w5fw ほか)、
