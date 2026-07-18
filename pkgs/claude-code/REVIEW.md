@@ -2,7 +2,7 @@
 
 ## 状態
 
-**review 済み、approve** (最新: 2026-07-15 / 2.1.210)
+**review 済み、approve** (最新: 2026-07-18 / 2.1.214)
 
 AUR の `claude-code` PKGBUILD を fork。改変なし。各 release の review 履歴は
 本ファイル末尾の「更新履歴」 section 参照。
@@ -77,6 +77,25 @@ upstream の新 release (2.1.143 等) が出たら:
    1 行追記
 
 ## 更新履歴
+
+- **2026-07-18 / 2.1.214** — approve。Issue #415 調査済み (release author `ashwin-ant` = v2.1.212/2.1.214 とも過去 release と同一)。
+  `2.1.211 → 2.1.212 → 2.1.214` の連続リリース (`v2.1.213` は GitHub タグ無し、スキップ)。
+  v2.1.212 は `/fork` の挙動変更 (background session へ conversation copy、旧来の in-session subagent 起動は `/subtask` に分離)、
+  `WebSearch`/subagent 起動数の暴走ループ対策上限追加、MCP tool call 2 分超の自動 background 化、**セキュリティ修正 2 件**
+  (plan mode での file 変更系 Bash の auto-run バグ、`.claude/worktrees` symlink 経由の repo 外 file 作成バグ)。
+  v2.1.214 は **セキュリティ修正多数** (単一segment `dir/**` allow rule の意図しない any-depth auto-approve、
+  Windows PowerShell 5.1 の permission-check bypass、bash と異なる解釈の fd redirect に対する fail-closed 化、
+  10,000 文字超コマンドの permission check 素通り、zsh variable subscript/`[[ ]]` modifier の inert text 扱い、
+  危険な option/command substitution を含む `help`/`man` の auto-approve、remote session での permission prompt 順序、
+  docker/podman daemon-redirect flag への permission prompt 追加) + `EndConversation` tool 新設。
+  いずれも upstream CLI 内部挙動の修正で [nekono] の配布物 (prebuilt binary の install のみ) には影響しない。
+  hook `if:` の単一segment `dir/**` 条件が any-depth match しなくなる設定変更があるが、これは claude-code 自体の
+  build/package には無関係 (ansible-nekonodesk 側の dotfiles 運用で確認要、と Issue 側に記載)。breaking change なし。
+  build script / depends / package() / wrapper script / `options=('!strip')` の変更なし。sha256 は
+  `downloads.claude.ai` raw binary 直接実測で確認:
+  - x86_64: `3c029136f7c81f54ed4a38e9d52e655aad536433dbbde50519c8c31bb646ad14`
+  - aarch64: `4c38f26a57a42619ee813f15dc39fc1fa4fe0bb403215c3cdc342b58fa689c3c`
+  PKGBUILD 改変は `pkgver` + 2 sha256 の 3 値のみ。Closes #415。
 
 - **2026-07-17 / 2.1.211** — approve。Issue #407 調査済み (release author `ashwin-ant` = 過去 release と同一、source URL `downloads.claude.ai` 不変、npm `_npmUser` `wolffiex@anthropic.com` 不変・maintainer 13 名不変、`dependencies: {}` 空・`optionalDependencies` は platform binary の version 同期のみ・`install.cjs`/`cli-wrapper.cjs` は 2.1.210 と byte-identical・新規 postinstall / typosquat 依存なし)。
   `2.1.210 → 2.1.211` の単一リリース (skip なし)。新機能 `--forward-subagent-text` フラグ、
