@@ -78,3 +78,4 @@ AUR には Arch 公式から落ちた electron37 を追う 2 系統が存在:
 | 日付 | release | review した PKGBUILD repo SHA | upstream tag commit | findings |
 |---|---|---|---|---|
 | 2026-07-14 | 37.10.3-1 | (this commit) | `v37.10.3` (electron/electron 公式 Release) | 初回 add。voicevox-bin の electron37 depends が Arch 公式 repo から落ちて resolve 不能になっていた問題への対応。sha256 独立実測で AUR 記載値と一致確認。 |
+| 2026-07-22 | 37.10.3-2 | bot PR #419 | — (pkgrel bump のみ) | `pkgrel` +1 (deps changed): nss 3.125-1 → 3.126-1 |
