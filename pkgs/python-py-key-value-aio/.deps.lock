@@ -9,5 +9,5 @@ python-build=1.4.3-1
 python-cachetools=7.1.4-1
 python-installer=1.0.0-1
 python-typing_extensions=4.16.0-1
-python-uv-build=0.11.29-1
+python-uv-build=0.11.30-1
 python-wheel=0.47.0-1
