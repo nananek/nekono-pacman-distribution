@@ -112,3 +112,4 @@ upstream の新 release (0.6.14 等) が出たら:
 | 2026-06-11 | 0.6.13-5 | (this PR) | — (pkgrel bump のみ) | `pkgrel` +1 (deps changed): pcsclite 2.5.0-1 → 2.5.1-1 |
 | 2026-06-28 | 0.6.13-6 | bot PR #301 | — (pkgrel bump のみ) | `pkgrel` +1 (deps changed): libtool 2.6.1-1 → 2.6.1-2 |
 | 2026-07-18 | 0.6.13-7 | bot PR #414 | — (pkgrel bump のみ) | `pkgrel` +1 (deps changed): pkgconf 2.5.1-1 → 3.0.3-1 |
+| 2026-07-22 | 0.6.13-8 | bot PR #421 | — (pkgrel bump のみ) | `pkgrel` +1 (deps changed): libtool 2.6.1-2 → 2.6.2-1 |
