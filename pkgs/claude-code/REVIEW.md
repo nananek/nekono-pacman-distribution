@@ -78,6 +78,16 @@ upstream の新 release (2.1.143 等) が出たら:
 
 ## 更新履歴
 
+- **2026-07-22 / 2.1.217** — approve。Issue #427 調査済み (release author `ashwin-ant` = v2.1.215/2.1.216/2.1.217 いずれも過去 release と同一)。
+  `2.1.214 → 2.1.215 → 2.1.216 → 2.1.217` の連続リリース (スキップ無し)。build() / package() / depends / optdepends は無変更、
+  `pkgver` + sha256 (x86_64/aarch64) の 3 値のみの機械的更新。**セキュリティ修正複数** (v2.1.216: worktree-isolated subagent の
+  `git -C`/`--git-dir` 等経由での共有 checkout 誤操作、`claude daemon stop --any` の stale lockfile 経由 kill、`.claude` symlink
+  経由の repo 外書き込み、MCP 再認証時の credential 早期 revoke。v2.1.217: 切り詰め MCP tool output の memory leak、symlink化
+  working directory 未 canonicalize による background session の sandbox escape、corporate mTLS/proxy 設定の Desktop 無視、
+  telemetry override の scope 漏れ。加えて subagent 同時実行数上限 (`CLAUDE_CODE_MAX_CONCURRENT_SUBAGENTS`) + nested spawn
+  デフォルト禁止で暴走 fan-out 対策)。sha256 は raw binary を `curl -sL <url> | sha256sum` で独立実測し issue 記載値と一致確認
+  (x86_64: `2630fc5dc6db61bc03f86b95daf47766e5ed5b61873f7bb7cfea764c5ac5a9ba` / aarch64:
+  `40c53507ac669c1d438366c19760c22f52748a06e50e0fc0e353d2cb73425597`)。
 - **2026-07-18 / 2.1.214** — approve。Issue #415 調査済み (release author `ashwin-ant` = v2.1.212/2.1.214 とも過去 release と同一)。
   `2.1.211 → 2.1.212 → 2.1.214` の連続リリース (`v2.1.213` は GitHub タグ無し、スキップ)。
   v2.1.212 は `/fork` の挙動変更 (background session へ conversation copy、旧来の in-session subagent 起動は `/subtask` に分離)、
