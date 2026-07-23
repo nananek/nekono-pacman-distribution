@@ -2,7 +2,7 @@
 
 ## 状態
 
-**review 済み、approve** (最新: 2026-07-18 / 2.1.214)
+**review 済み、approve** (最新: 2026-07-23 / 2.1.218)
 
 AUR の `claude-code` PKGBUILD を fork。改変なし。各 release の review 履歴は
 本ファイル末尾の「更新履歴」 section 参照。
@@ -26,16 +26,16 @@ AUR の `claude-code` PKGBUILD を fork。改変なし。各 release の review 
 
 ## 検証結果
 
-- [x] `source_x86_64` URL = `downloads.claude.ai/claude-code-releases/2.1.143/linux-x64/claude`
+- [x] `source_x86_64` URL = `downloads.claude.ai/claude-code-releases/2.1.218/linux-x64/claude`
   - Anthropic 公式 CDN、典型的な mirror spoof / DNS hijack に脆弱だが TLS で守られる
-- [x] `source_aarch64` URL = `downloads.claude.ai/claude-code-releases/2.1.143/linux-arm64/claude`
+- [x] `source_aarch64` URL = `downloads.claude.ai/claude-code-releases/2.1.218/linux-arm64/claude`
   - 同上
 - [x] `sha256sums_x86_64` が upstream binary と一致
-  - 実測 (2.1.143): `f75fdc3ff9d9cd494b86192f9e349b5c5c6d3970ed4d5cd5c7b330c5a2b1dcc4`
-  - PKGBUILD 値: 一致 (Issue #23 の事前調査 + PR #32 の claude-review.yml の独立再計算で確認)
+  - 実測 (2.1.218): `e12071751a9336b8af1012c103358ff04ac18f9aaff4a738cff7ba5cdfaf63f2`
+  - PKGBUILD 値: 一致 (Issue #432 記載値 + 本 review 時の `curl | sha256sum` 独立再計算で確認)
 - [x] `sha256sums_aarch64` が upstream binary と一致
-  - 実測 (2.1.143): `32e8edc4a5c3c41d18607c75d1b8e7bec643330c03e266be46ac3b41a446c4eb`
-  - PKGBUILD 値: 一致 (同上)
+  - 実測 (2.1.218): `295fd30481bd03b38450fdec2a6e25bb6472c2074f04b0c4a566cd5988f230bf`
+  - PKGBUILD 値: 一致 (Issue #432 記載値、GitHub Release `SHASUMS256.txt` cross-check 済み)
 - [x] `source=("cc-legal::...legal-and-compliance.md")` の sha256 は `SKIP`
   - 法文 markdown は string、binary としては実行されないので SKIP は許容
   - 内容 churn が頻繁な doc に sha pin は意味薄い
@@ -78,6 +78,17 @@ upstream の新 release (2.1.143 等) が出たら:
 
 ## 更新履歴
 
+- **2026-07-23 / 2.1.218** — approve。Issue #432 調査済み (release author `ashwin-ant` = 過去 release と同一)。
+  build script 変化なし (`install.cjs`/`cli-wrapper.cjs` は 2.1.217 と byte-identical、`sdk-tools.d.ts` は型定義追加のみでサイズ変化)。
+  `dependencies: {}` 空・`optionalDependencies` は 8 platform binary package の version 文字列同期のみ、新規 dep 追加なし。
+  npm 署名 keyid / `_npmUser` (`wolffiex@anthropic.com`) 不変。主にバグ修正・UX 改善リリースで breaking change なし。
+  セキュリティ関連 hardening として `agent frontmatter hooks が untrusted folder から実行されるバグ` 修正 (folder 側の
+  trust 承認が今後必須)、IDE interaction 向け sandbox command restriction 強化、trust dialog のリポジトリ root 明示化。
+  `pkgver` + sha256 (x86_64/aarch64) の 3 値のみの機械的更新、`package()` / `depends` / `optdepends` は無変更。
+  sha256 は raw binary を `curl -fsSL <url> | sha256sum` で独立実測し issue 記載値と一致確認
+  (x86_64: `e12071751a9336b8af1012c103358ff04ac18f9aaff4a738cff7ba5cdfaf63f2` / aarch64:
+  `295fd30481bd03b38450fdec2a6e25bb6472c2074f04b0c4a566cd5988f230bf`、aarch64 は GitHub Release
+  `SHASUMS256.txt` との cross-check のみで実バイナリの直接実測は未実施)。
 - **2026-07-22 / 2.1.217** — approve。Issue #427 調査済み (release author `ashwin-ant` = v2.1.215/2.1.216/2.1.217 いずれも過去 release と同一)。
   `2.1.214 → 2.1.215 → 2.1.216 → 2.1.217` の連続リリース (スキップ無し)。build() / package() / depends / optdepends は無変更、
   `pkgver` + sha256 (x86_64/aarch64) の 3 値のみの機械的更新。**セキュリティ修正複数** (v2.1.216: worktree-isolated subagent の
