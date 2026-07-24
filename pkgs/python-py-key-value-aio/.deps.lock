@@ -6,8 +6,8 @@
 python=3.14.6-1
 python-build=1.4.3-1
 # MISSING (not in Arch official repo, likely AUR-only or virtual): python-beartype
-python-cachetools=7.1.4-1
+python-cachetools=7.1.5-1
 python-installer=1.0.0-1
 python-typing_extensions=4.16.0-1
-python-uv-build=0.11.31-1
+python-uv-build=0.11.31-2
 python-wheel=0.47.0-1
