@@ -1,6 +1,6 @@
 pkgbase = python-cyclopts
 	pkgdesc = A modern, intuitive command line interface framework for Python
-	pkgver = 4.22.1
+	pkgver = 4.22.2
 	pkgrel = 1
 	url = https://github.com/BrianPugh/cyclopts
 	arch = any
@@ -15,7 +15,7 @@ pkgbase = python-cyclopts
 	depends = python-docstring-parser
 	depends = python-rich
 	depends = python-rich-rst
-	source = https://files.pythonhosted.org/packages/source/c/cyclopts/cyclopts-4.22.1.tar.gz
-	sha256sums = 49cd3779da7113a96ac5c23b151aa61ac9ae1b4b1fe813594d207ca843c97892
+	source = https://files.pythonhosted.org/packages/source/c/cyclopts/cyclopts-4.22.2.tar.gz
+	sha256sums = 0721e90e7209885e78f7637cfba255c12e89206b633e35d185305e349ba20ecd
 
 pkgname = python-cyclopts
