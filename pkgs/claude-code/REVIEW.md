@@ -2,7 +2,7 @@
 
 ## 状態
 
-**review 済み、approve** (最新: 2026-07-23 / 2.1.218)
+**review 済み、approve** (最新: 2026-07-27 / 2.1.220)
 
 AUR の `claude-code` PKGBUILD を fork。改変なし。各 release の review 履歴は
 本ファイル末尾の「更新履歴」 section 参照。
@@ -26,16 +26,16 @@ AUR の `claude-code` PKGBUILD を fork。改変なし。各 release の review 
 
 ## 検証結果
 
-- [x] `source_x86_64` URL = `downloads.claude.ai/claude-code-releases/2.1.218/linux-x64/claude`
+- [x] `source_x86_64` URL = `downloads.claude.ai/claude-code-releases/2.1.220/linux-x64/claude`
   - Anthropic 公式 CDN、典型的な mirror spoof / DNS hijack に脆弱だが TLS で守られる
-- [x] `source_aarch64` URL = `downloads.claude.ai/claude-code-releases/2.1.218/linux-arm64/claude`
+- [x] `source_aarch64` URL = `downloads.claude.ai/claude-code-releases/2.1.220/linux-arm64/claude`
   - 同上
 - [x] `sha256sums_x86_64` が upstream binary と一致
-  - 実測 (2.1.218): `e12071751a9336b8af1012c103358ff04ac18f9aaff4a738cff7ba5cdfaf63f2`
-  - PKGBUILD 値: 一致 (Issue #432 記載値 + 本 review 時の `curl | sha256sum` 独立再計算で確認)
+  - 実測 (2.1.220): `674f61f20ff306f3100cf9200e4c36c4b70278b5bef2884549819b942a89c863`
+  - PKGBUILD 値: 一致 (Issue #440 記載値 + 本 review 時の `curl | sha256sum` 独立再計算で確認)
 - [x] `sha256sums_aarch64` が upstream binary と一致
-  - 実測 (2.1.218): `295fd30481bd03b38450fdec2a6e25bb6472c2074f04b0c4a566cd5988f230bf`
-  - PKGBUILD 値: 一致 (Issue #432 記載値、GitHub Release `SHASUMS256.txt` cross-check 済み)
+  - 実測 (2.1.220): `159e4a51d796f3bf14677577100f7efb845611b1ceaf0c30cbd8d4650d942185`
+  - PKGBUILD 値: 一致 (Issue #440 記載値、GitHub Release `SHASUMS256.txt` cross-check 済み)
 - [x] `source=("cc-legal::...legal-and-compliance.md")` の sha256 は `SKIP`
   - 法文 markdown は string、binary としては実行されないので SKIP は許容
   - 内容 churn が頻繁な doc に sha pin は意味薄い
@@ -78,6 +78,17 @@ upstream の新 release (2.1.143 等) が出たら:
 
 ## 更新履歴
 
+- **2026-07-27 / 2.1.220** — approve。Issue #440 調査済み (release author `ashwin-ant` = v2.1.218/2.1.219/2.1.220 いずれも過去 release と同一)。
+  upstream 本体は closed-source binary のため公開 GitHub diff は `CHANGELOG.md`/`feed.xml` のみ、`build()`/`package()`/`depends`/`optdepends`
+  は無変更 (AUR PKGBUILD 側も 2.1.217→2.1.219 で `pkgver`+sha256 の 3 値のみ変更を確認)。
+  release note 要約: 2.1.219 で Opus 5 (`claude-opus-5`) がデフォルト Opus model に、
+  `sandbox.network.strictAllowlist` 設定追加 (非 allowlist host への通信を prompt 無しで拒否できる opt-in hardening)、
+  `DirectoryAdded` hook 追加、nested subagent の default spawn depth 1→3 拡大。2.1.220 は "Bug fixes and
+  reliability improvements" のみで詳細差分記載なし。breaking change 実質無し (Opus 4.7 の fast mode 除外のみ)。
+  sha256 は raw binary を `curl -fsSL <url> | sha256sum` で独立実測し issue 記載値・GitHub Release
+  `SHASUMS256.txt` の両方と一致確認 (x86_64: `674f61f20ff306f3100cf9200e4c36c4b70278b5bef2884549819b942a89c863` /
+  aarch64: `159e4a51d796f3bf14677577100f7efb845611b1ceaf0c30cbd8d4650d942185`)。
+  `pkgver` + sha256 (x86_64/aarch64) の 3 値のみの機械的更新。
 - **2026-07-23 / 2.1.218** — approve。Issue #432 調査済み (release author `ashwin-ant` = 過去 release と同一)。
   build script 変化なし (`install.cjs`/`cli-wrapper.cjs` は 2.1.217 と byte-identical、`sdk-tools.d.ts` は型定義追加のみでサイズ変化)。
   `dependencies: {}` 空・`optionalDependencies` は 8 platform binary package の version 文字列同期のみ、新規 dep 追加なし。
