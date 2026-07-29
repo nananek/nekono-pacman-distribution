@@ -8,6 +8,24 @@ pkgs/*/*.tar.gz
 pkgs/*/*.tar.xz
 pkgs/*/*.7z.*
 pkgs/*/*.whl
+pkgs/*/*.zip
+pkgs/*/*.deb
+pkgs/*/*.sh
+pkgs/*/*.desktop
+pkgs/*/*.metainfo.xml
+pkgs/*/*.png
+pkgs/*/*.txt
+
+# makepkg の source= ダウンロードキャッシュ (sha256 pin 済み、SRCDEST 未設定で
+# pkgs/<name>/ 直下に落ちる。拡張子なし / git clone source は個別 pattern)
+pkgs/claude-code/cc-legal
+pkgs/claude-code/claude-*-x86_64
+pkgs/claude-code/claude-*-aarch64
+pkgs/python-mcp/mcp/
+
+# python bytecode cache
+__pycache__/
+*.pyc
 
 # 配信先 (build host で hosting する signed artifact、git には載せない)
 repo/
