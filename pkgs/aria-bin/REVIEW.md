@@ -109,6 +109,7 @@ release pipeline (`github-actions` bot による GPG verified commit からの
 |---|---|---|---|---|
 | 2026-07-14 | 1.5.8-1 | (this commit) | `dbce179b61f597b43aca4e8b0f63a5c8f079adf7` (GPG verified) | 初回追加、approve |
 | 2026-07-17 | 1.5.8-2 | bot PR #406 | — (pkgrel bump のみ) | `pkgrel` +1 (deps changed): gst-plugins-base-libs 1.28.5-1 → 1.28.5-2 |
+| 2026-07-30 | 1.5.8-3 | bot PR #458 | — (pkgrel bump のみ) | `pkgrel` +1 (deps changed): gst-plugins-base-libs 1.28.5-2 → 1.28.5-4 |
 
 ## 更新方針
 
