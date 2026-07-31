@@ -50,3 +50,4 @@ upstream の新 tag が出たら:
 |---|---|---|---|---|
 | 2026-05-15 | 7.1-2 | `f09fb22` | upstream tag `7.1` | 初回 add、 AUR fork (pkgver=7.1, pkgrel=2)、 改変なし |
 | 2026-06-15 | 7.1-3 | (this PR) | — (pkgrel bump のみ) | `pkgrel` +1 (deps changed): qt6-tools 6.11.1-1 → 6.11.1-3 |
+| 2026-07-31 | 7.1-4 | (this PR) | — (pkgrel bump のみ) | `pkgrel` +1 (deps changed): qt6-tools 6.11.1-3 → 6.11.1-4 |
