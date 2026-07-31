@@ -1,7 +1,7 @@
 # Maintainer: Nekono Nana KAKKO KARI <3267314+nananek@users.noreply.github.com>
 # Contributor: Jesus Alvarez <jesusalv@rez.codes>
 pkgname=python-cyclopts
-pkgver=4.22.2
+pkgver=4.22.3
 pkgrel=1
 pkgdesc="A modern, intuitive command line interface framework for Python"
 arch=('any')
@@ -16,7 +16,7 @@ depends=(
 )
 makedepends=('python-build' 'python-installer' 'python-wheel' 'python-hatchling' 'python-hatch-vcs')
 source=("https://files.pythonhosted.org/packages/source/c/cyclopts/cyclopts-$pkgver.tar.gz")
-sha256sums=('0721e90e7209885e78f7637cfba255c12e89206b633e35d185305e349ba20ecd')
+sha256sums=('6c366f32604c23db83819a0411c0e30b398a6fcbc718191ea39f7119ce725d8e')
 
 build() {
     cd "cyclopts-$pkgver"
