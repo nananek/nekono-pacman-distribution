@@ -103,3 +103,4 @@ upstream で新 release (= v3.2.5 等) が出たら:
 | 2026-07-24 | 3.4.4-2 | (this PR) | — (pkgrel bump のみ) | `pkgrel` +1 (cascade: [nekono] dep rebuilt): python-py-key-value-aio 0.4.4-19 → 0.4.4-20 rebuild に追随 (build-all の cascade-warn 由来) |
 | 2026-07-27 | 3.4.4-3 | (this PR) | — (pkgrel bump のみ) | `pkgrel` +1 (cascade: [nekono] dep rebuilt): python-cyclopts 4.22.1-1 → 4.22.2-1 + python-py-key-value-aio 0.4.4-20 → 0.4.4-21 rebuild に追随 (build-all の cascade-warn 由来) |
 | 2026-07-29 | 3.4.4-4 | (this PR) | — (pkgrel bump のみ) | `pkgrel` +1 (cascade: [nekono] dep rebuilt): python-py-key-value-aio 0.4.4-21 → 0.4.4-22 rebuild に追随 (build-all の cascade-warn 由来) |
+| 2026-07-31 | 3.4.4-5 | (this PR) | — (pkgrel bump のみ) | `pkgrel` +1 (cascade: [nekono] dep rebuilt): python-cyclopts 4.22.2-1 → 4.22.3-1 rebuild に追随 (build-all の cascade-warn 由来) |
