@@ -137,6 +137,17 @@ upstream の新 release (docker 29.5.x 等) が出たら:
 
 ## 更新履歴
 
+- **2026-07-31 / 29.7.0** — approve (Issue #463)。Docker Engine v29.7.0 (release 2026-07-30、by `vvoland`)
+  への sync。upstream tag commit: `4b5cb715735a1b7000093bb2ab54295dfedfebfe`。
+  **security release**: `github.com/moby/go-archive` を v0.3.0 に更新し CVE-2026-17106
+  (GHSA-hfg8-hc9c-6c3h、細工された tar archive 内の link を使った path traversal) を修正。
+  fix commit は go-archive maintainer `thaJeztah` (Sebastiaan van Stijn) による正当な
+  upstream security fix。ただし CVE 群は go-archive (tar 展開) 側の fix であり、本 pkg が
+  取得する rootless スクリプト群 (`dockerd-rootless.sh` + `dockerd-rootless-setuptool.sh`)
+  の中身は v29.6.2 と **完全同一** (= sha256 4 値すべて不変、byte 単位で一致確認)。
+  PKGBUILD 改変は `pkgver=29.7.0` の 1 行のみ。sha256 独立再検証済み
+  (moby/moby docker-v29.7.0 の raw fetch + 実測)。Closes #463。
+
 - **2026-07-17 / 29.6.2** — approve (Issue #410)。Docker Engine v29.6.2 (release 2026-07-16、by `vvoland`)
   への sync。upstream tag commit: `3d80467678f6e36325fa9ae3dd486fe91e5652e3`。
   **security release**: BuildKit の脆弱性 5 件を修正 (CVE-2026-15788/15789/15791/15792/15793)、
