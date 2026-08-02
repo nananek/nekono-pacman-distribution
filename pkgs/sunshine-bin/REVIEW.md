@@ -82,3 +82,4 @@ upstream の新 release (v2026.5xx.xxxxxx 等) が出たら:
 |---|---|---|---|
 | 2026-07-10 | 2026.516.143833-1 | (this PR) | 新規追加。faithful fork、b2sums 独立検証一致、approve |
 | 2026-07-15 | 2026.516.143833-2 | (this PR) | `pkgrel` +1 (deps changed): libpipewire 1:1.6.7-1 → 1:1.6.8-1 |
+| 2026-08-04 | 2026.516.143833-3 | bot PR #477 | `pkgrel` +1 (deps changed): vulkan-icd-loader 1.4.350.1-1 → 1.4.357.0-1 |
