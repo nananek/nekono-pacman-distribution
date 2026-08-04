@@ -2,7 +2,7 @@
 
 ## 状態
 
-**review 済み、approve** (最新: 2026-07-27 / 2.1.220)
+**review 済み、approve** (最新: 2026-08-04 / 2.1.221)
 
 AUR の `claude-code` PKGBUILD を fork。改変なし。各 release の review 履歴は
 本ファイル末尾の「更新履歴」 section 参照。
@@ -26,16 +26,16 @@ AUR の `claude-code` PKGBUILD を fork。改変なし。各 release の review 
 
 ## 検証結果
 
-- [x] `source_x86_64` URL = `downloads.claude.ai/claude-code-releases/2.1.220/linux-x64/claude`
+- [x] `source_x86_64` URL = `downloads.claude.ai/claude-code-releases/2.1.221/linux-x64/claude`
   - Anthropic 公式 CDN、典型的な mirror spoof / DNS hijack に脆弱だが TLS で守られる
-- [x] `source_aarch64` URL = `downloads.claude.ai/claude-code-releases/2.1.220/linux-arm64/claude`
+- [x] `source_aarch64` URL = `downloads.claude.ai/claude-code-releases/2.1.221/linux-arm64/claude`
   - 同上
 - [x] `sha256sums_x86_64` が upstream binary と一致
-  - 実測 (2.1.220): `674f61f20ff306f3100cf9200e4c36c4b70278b5bef2884549819b942a89c863`
-  - PKGBUILD 値: 一致 (Issue #440 記載値 + 本 review 時の `curl | sha256sum` 独立再計算で確認)
+  - 実測 (2.1.221): `60db8e88d42c24b5199c92cfd56ec88370c510c3789c6f364af748354f087ada`
+  - PKGBUILD 値: 一致 (Issue #479 記載値 + 本 review 時の `curl | sha256sum` 独立再計算で確認)
 - [x] `sha256sums_aarch64` が upstream binary と一致
-  - 実測 (2.1.220): `159e4a51d796f3bf14677577100f7efb845611b1ceaf0c30cbd8d4650d942185`
-  - PKGBUILD 値: 一致 (Issue #440 記載値、GitHub Release `SHASUMS256.txt` cross-check 済み)
+  - 実測 (2.1.221): `d3c59d6bcc4adcf4cd85abca3bc13fa1131a34cb32f982bdf030d83a3b11e700`
+  - PKGBUILD 値: 一致 (Issue #479 記載値、本 review 時の `curl | sha256sum` 独立再計算で確認)
 - [x] `source=("cc-legal::...legal-and-compliance.md")` の sha256 は `SKIP`
   - 法文 markdown は string、binary としては実行されないので SKIP は許容
   - 内容 churn が頻繁な doc に sha pin は意味薄い
@@ -77,6 +77,21 @@ upstream の新 release (2.1.143 等) が出たら:
    1 行追記
 
 ## 更新履歴
+
+- **2026-08-04 / 2.1.221** — approve。Issue #479 調査済み (release author `ashwin-ant` = 過去 release と同一)。
+  `2.1.220 → 2.1.221` の単一リリース (skip なし)。npm 配布物 (`install.cjs`/`cli-wrapper.cjs`/`sdk-tools.d.ts`) は
+  2.1.220 と byte-identical、`dependencies: {}` 空・`optionalDependencies` は 8 platform binary package の
+  version 同期のみ。**Fixed (permission-check bypass 系、実質セキュリティ修正)**: zsh `[[ ]]` regex 条件内での
+  隠しコマンド実行によるBash tool permission-check bypass 修正、Windows PowerShell の引用符含みパスの
+  permission check 誤判定修正。**Added**: VSCode Focus view、Linux/WSL sandbox credential `mode: "mask"`、
+  `claude plugin validate` warning 追加。**Changed**: background session の commit/push 挙動、`/plugin install`
+  の marketplace catalog auto-refresh、`/fork` の独自 worktree 化。breaking change / CVE 番号の明記なし、
+  いずれも upstream CLI 内部挙動の修正で [nekono] の配布物 (prebuilt binary の install のみ) には影響しない。
+  build script / depends / package() / wrapper script / `options=('!strip')` の変更なし。sha256 は raw binary を
+  `curl -fsSL <url> | sha256sum` で独立実測し issue 記載値と一致確認:
+  - x86_64: `60db8e88d42c24b5199c92cfd56ec88370c510c3789c6f364af748354f087ada`
+  - aarch64: `d3c59d6bcc4adcf4cd85abca3bc13fa1131a34cb32f982bdf030d83a3b11e700`
+  PKGBUILD 改変は `pkgver` + 2 sha256 の 3 値のみ。Closes #479。
 
 - **2026-07-27 / 2.1.220** — approve。Issue #440 調査済み (release author `ashwin-ant` = v2.1.218/2.1.219/2.1.220 いずれも過去 release と同一)。
   upstream 本体は closed-source binary のため公開 GitHub diff は `CHANGELOG.md`/`feed.xml` のみ、`build()`/`package()`/`depends`/`optdepends`
