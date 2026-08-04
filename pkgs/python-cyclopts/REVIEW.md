@@ -2,7 +2,7 @@
 
 ## 状態
 
-**review 済み、 approve** (最新: 2026-05-21 / 4.14.1)
+**review 済み、 approve** (最新: 2026-08-04 / 4.22.4)
 
 AUR `python-cyclopts` 4.12.0-1 を fork。 **AUR の supply-chain 欠陥
 (`sha256sums=('SKIP')`) を fix** して [nekono] に投入。
@@ -72,3 +72,4 @@ upstream で新 release が出たら nvchecker (= `[python-cyclopts]` section) �
 | 2026-07-22 | 4.22.1-1 | (this PR) | upstream tag `v4.22.1` | safe-to-bump (Issue #425)。 v4.21.2 (`--` delimiter がエラーメッセージに混入するバグ修正) + v4.22.0 (config search_parents=False の親ディレクトリ walk バグ / 不正 timedelta 文字列 reject / 符号付き base-prefix 整数パース修正) + v4.22.1 (env_var iterable 分割 / boolean flag エラーメッセージ改善) の 3 release 分。 deps / build 無変化 (pyproject.toml diff 0)。 sha256 独立検証済み (curl 実測 + PyPI JSON API 一致)。 |
 | 2026-07-27 | 4.22.2-1 | (this PR) | upstream tag `v4.22.2` | safe-to-bump (Issue #439)。 空 mapping bind バグ修正 (#871) + `Parameter.count=True` flag への `=value` 明示指定サポート (#872) + config root_keys が table でない場合の CycloptsError 化 (#873) の 3 PR 分、いずれもバグ修正のみ。 deps / build 無変化 (pyproject.toml diff 0、sdist ファイル一覧完全一致)。 sha256 独立検証済み (curl 実測 + PyPI JSON API 一致)。 |
 | 2026-07-31 | 4.22.3-1 | (this PR) | upstream tag `v4.22.3` | safe-to-bump (Issue #462)。`__init__` が定義された `Enum` 型のパース失敗を修正 (PR #877)。バグ修正のみ、deps / build 無変化 (pyproject.toml diff 0、sdist ファイル一覧完全一致)。sha256 独立検証済み (curl 実測 + PyPI JSON API 一致)。 |
+| 2026-08-04 | 4.22.4-1 | (this PR) | upstream tag `v4.22.4` | safe-to-bump (Issue #478)。`ConsumeMultipleError` のエラーメッセージで要求数 1 の場合の名詞単数形化のみ (PR #879)。deps / build 無変化 (pyproject.toml byte 一致、sdist diff は PKG-INFO/_version.py/exceptions.py の 3 file のみ)。sha256 独立検証済み (curl 実測 + PyPI JSON API 一致)。 |
