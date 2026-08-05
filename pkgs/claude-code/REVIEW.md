@@ -2,7 +2,7 @@
 
 ## 状態
 
-**review 済み、approve** (最新: 2026-08-04 / 2.1.221)
+**review 済み、approve** (最新: 2026-08-06 / 2.1.222)
 
 AUR の `claude-code` PKGBUILD を fork。改変なし。各 release の review 履歴は
 本ファイル末尾の「更新履歴」 section 参照。
@@ -26,16 +26,16 @@ AUR の `claude-code` PKGBUILD を fork。改変なし。各 release の review 
 
 ## 検証結果
 
-- [x] `source_x86_64` URL = `downloads.claude.ai/claude-code-releases/2.1.221/linux-x64/claude`
+- [x] `source_x86_64` URL = `downloads.claude.ai/claude-code-releases/2.1.222/linux-x64/claude`
   - Anthropic 公式 CDN、典型的な mirror spoof / DNS hijack に脆弱だが TLS で守られる
-- [x] `source_aarch64` URL = `downloads.claude.ai/claude-code-releases/2.1.221/linux-arm64/claude`
+- [x] `source_aarch64` URL = `downloads.claude.ai/claude-code-releases/2.1.222/linux-arm64/claude`
   - 同上
 - [x] `sha256sums_x86_64` が upstream binary と一致
-  - 実測 (2.1.221): `60db8e88d42c24b5199c92cfd56ec88370c510c3789c6f364af748354f087ada`
-  - PKGBUILD 値: 一致 (Issue #479 記載値 + 本 review 時の `curl | sha256sum` 独立再計算で確認)
+  - 実測 (2.1.222): `10caae8f22b915c26bfff0e013a4d45608c4f1ae287583626569156f447730e5`
+  - PKGBUILD 値: 一致 (Issue #486 記載値 + 本 review 時の `curl | sha256sum` 独立再計算で確認)
 - [x] `sha256sums_aarch64` が upstream binary と一致
-  - 実測 (2.1.221): `d3c59d6bcc4adcf4cd85abca3bc13fa1131a34cb32f982bdf030d83a3b11e700`
-  - PKGBUILD 値: 一致 (Issue #479 記載値、本 review 時の `curl | sha256sum` 独立再計算で確認)
+  - 実測 (2.1.222): `a04be0a8d7fe0259571ab7411d51d85658d71a4a26ce62b60c908290372e6016`
+  - PKGBUILD 値: 一致 (Issue #486 記載値、本 review 時の `curl | sha256sum` 独立再計算で確認)
 - [x] `source=("cc-legal::...legal-and-compliance.md")` の sha256 は `SKIP`
   - 法文 markdown は string、binary としては実行されないので SKIP は許容
   - 内容 churn が頻繁な doc に sha pin は意味薄い
@@ -77,6 +77,22 @@ upstream の新 release (2.1.143 等) が出たら:
    1 行追記
 
 ## 更新履歴
+
+- **2026-08-06 / 2.1.222** — approve。Issue #486 調査済み (release author `ashwin-ant` = 過去 release と同一)。
+  `2.1.221 → 2.1.222` の単一リリース (skip なし)。npm 配布物 (`install.cjs`/`cli-wrapper.cjs`/`sdk-tools.d.ts`) は
+  2.1.221 と byte-identical、`dependencies: {}` 空・`optionalDependencies` は 8 platform binary package の
+  version 同期のみ。**セキュリティ修正複数**: worktree-isolated session + subagent が main checkout に destructive
+  git command を実行できてしまう問題 (isolation を全 session type の file edit / Bash に適用)、background agent task
+  の `PreToolUse` auto-allow hook が tool restriction を bypass する問題、auto mode で `SendMessage` 経由の他 agent
+  session宛メッセージも dispatch 前に permission classifier 評価するよう変更。**Changed**: Remote Control の
+  auto-start をリポジトリローカル設定から有効化不可に、`/diff` 系 view が workspace の diff driver/textconv を
+  無視し raw git blob content を使うよう変更、**ultraplan 機能削除**。他バグ修正多数 (breaking change なし)。
+  いずれも upstream CLI 内部挙動の修正で [nekono] の配布物 (prebuilt binary の install のみ) には影響しない。
+  build script / depends / package() / wrapper script / `options=('!strip')` の変更なし。sha256 は raw binary を
+  `curl -fsSL <url> | sha256sum` で独立実測し issue 記載値と一致確認 (GitHub Release `SHASUMS256.txt` とも一致):
+  - x86_64: `10caae8f22b915c26bfff0e013a4d45608c4f1ae287583626569156f447730e5`
+  - aarch64: `a04be0a8d7fe0259571ab7411d51d85658d71a4a26ce62b60c908290372e6016`
+  PKGBUILD 改変は `pkgver` + 2 sha256 の 3 値のみ。Closes #486。
 
 - **2026-08-04 / 2.1.221** — approve。Issue #479 調査済み (release author `ashwin-ant` = 過去 release と同一)。
   `2.1.220 → 2.1.221` の単一リリース (skip なし)。npm 配布物 (`install.cjs`/`cli-wrapper.cjs`/`sdk-tools.d.ts`) は
