@@ -62,6 +62,7 @@
 | `qview`          | from-source (Qt6)             | 画像ビューア |
 | `localsend-bin`  | -bin (Flutter prebuilt)       | AirDrop 代替 (LAN ファイル転送) |
 | `pwvucontrol`    | from-source (Rust/GTK4)       | PipeWire 音量コントロール |
+| `lswt`           | from-source (C)               | Wayland toplevel 一覧 (xdg-desktop-portal-wlr の窓単位画面共有 chooser 用) |
 
 ### システム・インフラ
 

@@ -91,6 +91,18 @@ source = "github"
 github = "xiph/igloo"
 use_max_tag = true
 
+[lswt]
+# Wayland toplevel 一覧ツール。xdg-desktop-portal-wlr の window chooser が
+# 要求する ext-foreign-toplevel-list-v1 の identifier を取るのに使う。
+# upstream が sr.ht のため github/gitlab source が使えず、nvchecker builtin
+# の git source (git ls-remote) で tag を見る。
+# sr.ht に release 機能が無いので use_latest_release 不可 → use_max_tag。
+# tag は "vX.Y.Z" 形式なので prefix で strip して PKGBUILD の pkgver と比較。
+source = "git"
+git = "https://git.sr.ht/~leon_plickat/lswt"
+use_max_tag = true
+prefix = "v"
+
 [localsend-bin]
 # release tag "vX.Y.Z" 形式。
 source = "github"
