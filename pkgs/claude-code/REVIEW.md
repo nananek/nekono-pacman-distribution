@@ -78,6 +78,22 @@ upstream の新 release (2.1.143 等) が出たら:
 
 ## 更新履歴
 
+- **2026-08-06 / 2.1.223** — approve。Issue #492 調査済み (release author `ashwin-ant` = 過去 release と同一)。
+  `2.1.222 → 2.1.223` の単一リリース (skip なし)。public repo `anthropics/claude-code` の diff は
+  `chore: Update CHANGELOG.md and feed.xml` の 1 commit のみで、build script / depends に影響なし。
+  **セキュリティ修正複数**: 細工コマンドで一部を permission check から隠せる bash permission bypass、
+  tab / invisible Unicode パディングで承認ダイアログの一部を隠せる permission prompt の問題、
+  workflow script が動的 `import()` で sandbox 外コードを実行できた問題、agent definition の
+  `bypassPermissions` mode が org の bypass-permissions disable policy を無視していた permission gap、
+  いずれも修正。**Changed**: `strictKnownMarketplaces`/`blockedMarketplaces` に owner wildcard 対応、
+  `/review` を `/code-review` の alias 化。他バグ修正多数 (breaking change なし)。
+  いずれも upstream CLI 内部挙動の修正で [nekono] の配布物 (prebuilt binary の install のみ) には影響しない。
+  build script / depends / package() / wrapper script / `options=('!strip')` の変更なし。sha256 は raw binary を
+  `curl -sL <url> | sha256sum` で独立実測し issue 記載値と一致確認:
+  - x86_64: `98226474f802e3094d6a86c5ade8883c16206d0fcb5c400b7401c800063e99d7`
+  - aarch64: `60e83d8db0e894d0e54413e5e7daa256d180db660f51e139a51b614fc30cf3ac`
+  PKGBUILD 改変は `pkgver` + 2 sha256 の 3 値のみ。Closes #492。
+
 - **2026-08-06 / 2.1.222** — approve。Issue #486 調査済み (release author `ashwin-ant` = 過去 release と同一)。
   `2.1.221 → 2.1.222` の単一リリース (skip なし)。npm 配布物 (`install.cjs`/`cli-wrapper.cjs`/`sdk-tools.d.ts`) は
   2.1.221 と byte-identical、`dependencies: {}` 空・`optionalDependencies` は 8 platform binary package の
