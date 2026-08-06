@@ -21,7 +21,7 @@ _meta_pkg='fastmcp'
 
 pkgname='python-fastmcp'         # pacman 名は変えない (_slim_pkg が変わったため明示固定)
 pkgver="${_upstreamver}"
-pkgrel=7
+pkgrel=8
 pkgdesc="The fast, Pythonic way to build MCP servers and clients."
 arch=('any')
 url='https://github.com/PrefectHQ/fastmcp'
