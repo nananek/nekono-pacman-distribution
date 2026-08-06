@@ -63,6 +63,7 @@
 | `localsend-bin`  | -bin (Flutter prebuilt)       | AirDrop 代替 (LAN ファイル転送) |
 | `pwvucontrol`    | from-source (Rust/GTK4)       | PipeWire 音量コントロール |
 | `lswt`           | from-source (C)               | Wayland toplevel 一覧 (xdg-desktop-portal-wlr の窓単位画面共有 chooser 用) |
+| `xdg-desktop-portal-wlr-nekono` | fork (自家 patch, extra 版置換) | HDMI キャプチャ等の既存 PipeWire node を直接画面共有ソースにする `Node: <id>` chooser 対応版 xdpw |
 
 ### システム・インフラ
 
