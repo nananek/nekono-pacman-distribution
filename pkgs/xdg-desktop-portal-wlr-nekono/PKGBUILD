@@ -1,0 +1,68 @@
+# Maintainer: Nekono Nana KAKKO KARI <3267314+nananek@users.noreply.github.com>
+# Based on the Arch official packaging repo (not AUR):
+#   https://gitlab.archlinux.org/archlinux/packaging/packages/xdg-desktop-portal-wlr
+# Original maintainers: Christian Rebischke <chris.rebischke@archlinux.org>,
+#                        Carl Smedstad <carsme@archlinux.org>
+#
+# nekono-pacman-distribution の改変 (= extra 版との diff、詳細は REVIEW.md):
+#   - pkgname に -nekono を付与し、provides/conflicts/replaces で extra 版を置換
+#     (repo 順が [core] -> [extra] -> [nekono] のため、同名では extra 版が勝つ)
+#   - source を upstream tarball から自家 fork の署名付き git tag に変更
+#     (git+https://github.com/nananek/xdg-desktop-portal-wlr.git, GPG 署名検証)
+#   - makedepends に git を追加 (git source のため)
+#   - pkgver は upstream (emersion/xdg-desktop-portal-wlr) と同じ値を使う。
+#     fork の世代は git tag 側 (v$pkgver-nekonoN) で表現する
+#   - patch (Node: <pipewire node id> chooser source) は新規依存を増やさない
+
+pkgname=xdg-desktop-portal-wlr-nekono
+pkgver=0.8.4
+pkgrel=1
+pkgdesc='xdg-desktop-portal backend for wlroots (nekono fork: adds "Node: <id>" chooser source)'
+arch=('x86_64')
+url="https://github.com/emersion/xdg-desktop-portal-wlr"
+license=('MIT')
+depends=(
+  'glibc'
+  'grim'
+  'libdrm'
+  'libinih'
+  'libpipewire'
+  'mesa'
+  'pipewire'
+  'pipewire-session-manager'
+  'slurp'
+  'systemd-libs'
+  'wayland'
+  'xdg-desktop-portal'
+)
+makedepends=(
+  'git'
+  'meson'
+  'scdoc'
+  'wayland-protocols'
+)
+provides=("xdg-desktop-portal-wlr=$pkgver" 'xdg-desktop-portal-impl')
+conflicts=('xdg-desktop-portal-wlr')
+replaces=('xdg-desktop-portal-wlr')
+source=(
+  "$pkgname::git+https://github.com/nananek/xdg-desktop-portal-wlr.git#tag=v$pkgver-nekono1?signed"
+  wlr-portals.conf
+)
+sha256sums=('SKIP'
+            '85b84ba8ba69e41295e7f02045c67b547df6eab1b137502b089ddf354f2a04de')
+validpgpkeys=('483DC691DF9F29327EA106BD030130E2F156CD74')
+
+build() {
+  cd "$pkgname"
+  arch-meson -Dsd-bus-provider=libsystemd build
+  ninja -C build
+}
+
+package() {
+  cd "$pkgname"
+  DESTDIR="$pkgdir" ninja -C build install
+  install -vDm644 -t "$pkgdir/usr/share/licenses/$pkgname" LICENSE
+
+  # fix detection with x-d-p 1.18
+  install -vDm644 -t "$pkgdir/usr/share/xdg-desktop-portal" "$srcdir/wlr-portals.conf"
+}
