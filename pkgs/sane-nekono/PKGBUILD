@@ -103,6 +103,13 @@ build() {
   )
 
   cd "$_srcdir"
+  # glibc >= 2.38 gates u_char/u_short/u_int/u_long behind _DEFAULT_SOURCE;
+  # without it configure's AC_CHECK_TYPES() misdetects them as absent and
+  # config.h falls back to #define'ing them, which then collides with the
+  # real system typedefs once _GNU_SOURCE is active during the actual build
+  # (compile error: "宣言指定内に二個またはそれ以上の型があります" in
+  # frontend/scanimage.c). Force it on for the configure-time type checks.
+  CPPFLAGS="${CPPFLAGS} -D_DEFAULT_SOURCE" \
   ./configure "${configure_options[@]}"
 
   # circumvent overlinking in libraries
