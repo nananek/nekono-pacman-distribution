@@ -2,7 +2,7 @@
 
 ## 状態
 
-**review 済み、approve** (最新: 2026-08-01 / 29.7.1)
+**review 済み、approve** (最新: 2026-08-09 / 29.7.2)
 
 AUR の `docker-rootless-extras` PKGBUILD を **純 fork**。diff は
 `# Maintainer:` → `# Contributor:` の置換 + fork 説明コメント追加、および
@@ -136,6 +136,17 @@ upstream の新 release (docker 29.5.x 等) が出たら:
    1 行追記 (review 日付 + PKGBUILD repo SHA + upstream tag commit SHA)
 
 ## 更新履歴
+
+- **2026-08-09 / 29.7.2** — approve (Issue #502)。Docker Engine v29.7.2
+  (release 2026-08-06、by `vvoland`) への sync。upstream tag commit:
+  `6a43e3d5afddf4111da0f864bbc7cae5d7e95001`。bug fix のみのリリース (CVE 番号
+  記載無し、docker service create/update の環境変数重複指定時 panic 修正、
+  v29.7.0 で混入した image pull リグレッション 2 件の修正)。rootless スクリプト群
+  (`dockerd-rootless.sh` + `dockerd-rootless-setuptool.sh`) の中身は v29.7.1 と
+  **完全同一** (= sha256 4 値すべて不変、byte 単位で一致確認)。PKGBUILD 改変は
+  `pkgver=29.7.2` の 1 行のみ。tag は annotated + GPG 署名済み (`verified: true`)、
+  tagger は既知の Docker Inc. maintainer `vvoland` (Paweł Gronowski)。sha256
+  独立再検証済み (moby/moby docker-v29.7.2 の raw fetch + 実測)。Closes #502。
 
 - **2026-08-01 / 29.7.1** — approve (Issue #470)。Docker Engine v29.7.1 (release
   2026-07-31、by `vvoland`) への sync。upstream tag commit:
