@@ -2,7 +2,7 @@
 
 ## 状態
 
-**review 済み、approve** (最新: 2026-08-06 / 2.1.222)
+**review 済み、approve** (最新: 2026-08-09 / 2.1.226)
 
 AUR の `claude-code` PKGBUILD を fork。改変なし。各 release の review 履歴は
 本ファイル末尾の「更新履歴」 section 参照。
@@ -77,6 +77,22 @@ upstream の新 release (2.1.143 等) が出たら:
    1 行追記
 
 ## 更新履歴
+
+- **2026-08-09 / 2.1.226** — approve。Issue #507 調査済み (release author `ashwin-ant` = 過去 release と同一)。
+  `2.1.223 → 2.1.224 → 2.1.225 → 2.1.226` の連続リリース (skip なし)。npm 配布物
+  (`install.cjs`/`cli-wrapper.cjs`) は 2.1.223 と byte-identical、`sdk-tools.d.ts` は
+  `RemoteTriggerInput.action` union への型定義追加のみ。**2.1.224 でセキュリティ修正複数**:
+  sandbox filesystem の deny entry を trailing slash 付きで書くと bypass 可能だった問題、
+  sandbox violation 詳細が Bash tool 結果に表示されなかった問題、長いプロジェクトパスでの
+  session dir cross-project 混線バグ、`SendMessage` inbox 書き込み失敗時の誤表示バグ、を修正。
+  feedback survey の transcript share 拡張は同意ベースの opt-in 機能で配布物に影響なし。
+  2.1.225 は `CLAUDE_CODE_OAUTH_TOKEN` 401 誤置換バグ等の修正。2.1.226 は "bug fixes and
+  reliability improvements" のみ。いずれも build script / depends / package() / wrapper script /
+  `options=('!strip')` の変更なし。sha256 は raw binary を `curl -sL <url> | sha256sum` で
+  独立実測し issue 記載値と一致確認:
+  - x86_64: `4e9bec1177ce9690e8bd988b710ac24105e70da428dd094c5adcbbe786a55555`
+  - aarch64: `feb715ee066d02a400c9d83941592f11c8e8fa6628c1e3c14262bc529f950498`
+  PKGBUILD 改変は `pkgver` + 2 sha256 の 3 値のみ。Closes #507, #503 (older duplicate)。
 
 - **2026-08-06 / 2.1.223** — approve。Issue #492 調査済み (release author `ashwin-ant` = 過去 release と同一)。
   `2.1.222 → 2.1.223` の単一リリース (skip なし)。public repo `anthropics/claude-code` の diff は
