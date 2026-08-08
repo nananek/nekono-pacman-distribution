@@ -1,19 +1,19 @@
 pkgbase = genshin-dict
 	pkgdesc = Genshin Impact dictionary for Mozc IME (Windows IME format TSV + import helper)
-	pkgver = 6.6.1
+	pkgver = 7.0.0
 	pkgrel = 1
 	url = https://github.com/kotofurumiya/genshin-dict
 	install = genshin-dict.install
 	arch = any
 	license = MIT
+	makedepends = protobuf
 	depends = python
 	depends = python-protobuf
-	makedepends = protobuf
 	optdepends = fcitx5-mozc: Mozc IME (genshin-dict-mozc-import の操作対象)
-	source = genshin-dict-6.6.1.tar.gz::https://github.com/kotofurumiya/genshin-dict/archive/refs/tags/v6.6.1.tar.gz
+	source = genshin-dict-7.0.0.tar.gz::https://github.com/kotofurumiya/genshin-dict/archive/refs/tags/v7.0.0.tar.gz
 	source = genshin-dict-mozc-import
 	source = user_dictionary_storage.proto
-	sha256sums = 1b23b3882eac3e1f71e75f08ad42c00c3dfc88c3b05e4c51df8026f7f0fdd914
+	sha256sums = cd08ff516ed31c7ca286d7eb0baa0027f2ed57e334b79b458e002c39cf3225d8
 	sha256sums = 51ad4257eb8e249cad6089b205d4f9e4bb76bd032da4782792b66abea945146c
 	sha256sums = b38529be56a93c215d58b931d367a822e26d88c70949e4fd870d4de4521fb373
 
