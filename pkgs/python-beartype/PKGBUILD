@@ -6,7 +6,7 @@
 pkgname=python-beartype
 _pkgname=${pkgname#python-}
 pkgver=0.22.9
-pkgrel=10
+pkgrel=11
 pkgdesc="Unbearably fast near-real-time hybrid runtime-static type-checking in pure Python"
 arch=('any')
 url="https://github.com/beartype/beartype"
@@ -47,6 +47,8 @@ check() {
   python -m installer --destdir=tmp_install dist/*.whl
   local site_packages=$(python -c "import site; print(site.getsitepackages()[0])")
   export PYTHONPATH="$PWD/tmp_install/$site_packages"
+  # test_poetry は poetry install を実行して長時間の依存解決・network access を
+  # 起こすため除外。配布 wheel の検証には不要。
   # test_claw_fastmcp は Python 3.14 + multiprocessing のピクリング非互換で
   # PicklingError: it's not the same object が出るため除外 (beartype upstream 未修正)
   #
@@ -59,7 +61,8 @@ check() {
   #     (test_redhint x2 / test_checkdoor x5 / test_beartype x1)
   #   - Python 3.14.6 の PEP585/PEP695 typing sign 判定変更で assert が
   #     ずれる 3 件 (test_pep585 / test_get_hint_pep_sign / test_is_hint_pep_type_typing)
-  pytest --deselect beartype_test/a90_func/pep/test_pep561_static.py \
+  pytest --deselect beartype_test/a90_func/a50_external/test_poetry.py::test_poetry \
+         --deselect beartype_test/a90_func/pep/test_pep561_static.py \
          --deselect beartype_test/a90_func/a40_claw/external/test_claw_fastmcp.py::test_claw_fastmcp \
          --deselect beartype_test/a00_unit/a60_check/a40_convert/a00_reduce/test_redhint.py::test_reduce_hint \
          --deselect beartype_test/a00_unit/a60_check/a40_convert/a00_reduce/test_redhint.py::test_reduce_hint_ignorable \
