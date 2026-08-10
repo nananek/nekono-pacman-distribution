@@ -3,4 +3,4 @@
 # Source: pkgs/lswt/.SRCINFO (depends + makedepends entries).
 # Format: 1 line per package: <name>=<full-version>
 
-wayland=1.25.0-1
+wayland=1.26.0-1
