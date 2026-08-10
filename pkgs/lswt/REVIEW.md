@@ -110,3 +110,4 @@ upstream の新 tag (v2.0.1 等) が出たら:
 
 | 日付 | release | review した PKGBUILD repo SHA | upstream tag commit | findings |
 |---|---|---|---|---|
+| 2026-08-10 | 2.0.0-2 | — (pkgrel bump のみ) | — | `wayland` 1.25.0-1 → 1.26.0-1 に伴う rebuild、既存 review 内容に変更なし |
