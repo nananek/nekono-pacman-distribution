@@ -16,7 +16,7 @@
 
 pkgname=xdg-desktop-portal-wlr-nekono
 pkgver=0.8.4
-pkgrel=1
+pkgrel=2
 pkgdesc='xdg-desktop-portal backend for wlroots (nekono fork: adds "Node: <id>" chooser source)'
 arch=('x86_64')
 url="https://github.com/emersion/xdg-desktop-portal-wlr"

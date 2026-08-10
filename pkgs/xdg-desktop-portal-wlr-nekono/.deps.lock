@@ -4,18 +4,18 @@
 # Format: 1 line per package: <name>=<full-version>
 
 # MISSING (not in Arch official repo, likely AUR-only or virtual): pipewire-session-manager
+git=2.55.0-1
 glibc=2.44+r5+g7cba77790f32-1
 grim=1.5.0-2
 libdrm=2.4.134-1
 libinih=62-2
 libpipewire=1:1.6.8-1
 mesa=1:26.1.6-1
+meson=1.11.2-1
 pipewire=1:1.6.8-1
+scdoc=1.11.5-1
 slurp=1.5.0-2
 systemd-libs=261.2-1
-wayland=1.25.0-1
-xdg-desktop-portal=1.22.1-2
-meson=1.11.2-1
-scdoc=1.11.5-1
+wayland=1.26.0-1
 wayland-protocols=1.49-1
-git=2.55.0-1
+xdg-desktop-portal=1.22.1-2
