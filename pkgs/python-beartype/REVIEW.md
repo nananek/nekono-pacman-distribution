@@ -70,3 +70,4 @@ upstream で新 release が出たら nvchecker (= `[python-beartype]` section) �
 | 2026-07-06 | 0.22.9-8 (build fix) | (this PR) | (同上) | check() fix: 0.22.9-8 rebuild が check() で 11 件 fail したため `--deselect` を追加。 いずれも beartype 0.22.9 の test suite が build host 環境 (numpy 2.5.0 の ScalarT dtype 8 件 + Python 3.14.6 の PEP585/PEP695 typing 判定 3 件) に追随できない upstream 未修正の version 非互換。 配布 wheel は既配布 0.22.9-7 と source 同一 (pkgrel のみ差)、 package 実体は不変。 [nekono] 用途 (fastmcp transitive dep、 numpy hint 不使用) には影響なし。 test_claw_fastmcp / test_pep561_static の既存 deselect と同種対応 |
 | 2026-07-07 | 0.22.9-9 | bot PR #352 | (同上) | `pkgrel` +1 (deps changed): python-typing_extensions 4.15.0-3 → 4.16.0-1 |
 | 2026-08-10 | 0.22.9-10 | — (pkgrel bump のみ) | — | `python-numpy` 2.5.1-1 → 2.5.2-1 に伴う rebuild、既存 review 内容に変更なし |
+| 2026-08-10 | 0.22.9-11 (build fix) | — | — | `check()` の `test_poetry` が `poetry install` による長時間の依存解決・network access を起こすため deselect。配布 wheel の build/package 検証には不要 |
