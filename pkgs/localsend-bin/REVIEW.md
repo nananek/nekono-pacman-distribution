@@ -50,6 +50,7 @@ rename のみで、実行 binary は upstream そのまま。
 | 日付 | release | review した PKGBUILD repo SHA | upstream tag commit | findings |
 |---|---|---|---|---|
 | 2026-06-21 | 1.17.0-2 | (this PR) | — (pkgrel bump のみ) | `pkgrel` +1 (deps changed): libayatana-appindicator 0.5.94-1 → 0.6.0-1 |
+| 2026-08-11 | 1.18.0 | — (upstream bump) | `82471a523411906d52f410e71503093c563ba44a` | pkgver bump、build/depends 変更なし (deb packaging config 無変更を確認)。checksum 検証機能追加、Rust コアリライトは upstream CI 内で完結 |
 
 ## 更新方針
 
