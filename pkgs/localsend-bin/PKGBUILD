@@ -25,7 +25,7 @@ _pkgdesktop="localsend_app.desktop"
 
 
 prepare() {
-	tar -xf data.tar.xz
+	tar -xf data.tar.zst
 }
 
 build() {
@@ -53,7 +53,7 @@ package() {
 
 	# Executable
 	install -dm755 "${pkgdir}/opt/${pkgname%-*}/"
-	cp -a "${srcdir}/usr/share/localsend_app/." "${pkgdir}/opt/${pkgname%-*}"
+	cp -a "${srcdir}/opt/localsend_app/." "${pkgdir}/opt/${pkgname%-*}"
 	# Same as icons - rename to localsend
 	mv "${pkgdir}/opt/${pkgname%-*}/localsend_app" "${pkgdir}/opt/${pkgname%-*}/localsend"
 
