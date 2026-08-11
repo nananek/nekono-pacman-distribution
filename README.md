@@ -70,6 +70,7 @@
 | package | source 方針 | 役割 |
 |---|---|---|
 | `claude-code`            | -bin (npm tarball)      | Anthropic Claude Code CLI |
+| `github-copilot-cli`     | from-source (npm vendor) | GitHub Copilot CLI (npm wrapper + platform binary を offline install) |
 | `docker-rootless-extras` | from-source             | Docker rootless mode 補助バイナリ |
 | `nekonopaw`              | from-source (Go)        | PipeWire → PAM 連携デーモン |
 | `pam_pkcs11`             | from-source (C)         | PIV/PKCS#11 PAM 認証モジュール |

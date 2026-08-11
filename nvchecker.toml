@@ -36,6 +36,15 @@ newver = "newver.json"
 source = "npm"
 npm = "@anthropic-ai/claude-code"
 
+[github-copilot-cli]
+# GitHub Copilot CLI。npm registry の @github/copilot (= npm-loader.js の薄い
+# wrapper) が pkgver と完全 version sync しており (= optionalDependencies で
+# platform package を同 version pin)、最新を拾うにはこれが最適。
+# PKGBUILD は wrapper + detect-libc + @github/copilot-linux-x64 の 3 tarball を
+# vendor して --offline install する方針 (= REVIEW.md「依存方針」参照)。
+source = "npm"
+npm = "@github/copilot"
+
 [docker-rootless-extras]
 # Docker Engine と version sync (rootless extras は moby/moby tree の subset)。
 # release tag は "docker-vX.Y.Z" 形式なので prefix を strip。use_latest_release
