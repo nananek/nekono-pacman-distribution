@@ -62,14 +62,12 @@
 | `qview`          | from-source (Qt6)             | 画像ビューア |
 | `localsend-bin`  | -bin (Flutter prebuilt)       | AirDrop 代替 (LAN ファイル転送) |
 | `pwvucontrol`    | from-source (Rust/GTK4)       | PipeWire 音量コントロール |
-| `lswt`           | from-source (C)               | Wayland toplevel 一覧 (xdg-desktop-portal-wlr の窓単位画面共有 chooser 用) |
-| `xdg-desktop-portal-wlr-nekono` | fork (自家 patch, extra 版置換) | HDMI キャプチャ等の既存 PipeWire node を直接画面共有ソースにする `Node: <id>` chooser 対応版 xdpw |
+| `lswt`           | from-source (C)               | Wayland toplevel 一覧 |
 
 ### システム・インフラ
 
 | package | source 方針 | 役割 |
 |---|---|---|
-| `claude-code`            | -bin (npm tarball)      | Anthropic Claude Code CLI |
 | `github-copilot-cli`     | from-source (npm vendor) | GitHub Copilot CLI (npm wrapper + platform binary を offline install) |
 | `docker-rootless-extras` | from-source             | Docker rootless mode 補助バイナリ |
 | `nekonopaw`              | from-source (Go)        | PipeWire → PAM 連携デーモン |

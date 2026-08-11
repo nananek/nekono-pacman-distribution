@@ -29,13 +29,6 @@
 oldver = "oldver.json"
 newver = "newver.json"
 
-[claude-code]
-# Anthropic Claude Code CLI。downloads.claude.ai 経由配布だが npm registry
-# にも同 version で publish される (@anthropic-ai/claude-code)。npm の方が
-# version 取得が安定。
-source = "npm"
-npm = "@anthropic-ai/claude-code"
-
 [github-copilot-cli]
 # GitHub Copilot CLI。npm registry の @github/copilot (= npm-loader.js の薄い
 # wrapper) が pkgver と完全 version sync しており (= optionalDependencies で
@@ -333,18 +326,6 @@ use_max_tag = true
 include_regex = "v37\\..*"
 prefix = "v"
 
-[xdg-desktop-portal-wlr-nekono]
-# fork だが追跡対象は upstream (emersion) の release。
-# 我々の pkgver は upstream と同じ値を使い、fork 世代は git tag 側
-# (v<pkgver>-nekonoN) で表現しているので、ここが上がったら
-#   1. fork を新 tag へ rebase して -nekono1 を打ち直す
-#   2. PKGBUILD の pkgver を上げる
-# という手順になる。
-source = "github"
-github = "emersion/xdg-desktop-portal-wlr"
-use_latest_release = true
-prefix = "v"
-
 [voicevox-bin]
 # VOICEVOX editor (= Electron 製 GUI)。 release tag は素の X.Y.Z 形式
 # (prefix 無し)。 [nekono] には CPU AppImage 1 variant のみ (= system electron37
@@ -353,4 +334,3 @@ prefix = "v"
 source = "github"
 github = "VOICEVOX/voicevox"
 use_latest_release = true
-
