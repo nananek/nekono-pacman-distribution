@@ -139,3 +139,4 @@ upstream (`emersion/xdg-desktop-portal-wlr`) が新 release を出したら
 |---|---|---|---|---|
 | 2026-08-06 | 0.8.4-1 (fork tag v0.8.4-nekono1) | (this commit) | `34153094662acd713241ca6cbbb20003ef67da5f` (emersion v0.8.4) / fork tag commit `5459ef00857009f5963f455e180c9da430fe4658` | 新規追加。extra 版 (Arch 公式 packaging repo, main HEAD `ca8ab29`, 0.8.3-1) をベースに pkgname/provides/conflicts/replaces/source/makedepends を改変。patch 本体・tag 署名・wlr-portals.conf sha256 を独立検証、approve |
 | 2026-08-10 | 0.8.4-2 | — (pkgrel bump のみ) | — | `wayland` 1.25.0-1 → 1.26.0-1 に伴う rebuild、既存 review 内容に変更なし |
+| 2026-08-11 | 0.8.4-3 | — (pkgrel bump のみ) | — | `meson` 1.11.2-1 → 1.12.0-1 に伴う rebuild、既存 review 内容に変更なし |
