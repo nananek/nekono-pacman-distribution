@@ -78,6 +78,8 @@ upstream の新 release (2.1.143 等) が出たら:
 
 ## 更新履歴
 
+- **2026-08-11 / 2.1.227** — approve。Issue #517 調査済み。単一リリースで build script / depends / package() / wrapper script に変更なし。主に feature flag 評価、GitHub Actions runner の Bash、TUI rewind、UI/性能の修正。sha256 は Issue 記載値を採用し、GitHub Release の tarball 内 binary と cross-check 済み。x86_64: `6832dc3f1797b890b71116e5f2dbbf9a83fd3d0498c235b4b0f9cd0e6e499ad6` / aarch64: `db47335532cbcab67a4b3ab16d8f3f77976bf85d53c7d79f8296538aa22bfce6`。Closes #517。
+
 - **2026-08-09 / 2.1.226** — approve。Issue #507 調査済み (release author `ashwin-ant` = 過去 release と同一)。
   `2.1.223 → 2.1.224 → 2.1.225 → 2.1.226` の連続リリース (skip なし)。npm 配布物
   (`install.cjs`/`cli-wrapper.cjs`) は 2.1.223 と byte-identical、`sdk-tools.d.ts` は
