@@ -1,0 +1,12 @@
+# Snapshot of Arch official repo versions for depends + makedepends of github-copilot-cli.
+# Auto-generated and updated by .github/workflows/dep-version-pr.yml.
+# Source: pkgs/github-copilot-cli/.SRCINFO (depends + makedepends entries).
+# Format: 1 line per package: <name>=<full-version>
+
+gcc-libs=16.1.1+r595+g171d15ac6959-1
+glib2=2.88.3-1
+glibc=2.44+r5+g7cba77790f32-1
+jq=1.8.2-1
+libsecret=0.21.7-1
+npm=12.0.2-1
+nodejs=26.7.0-1
