@@ -59,6 +59,7 @@ upstream で新 release が出たら nvchecker (= `[python-beartype]` section) �
 
 | 日付 | release | review した PKGBUILD repo SHA | upstream tag commit | findings |
 |---|---|---|---|---|
+| 2026-08-15 | 0.22.9-12 | (this PR) | — (pkgrel bump のみ) | `pkgrel` +1 (deps changed): python 3.14.6-1 → 3.14.7-1, python-wheel 0.47.0-1 → 0.48.0-1 |
 | 2026-05-20 | 0.22.9-1 | `795f1f0` | upstream tag `v0.22.9` | 初回 add、 AUR 純 fork、 py-key-value-aio dep 経由で fastmcp chain 完成のため必要 (= 当初 SHA `659b27b`、 master rebase で `795f1f0` に再付番) |
 | 2026-05-20 | 0.22.9-2 | `328e5a532467a7df920b773635091ae68235c394` | (同上) | `pkgrel` +1: checkdepends に `python-poetry` 追加 (= AUR PKGBUILD 漏れの test_poetry 通過用、 build host で実測 fail を確認、 全 dep Arch 公式で揃う) |
 | 2026-05-21 | 0.22.9-3 | `d83ada9` | (同上) | `pkgrel` +1 (deps changed): python-click 8.3.3-1, python-poetry 2.4.1-1, python-pygments 2.20.0-1, python-pytest 1:9.0.3-1, python-rich-click 1.9.7-1, python-xarray 2026.04.0-1 |
