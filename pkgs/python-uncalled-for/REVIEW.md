@@ -66,6 +66,7 @@ upstream で新 release (= 0.3.x 等) が出たら、 **fastmcp の依存要件�
 
 | 日付 | release | review した PKGBUILD repo SHA | upstream tag commit | findings |
 |---|---|---|---|---|
+| 2026-08-14 | 0.4.0-1 | (this PR) | `9228197fdb1ddbbc4a0b1ec4069efedaf15bc9bb` (0.4.0) | safe-to-bump: CallArgument/Frame 機能追加のみ、pyproject.toml / depends / makedepends 変化なし、sha256 独立検証済み、fastmcp `>=0.2.0` 要件を満たす。Closes #540 |
 | 2026-05-21 | 0.3.2 | (this PR) | `007051c7607cc1d77c04933bf67c8c166af2f65f` | safe-to-bump: depends/makedepends 変化なし、sha256 Issue #77 確認済み。fastmcp `>=0.2.0` 要件を満たす。Closes #77 |
 | 2026-06-15 | 0.3.2-2 | (this PR) | — (pkgrel bump のみ) | `pkgrel` +1 (deps changed): python-hatchling 1.29.0-1 → 1.30.1-1 |
 | 2026-05-19 | 0.2.0 | `cfcbb1e840b347748dc121d957fda2a7ffee46c5` | `b39a1115e11db09533461df5341e1c78a583a80d` | 初回 add、 純 fork (= prepare()/check() 削除のみ) |
