@@ -129,5 +129,6 @@ upstream の新 release が出たら:
 
 | 日付 | release | review した PKGBUILD repo SHA | upstream tag commit | findings |
 |---|---|---|---|---|
+| 2026-08-15 | 1.0.80-1 | (this PR) | — (deps.lock sync) | .deps.lock 更新: gcc-libs 16.1.1+r595+g171d15ac6959-1 → 16.2.1+r23+gd564253eb6c8-1, glibc 2.44+r5+g7cba77790f32-1 → 2.44+r24+g16be1518495f-1 (pkgrel-2 PR #524 は pkgver bump で superseded のため close) |
 | 2026-08-14 | 1.0.80-1 | (this PR) | `ef627e1b` (v1.0.80) | safe-to-bump: 機械的 pkgver bump、npm package 1.0.77→1.0.80 diff 済み (新規は SKILL.md / doc / .d.ts のみ、実行コード変更なし)、build/depends/makedepends 変更なし、maintainer 1 名削除 (publish は OIDC 経由のため risk 無し)、b2sums 独立検証済み。Closes #541 |
 | 2026-08-11 | 1.0.77-1 | (初版) | `aee1edd2` (v1.0.77) | 新規追加。AUR fork + npm 依存の offline vendor 化。4 source の b2sums を registry download で独立検証、offline install / bin / completion を実地確認。approve |
