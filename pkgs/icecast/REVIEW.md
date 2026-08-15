@@ -89,6 +89,7 @@ build host で `bin/build-all icecast` 実行可。
 
 | 日付 | pkgver-pkgrel | PKGBUILD SHA | upstream tag commit | findings |
 |---|---|---|---|---|
+| 2026-08-15 | 2.5.0-9 | (this PR) | — (pkgrel bump のみ) | `pkgrel` +1 (deps changed): glibc 2.44+r5+g7cba77790f32-1 → 2.44+r24+g16be1518495f-1, libtool 2.6.2-3 → 2.6.2-5 |
 | 2026-05-25 | 2.5.0-1 | (初回 fork) | — | approve、AUR 改変なし |
 | 2026-06-06 | 2.5.0-2 | (this PR) | — (pkgrel bump のみ) | `pkgrel` +1 (deps changed): libtool 2.6.0+r23+gb08cb0a0-1 → 2.6.1-1 |
 | 2026-06-10 | 2.5.0-3 | (this PR) | — (pkgrel bump のみ) | `pkgrel` +1 (deps changed): openssl 3.6.2-2 → 3.6.3-1 |
