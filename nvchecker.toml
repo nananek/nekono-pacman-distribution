@@ -29,6 +29,13 @@
 oldver = "oldver.json"
 newver = "newver.json"
 
+[claude-code]
+# Anthropic Claude Code CLI。downloads.claude.ai 経由配布だが npm registry
+# にも同 version で publish される (@anthropic-ai/claude-code)。npm の方が
+# version 取得が安定。
+source = "npm"
+npm = "@anthropic-ai/claude-code"
+
 [github-copilot-cli]
 # GitHub Copilot CLI。npm registry の @github/copilot (= npm-loader.js の薄い
 # wrapper) が pkgver と完全 version sync しており (= optionalDependencies で

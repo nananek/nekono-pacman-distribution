@@ -1,0 +1,426 @@
+# claude-code review
+
+## 状態
+
+**review 済み、approve** (復活: 2026-08-17 / 2.1.233)
+
+AUR の `claude-code` PKGBUILD を fork。改変なし。各 release の review 履歴は
+本ファイル末尾の「更新履歴」 section 参照。
+
+2026-08-11 に retire (PR #523) されたが、2026-08-17 付で 2.1.233 で復活。
+
+(AUR には `claude-code` と `claude-code-bin` 両方ある。内容ほぼ同一で
+`-bin` は古い version `2.1.126`。両者とも Anthropic 公式 prebuilt binary
+を取るだけ、命名の歴史が違うだけ。**無印 `claude-code` の新しい方を採用**。)
+
+## Source
+
+- AUR: https://aur.archlinux.org/packages/claude-code
+  - maintainers: Christopher Cooper / Jérôme Poulin / Fabio Fontana
+  - automation: https://github.com/fabifont/claude-code-aur
+- Upstream binary: `https://downloads.claude.ai/claude-code-releases/<ver>/linux-<arch>/claude`
+  - Anthropic 公式 CDN、self-contained Bun executable (JS + resources embed)
+- Upstream legal: `https://code.claude.com/docs/en/legal-and-compliance.md`
+  - Anthropic 公式 ドメイン、TLS 有効、HTTP 200
+- GitHub: https://github.com/anthropics/claude-code (= Anthropic Org、
+  124k stars、license field は GitHub 上 null = repo に LICENSE 明示なし、
+  PKGBUILD は `LicenseRef-claude-code` で扱う)
+
+## 検証結果
+
+- [x] `source_x86_64` URL = `downloads.claude.ai/claude-code-releases/2.1.233/linux-x64/claude`
+  - Anthropic 公式 CDN、典型的な mirror spoof / DNS hijack に脆弱だが TLS で守られる
+- [x] `source_aarch64` URL = `downloads.claude.ai/claude-code-releases/2.1.233/linux-arm64/claude`
+  - 同上
+- [x] `sha256sums_x86_64` が upstream binary と一致
+  - 実測 (2.1.233): `55d281096f57d411ebbdd94dbf5e9ff3accb7c05713e37348c2c11d4b83bf9d9`
+  - PKGBUILD 値: 一致 (AUR 記載値 + 本 review 時の `curl | sha256sum` 独立再計算で確認)
+- [x] `sha256sums_aarch64` が upstream binary と一致
+  - 実測 (2.1.233): `42df1841f74e9b2ac13f2c1a2a820ef6b9ac5b2efb8646bb25c9a92b8bd69194`
+  - PKGBUILD 値: 一致 (AUR 記載値 + 本 review 時の `curl | sha256sum` 独立再計算で確認)
+- [x] `source=("cc-legal::...legal-and-compliance.md")` の sha256 は `SKIP`
+  - 法文 markdown は string、binary としては実行されないので SKIP は許容
+  - 内容 churn が頻繁な doc に sha pin は意味薄い
+- [x] `package()`:
+  - `/opt/claude-code/bin/claude` ← upstream binary (= self-contained Bun)
+  - `/usr/bin/claude` wrapper:
+    ```sh
+    #!/bin/sh
+    export DISABLE_UPDATES=1
+    export DISABLE_INSTALLATION_CHECKS=1
+    exec /opt/claude-code/bin/claude "$@"
+    ```
+    → `DISABLE_UPDATES=1` で self-update 抑止 + `DISABLE_INSTALLATION_CHECKS=1`
+      で native-install 健康診断 (claude が期待する `~/.local/bin/claude` が無い
+      warning) を抑止、pacman 管理に統一
+  - `/usr/share/licenses/claude-code/LICENSE` ← legal doc
+  - install -Dm 標準、curl / wget / eval なし
+- [x] `options=('!strip')`: 必須 (= Bun 静的 binary に embedded JS を含む、
+      stripping すると壊れる)
+- [x] `depends`: `bash` のみ (= wrapper 用)
+- [x] `optdepends`: `git / github-cli / glab / ripgrep / tmux / bubblewrap /
+      socat` — claude が呼ぶ optional ツール、妥当
+- [x] license `LicenseRef-claude-code` — Anthropic 独自 license (= SPDX 標準
+      に無いため LicenseRef-)、`cc-legal` を licenses/ に同梱
+
+## 結論
+
+**approve** — そのまま build host で `makepkg -s --sign --key 483D...` 可。
+
+binary は Anthropic 公式 CDN + sha256 pin で守られる。Anthropic の GPG
+signing は CLI binary には付かないため (= npm tarball / CDN download とも
+署名なし)、tarball の sha256 を毎 release 手動更新する運用が必須。
+
+## 更新方針
+
+upstream の新 release (2.1.143 等) が出たら:
+1. AUR で pkgver / sha256sums の値を確認 (`https://aur.archlinux.org/packages/claude-code`)
+2. 本 dir の PKGBUILD を差し替え
+3. sha256 を独立再計算 (= `curl -fsSL https://downloads.claude.ai/claude-code-releases/<ver>/linux-x64/claude | sha256sum`)
+4. cc-legal 自体は churn 多いので照合不要、SKIP のまま
+5. REVIEW.md の「検証結果」 section を新 sha256 で上書き + 「更新履歴」に
+   1 行追記
+
+## 更新履歴
+
+- **2026-08-17 / 2.1.233** — approve。**retire 復活** (2026-08-11 retire, PR #523 → 本 PR で再導入)。
+  `2.1.227 → 2.1.233` の累積 bump (release は 2.1.228 / 2.1.229 / 2.1.231 / 2.1.232 / 2.1.233
+  [2.1.230 はタグ無し skip]、release author は全て `ashwin-ant` = 過去 release と同一)。
+  source URL (`downloads.claude.ai`) / depends / optdepends / `options=('!strip')` / package() の
+  構造は無変更。**wrapper script に `DISABLE_INSTALLATION_CHECKS=1` を追加** (= AUR 側の変更を
+  そのまま追従、claude が期待する `~/.local/bin/claude` layout が無いための起動時 warning
+  "claude command at ~/.local/bin/claude missing or broken" を抑止する opt-in env)。
+  主要変更: v2.1.232 で subagent forking が default on / クロスセッション `@mention` (`SendMessage`)
+  / GitLab token の secret redaction 追加、**セキュリティ修正複数** (PowerShell
+  `$PSDefaultParameterValues` 経由の permission bypass、Cygwin symlink 追従 bypass、nested git repo の
+  trust 親継承問題、Remote Control bridge session の transcript/credential 継承問題)。v2.1.233 で
+  `\??\` NT device prefix 経由の UNC path validation bypass (= NTLM credential-leak vector) 修正、
+  Linux sandbox の CPU busy-loop 修正、Todo 系 tool が新 model で無効化 (opt-in env で復帰可)。
+  いずれも upstream CLI 内部挙動の修正で [nekono] の配布物 (prebuilt binary の install のみ) には
+  影響しない。sha256 は raw binary を `curl -fsSL <url> | sha256sum` で独立実測し AUR 記載値と一致確認:
+  - x86_64: `55d281096f57d411ebbdd94dbf5e9ff3accb7c05713e37348c2c11d4b83bf9d9`
+  - aarch64: `42df1841f74e9b2ac13f2c1a2a820ef6b9ac5b2efb8646bb25c9a92b8bd69194`
+  PKGBUILD 改変は `pkgver` + 2 sha256 + wrapper env 1 行の計 4 値。
+
+- **2026-08-11 / 2.1.227** — approve。Issue #517 調査済み。単一リリースで build script / depends / package() / wrapper script に変更なし。主に feature flag 評価、GitHub Actions runner の Bash、TUI rewind、UI/性能の修正。sha256 は Issue 記載値を採用し、GitHub Release の tarball 内 binary と cross-check 済み。x86_64: `6832dc3f1797b890b71116e5f2dbbf9a83fd3d0498c235b4b0f9cd0e6e499ad6` / aarch64: `db47335532cbcab67a4b3ab16d8f3f77976bf85d53c7d79f8296538aa22bfce6`。Closes #517。
+
+- **2026-08-09 / 2.1.226** — approve。Issue #507 調査済み (release author `ashwin-ant` = 過去 release と同一)。
+  `2.1.223 → 2.1.224 → 2.1.225 → 2.1.226` の連続リリース (skip なし)。npm 配布物
+  (`install.cjs`/`cli-wrapper.cjs`) は 2.1.223 と byte-identical、`sdk-tools.d.ts` は
+  `RemoteTriggerInput.action` union への型定義追加のみ。**2.1.224 でセキュリティ修正複数**:
+  sandbox filesystem の deny entry を trailing slash 付きで書くと bypass 可能だった問題、
+  sandbox violation 詳細が Bash tool 結果に表示されなかった問題、長いプロジェクトパスでの
+  session dir cross-project 混線バグ、`SendMessage` inbox 書き込み失敗時の誤表示バグ、を修正。
+  feedback survey の transcript share 拡張は同意ベースの opt-in 機能で配布物に影響なし。
+  2.1.225 は `CLAUDE_CODE_OAUTH_TOKEN` 401 誤置換バグ等の修正。2.1.226 は "bug fixes and
+  reliability improvements" のみ。いずれも build script / depends / package() / wrapper script /
+  `options=('!strip')` の変更なし。sha256 は raw binary を `curl -sL <url> | sha256sum` で
+  独立実測し issue 記載値と一致確認:
+  - x86_64: `4e9bec1177ce9690e8bd988b710ac24105e70da428dd094c5adcbbe786a55555`
+  - aarch64: `feb715ee066d02a400c9d83941592f11c8e8fa6628c1e3c14262bc529f950498`
+  PKGBUILD 改変は `pkgver` + 2 sha256 の 3 値のみ。Closes #507, #503 (older duplicate)。
+
+- **2026-08-06 / 2.1.223** — approve。Issue #492 調査済み (release author `ashwin-ant` = 過去 release と同一)。
+  `2.1.222 → 2.1.223` の単一リリース (skip なし)。public repo `anthropics/claude-code` の diff は
+  `chore: Update CHANGELOG.md and feed.xml` の 1 commit のみで、build script / depends に影響なし。
+  **セキュリティ修正複数**: 細工コマンドで一部を permission check から隠せる bash permission bypass、
+  tab / invisible Unicode パディングで承認ダイアログの一部を隠せる permission prompt の問題、
+  workflow script が動的 `import()` で sandbox 外コードを実行できた問題、agent definition の
+  `bypassPermissions` mode が org の bypass-permissions disable policy を無視していた permission gap、
+  いずれも修正。**Changed**: `strictKnownMarketplaces`/`blockedMarketplaces` に owner wildcard 対応、
+  `/review` を `/code-review` の alias 化。他バグ修正多数 (breaking change なし)。
+  いずれも upstream CLI 内部挙動の修正で [nekono] の配布物 (prebuilt binary の install のみ) には影響しない。
+  build script / depends / package() / wrapper script / `options=('!strip')` の変更なし。sha256 は raw binary を
+  `curl -sL <url> | sha256sum` で独立実測し issue 記載値と一致確認:
+  - x86_64: `98226474f802e3094d6a86c5ade8883c16206d0fcb5c400b7401c800063e99d7`
+  - aarch64: `60e83d8db0e894d0e54413e5e7daa256d180db660f51e139a51b614fc30cf3ac`
+  PKGBUILD 改変は `pkgver` + 2 sha256 の 3 値のみ。Closes #492。
+
+- **2026-08-06 / 2.1.222** — approve。Issue #486 調査済み (release author `ashwin-ant` = 過去 release と同一)。
+  `2.1.221 → 2.1.222` の単一リリース (skip なし)。npm 配布物 (`install.cjs`/`cli-wrapper.cjs`/`sdk-tools.d.ts`) は
+  2.1.221 と byte-identical、`dependencies: {}` 空・`optionalDependencies` は 8 platform binary package の
+  version 同期のみ。**セキュリティ修正複数**: worktree-isolated session + subagent が main checkout に destructive
+  git command を実行できてしまう問題 (isolation を全 session type の file edit / Bash に適用)、background agent task
+  の `PreToolUse` auto-allow hook が tool restriction を bypass する問題、auto mode で `SendMessage` 経由の他 agent
+  session宛メッセージも dispatch 前に permission classifier 評価するよう変更。**Changed**: Remote Control の
+  auto-start をリポジトリローカル設定から有効化不可に、`/diff` 系 view が workspace の diff driver/textconv を
+  無視し raw git blob content を使うよう変更、**ultraplan 機能削除**。他バグ修正多数 (breaking change なし)。
+  いずれも upstream CLI 内部挙動の修正で [nekono] の配布物 (prebuilt binary の install のみ) には影響しない。
+  build script / depends / package() / wrapper script / `options=('!strip')` の変更なし。sha256 は raw binary を
+  `curl -fsSL <url> | sha256sum` で独立実測し issue 記載値と一致確認 (GitHub Release `SHASUMS256.txt` とも一致):
+  - x86_64: `10caae8f22b915c26bfff0e013a4d45608c4f1ae287583626569156f447730e5`
+  - aarch64: `a04be0a8d7fe0259571ab7411d51d85658d71a4a26ce62b60c908290372e6016`
+  PKGBUILD 改変は `pkgver` + 2 sha256 の 3 値のみ。Closes #486。
+
+- **2026-08-04 / 2.1.221** — approve。Issue #479 調査済み (release author `ashwin-ant` = 過去 release と同一)。
+  `2.1.220 → 2.1.221` の単一リリース (skip なし)。npm 配布物 (`install.cjs`/`cli-wrapper.cjs`/`sdk-tools.d.ts`) は
+  2.1.220 と byte-identical、`dependencies: {}` 空・`optionalDependencies` は 8 platform binary package の
+  version 同期のみ。**Fixed (permission-check bypass 系、実質セキュリティ修正)**: zsh `[[ ]]` regex 条件内での
+  隠しコマンド実行によるBash tool permission-check bypass 修正、Windows PowerShell の引用符含みパスの
+  permission check 誤判定修正。**Added**: VSCode Focus view、Linux/WSL sandbox credential `mode: "mask"`、
+  `claude plugin validate` warning 追加。**Changed**: background session の commit/push 挙動、`/plugin install`
+  の marketplace catalog auto-refresh、`/fork` の独自 worktree 化。breaking change / CVE 番号の明記なし、
+  いずれも upstream CLI 内部挙動の修正で [nekono] の配布物 (prebuilt binary の install のみ) には影響しない。
+  build script / depends / package() / wrapper script / `options=('!strip')` の変更なし。sha256 は raw binary を
+  `curl -fsSL <url> | sha256sum` で独立実測し issue 記載値と一致確認:
+  - x86_64: `60db8e88d42c24b5199c92cfd56ec88370c510c3789c6f364af748354f087ada`
+  - aarch64: `d3c59d6bcc4adcf4cd85abca3bc13fa1131a34cb32f982bdf030d83a3b11e700`
+  PKGBUILD 改変は `pkgver` + 2 sha256 の 3 値のみ。Closes #479。
+
+- **2026-07-27 / 2.1.220** — approve。Issue #440 調査済み (release author `ashwin-ant` = v2.1.218/2.1.219/2.1.220 いずれも過去 release と同一)。
+  upstream 本体は closed-source binary のため公開 GitHub diff は `CHANGELOG.md`/`feed.xml` のみ、`build()`/`package()`/`depends`/`optdepends`
+  は無変更 (AUR PKGBUILD 側も 2.1.217→2.1.219 で `pkgver`+sha256 の 3 値のみ変更を確認)。
+  release note 要約: 2.1.219 で Opus 5 (`claude-opus-5`) がデフォルト Opus model に、
+  `sandbox.network.strictAllowlist` 設定追加 (非 allowlist host への通信を prompt 無しで拒否できる opt-in hardening)、
+  `DirectoryAdded` hook 追加、nested subagent の default spawn depth 1→3 拡大。2.1.220 は "Bug fixes and
+  reliability improvements" のみで詳細差分記載なし。breaking change 実質無し (Opus 4.7 の fast mode 除外のみ)。
+  sha256 は raw binary を `curl -fsSL <url> | sha256sum` で独立実測し issue 記載値・GitHub Release
+  `SHASUMS256.txt` の両方と一致確認 (x86_64: `674f61f20ff306f3100cf9200e4c36c4b70278b5bef2884549819b942a89c863` /
+  aarch64: `159e4a51d796f3bf14677577100f7efb845611b1ceaf0c30cbd8d4650d942185`)。
+  `pkgver` + sha256 (x86_64/aarch64) の 3 値のみの機械的更新。
+- **2026-07-23 / 2.1.218** — approve。Issue #432 調査済み (release author `ashwin-ant` = 過去 release と同一)。
+  build script 変化なし (`install.cjs`/`cli-wrapper.cjs` は 2.1.217 と byte-identical、`sdk-tools.d.ts` は型定義追加のみでサイズ変化)。
+  `dependencies: {}` 空・`optionalDependencies` は 8 platform binary package の version 文字列同期のみ、新規 dep 追加なし。
+  npm 署名 keyid / `_npmUser` (`wolffiex@anthropic.com`) 不変。主にバグ修正・UX 改善リリースで breaking change なし。
+  セキュリティ関連 hardening として `agent frontmatter hooks が untrusted folder から実行されるバグ` 修正 (folder 側の
+  trust 承認が今後必須)、IDE interaction 向け sandbox command restriction 強化、trust dialog のリポジトリ root 明示化。
+  `pkgver` + sha256 (x86_64/aarch64) の 3 値のみの機械的更新、`package()` / `depends` / `optdepends` は無変更。
+  sha256 は raw binary を `curl -fsSL <url> | sha256sum` で独立実測し issue 記載値と一致確認
+  (x86_64: `e12071751a9336b8af1012c103358ff04ac18f9aaff4a738cff7ba5cdfaf63f2` / aarch64:
+  `295fd30481bd03b38450fdec2a6e25bb6472c2074f04b0c4a566cd5988f230bf`、aarch64 は GitHub Release
+  `SHASUMS256.txt` との cross-check のみで実バイナリの直接実測は未実施)。
+- **2026-07-22 / 2.1.217** — approve。Issue #427 調査済み (release author `ashwin-ant` = v2.1.215/2.1.216/2.1.217 いずれも過去 release と同一)。
+  `2.1.214 → 2.1.215 → 2.1.216 → 2.1.217` の連続リリース (スキップ無し)。build() / package() / depends / optdepends は無変更、
+  `pkgver` + sha256 (x86_64/aarch64) の 3 値のみの機械的更新。**セキュリティ修正複数** (v2.1.216: worktree-isolated subagent の
+  `git -C`/`--git-dir` 等経由での共有 checkout 誤操作、`claude daemon stop --any` の stale lockfile 経由 kill、`.claude` symlink
+  経由の repo 外書き込み、MCP 再認証時の credential 早期 revoke。v2.1.217: 切り詰め MCP tool output の memory leak、symlink化
+  working directory 未 canonicalize による background session の sandbox escape、corporate mTLS/proxy 設定の Desktop 無視、
+  telemetry override の scope 漏れ。加えて subagent 同時実行数上限 (`CLAUDE_CODE_MAX_CONCURRENT_SUBAGENTS`) + nested spawn
+  デフォルト禁止で暴走 fan-out 対策)。sha256 は raw binary を `curl -sL <url> | sha256sum` で独立実測し issue 記載値と一致確認
+  (x86_64: `2630fc5dc6db61bc03f86b95daf47766e5ed5b61873f7bb7cfea764c5ac5a9ba` / aarch64:
+  `40c53507ac669c1d438366c19760c22f52748a06e50e0fc0e353d2cb73425597`)。
+- **2026-07-18 / 2.1.214** — approve。Issue #415 調査済み (release author `ashwin-ant` = v2.1.212/2.1.214 とも過去 release と同一)。
+  `2.1.211 → 2.1.212 → 2.1.214` の連続リリース (`v2.1.213` は GitHub タグ無し、スキップ)。
+  v2.1.212 は `/fork` の挙動変更 (background session へ conversation copy、旧来の in-session subagent 起動は `/subtask` に分離)、
+  `WebSearch`/subagent 起動数の暴走ループ対策上限追加、MCP tool call 2 分超の自動 background 化、**セキュリティ修正 2 件**
+  (plan mode での file 変更系 Bash の auto-run バグ、`.claude/worktrees` symlink 経由の repo 外 file 作成バグ)。
+  v2.1.214 は **セキュリティ修正多数** (単一segment `dir/**` allow rule の意図しない any-depth auto-approve、
+  Windows PowerShell 5.1 の permission-check bypass、bash と異なる解釈の fd redirect に対する fail-closed 化、
+  10,000 文字超コマンドの permission check 素通り、zsh variable subscript/`[[ ]]` modifier の inert text 扱い、
+  危険な option/command substitution を含む `help`/`man` の auto-approve、remote session での permission prompt 順序、
+  docker/podman daemon-redirect flag への permission prompt 追加) + `EndConversation` tool 新設。
+  いずれも upstream CLI 内部挙動の修正で [nekono] の配布物 (prebuilt binary の install のみ) には影響しない。
+  hook `if:` の単一segment `dir/**` 条件が any-depth match しなくなる設定変更があるが、これは claude-code 自体の
+  build/package には無関係 (ansible-nekonodesk 側の dotfiles 運用で確認要、と Issue 側に記載)。breaking change なし。
+  build script / depends / package() / wrapper script / `options=('!strip')` の変更なし。sha256 は
+  `downloads.claude.ai` raw binary 直接実測で確認:
+  - x86_64: `3c029136f7c81f54ed4a38e9d52e655aad536433dbbde50519c8c31bb646ad14`
+  - aarch64: `4c38f26a57a42619ee813f15dc39fc1fa4fe0bb403215c3cdc342b58fa689c3c`
+  PKGBUILD 改変は `pkgver` + 2 sha256 の 3 値のみ。Closes #415。
+
+- **2026-07-17 / 2.1.211** — approve。Issue #407 調査済み (release author `ashwin-ant` = 過去 release と同一、source URL `downloads.claude.ai` 不変、npm `_npmUser` `wolffiex@anthropic.com` 不変・maintainer 13 名不変、`dependencies: {}` 空・`optionalDependencies` は platform binary の version 同期のみ・`install.cjs`/`cli-wrapper.cjs` は 2.1.210 と byte-identical・新規 postinstall / typosquat 依存なし)。
+  `2.1.210 → 2.1.211` の単一リリース (skip なし)。新機能 `--forward-subagent-text` フラグ、
+  permission preview の bidirectional-override / zero-width / look-alike quote 正規化、
+  auto mode の unsandboxed Bash に対する PreToolUse hook `ask` floor 化、ファイルアップロード検証強化、
+  `.claude/rules/*.md` nested file の setting sources 除外バグ修正等 (いずれも CVE 番号記載なし、
+  upstream CLI 内部挙動の修正で [nekono] の配布物には影響しない)。breaking change なし。
+  build script / depends / package() / wrapper script / `options=('!strip')` の変更なし。sha256 は
+  `downloads.claude.ai` raw binary 直接実測 + GitHub Release `SHASUMS256.txt` (GPG 署名確認可能)
+  展開後 binary との byte 一致で二重検証:
+  - x86_64: `8272c8a474ac9ea1bc35f19b9f7c7e7dc4dc4eb6d5ad3e484b19335ac72446b2`
+  - aarch64: `1fff7e8f947c07b19d10b1fbf714b7e547e9536253b9b58230d8adbc4624f867`
+  PKGBUILD 改変は `pkgver` + 2 sha256 の 3 値のみ。Closes #407。
+
+- **2026-07-15 / 2.1.210** — approve。Issue #399 調査済み (release author `ashwin-ant` = v2.1.208/2.1.209/2.1.210 いずれも過去 release と同一、source URL `downloads.claude.ai` 不変、npm `dependencies: {}` 空・maintainer 13 名不変、`install.cjs`/`cli-wrapper.cjs` は 2.1.207 と byte-identical・新規 postinstall / typosquat 依存なし)。
+  `2.1.207 → 2.1.208 → 2.1.209 → 2.1.210` の連続リリースを直接 2.1.210 へ bump (Issue #389 = 2.1.208 単独 bump は本 Issue に吸収され supersede、close)。
+  v2.1.208 は screen reader mode 等の新機能 + command substitution permission bypass hardening、v2.1.209 は background session dialog block の単発修正、v2.1.210 は `isolation: 'worktree'` escape 修正 / `ultracode` indirect prompt injection 修正 / Agent tool の indirect prompt injection hardening / `.claude/*` symlink sandbox bypass 修正 (いずれも CVE 番号記載なし、upstream CLI 内部挙動の修正) を含むが、[nekono] の配布物 (prebuilt binary の install のみ) には影響しない。breaking change なし。
+  build script / depends / package() / wrapper script / `options=('!strip')` の変更なし。sha256 は raw binary 直接実測 + GitHub Release `SHASUMS256.txt` 展開後 binary との byte 一致で二重検証:
+  - x86_64: `e7d2ceb53ed4c2ced1fe7fc1c6331c98dc5f7b4c9b2722d9c5fa3dd5dff6f719`
+  - aarch64: `84feb193c1d91f3b5eba836ed47c0e4dee953195abba950917c3e101eff174e8`
+  PKGBUILD 改変は `pkgver` + 2 sha256 の 3 値のみ。Closes #399 (#389 は 2.1.208 単独 bump として既に別 PR で処理・close 済み)。
+
+- **2026-07-15 / 2.1.208** — approve。Issue #389 調査済み (release author `ashwin-ant` = 過去 release と同一、source URL `downloads.claude.ai` 不変、npm `dependencies: {}` 空・`optionalDependencies` は platform binary の version 同期のみ・maintainer 13 名不変 (`_npmUser` `wolffiex` 不変)、`install.cjs`/`cli-wrapper.cjs` は 2.1.207 と byte-identical・新規 postinstall / typosquat 依存なし)。
+  `2.1.207 → 2.1.208` の単一リリース (連続 skip なし)。screen reader mode / `vimInsertModeRemaps` / `CLAUDE_CODE_PROCESS_WRAPPER` 等の新機能、command substitution (`$(…)` 等) を使った permission bypass の hardening (CVE 番号記載なし)、多数のバグ修正 + パフォーマンス改善 (permission rule matcher / MCP tool pool / transcript size) を含むが、いずれも upstream 内部挙動の変更で [nekono] の配布物 (prebuilt binary の install のみ) には影響しない。breaking change なし。
+  build script / depends / package() / wrapper script / `options=('!strip')` の変更なし。sha256 は raw binary 直接実測 + GitHub Release `SHASUMS256.txt` 展開後 binary との byte 一致で二重検証:
+  - x86_64: `125372839bc827ca24dd72382627b291fbca615408d732fe3291bc16723ce7f3`
+  - aarch64: `81e5dd48377bfd3cb733820e4e23f2294c925cba1e52dbeada69f46929f0c4a6`
+  PKGBUILD 改変は `pkgver` + 2 sha256 の 3 値のみ。Closes #389。
+
+- **2026-07-13 / 2.1.207** — approve。Issue #386 調査済み (release author `ashwin-ant` = 過去 release と同一、source URL `downloads.claude.ai` 不変、npm `dependencies: {}` 空・maintainer 不変・`install.cjs`/`cli-wrapper.cjs` は 2.1.205 と byte-identical・新規 postinstall / typosquat 依存なし)。
+  `2.1.205 → 2.1.206 → 2.1.207` の連続リリースを直接 2.1.207 へ bump (Issue #384 = 2.1.206 は本 bump に吸収され supersede、close)。
+  `2.1.206` は `/cd` path suggestion 等の UX 改善、`2.1.207` は non-interactive 実行時の managed settings 同意永続化バグ + plugin hooks/monitors/headersHelper の `${user_config.*}` shell-injection 修正 (security fix 2 件) を含むが、いずれも upstream 内部挙動の修正で [nekono] の配布物 (prebuilt binary の install のみ) には影響しない。CVE 番号記載なし、breaking change なし。
+  build script / depends / package() / wrapper script / `options=('!strip')` の変更なし。 sha256 は raw binary 直接実測 + GitHub Release `SHASUMS256.txt` 展開後 binary との byte 一致で二重検証:
+  - x86_64: `85e7e988a392d859f90802ca21fb26e89d3c9ab527f5ed0b08df3955e34d5c83`
+  - aarch64: `8bc14a284065383460f37981d724b8f7aa7ca93c9849d2fe367e08f03383f454`
+  PKGBUILD 改変は `pkgver` + 2 sha256 の 3 値のみ。 Closes #386, #384。
+
+- **2026-07-10 / 2.1.205** — approve。Issue #377 調査済み (release author `ashwin-ant` 系 = 過去 release と同経路、source URL `downloads.claude.ai` 不変、npm `dependencies: {}` 空・maintainer 不変・新規 postinstall / typosquat 依存なし)。
+  `2.1.204 → 2.1.205` の単一リリース。 npm `install.cjs` / `cli-wrapper.cjs` の diff は **FreeBSD 向け (未公開だった) platform map entry を削除し明示的な非対応メッセージを出すのみ**で、`linux-x64` / `linux-arm64` の解決ロジックに変更なし。 CHANGELOG に CVE/removed/deprecated/breaking の記載なし。
+  build script / depends / package() / wrapper script / `options=('!strip')` の変更なし。 upstream repo に build script は存在せず (closed-source CLI、prebuilt binary 配布のみ)、 package() は raw binary を `install -Dm755` するだけ。 新規 install hook なし。
+  sha256 は raw binary を `downloads.claude.ai/.../linux-{x64,arm64}/claude` から直接 `curl | sha256sum` で **独立再計測** (Issue #377 記載値と byte 一致):
+  - x86_64: `dd8734c0b6a503fe1d17425184e57b397c30bb0337a33f1470d9985febfe5b09`
+  - aarch64: `c1874c85bcd3a88b70439fd50ff5910b7e6ac5371c14dd49d4ccc2878a592d09`
+  PKGBUILD 改変は `pkgver` + 2 sha256 の 3 値のみ。 Closes #377。
+
+- **2026-07-09 / 2.1.204** — approve。Issue #369 調査済み (release author `ashwin-ant` = 過去 release と同一、source URL `downloads.claude.ai` 不変、npm `dependencies: {}` 空・`optionalDependencies` は platform binary の version 同期のみ・maintainer 13 名不変、`install.cjs`/`cli-wrapper.cjs` は 2.1.202 と byte-identical・新規 postinstall / typosquat 依存なし)。
+  `2.1.202 → 2.1.203 → 2.1.204` の連続リリース。 v2.1.203 に **`ANTHROPIC_BASE_URL` drop 修正** (background/agent-view session が shell export した base URL を落として API key が default endpoint に送られ 401 になる問題の hardening、CVE 番号なし) + background/worktree/daemon 系のバグ修正多数 + bundled dependency の lazy load 化で binary size / 起動時メモリを各 ~7MB 削減。 v2.1.204 は headless session の `SessionStart` hook streaming 修正 1 件のみ。 CHANGELOG に CVE/removed/deprecated/breaking の記載なし。
+  build script / depends / package() / wrapper script / `options=('!strip')` の変更なし。 upstream repo に build script は存在せず (closed-source CLI、prebuilt binary 配布のみ)、 package() は raw binary を `install -Dm755` するだけ。 新規 install hook なし。
+  sha256 は **二重に独立検証** (完全一致): (1) `downloads.claude.ai/.../linux-{x64,arm64}/claude` を直接 `curl | sha256sum`、 (2) GitHub Release `v2.1.204` の署名済み `SHASUMS256.txt` に載る `claude-linux-{x64,arm64}.tar.gz` の値 (`f85e3e65…` / `cb6d5fd4…`) と download 実測が一致し、 展開した inner binary の sha256 が (1) と byte 一致:
+  - x86_64: `c8ee1ea69154533c691a68f46abb645196fe7339d26e6fc204cc7f08220139d3`
+  - aarch64: `c37256a8c3998b8675e8385f1ae4677d69bdff1e717c389296eec70e02e317ef`
+  PKGBUILD 改変は `pkgver` + 2 sha256 の 3 値のみ。 Closes #369。
+
+- **2026-07-07 / 2.1.202** — approve。Issue #361 調査済み (release author `ashwin-ant` = 過去 release と同一、source URL `downloads.claude.ai` 不変、npm `dependencies: {}` 空・`optionalDependencies` は platform binary の version 同期のみ・maintainer 13 名不変・新規 typosquat 依存なし)。
+  `2.1.201 → 2.1.202` の単一リリース。 `/config` に "Dynamic workflow size" 設定 (advisory) + workflow telemetry OTel attribute 追加、 残りは bug fix 多数 (Ctrl+R history search クラッシュ、mTLS 証明書ローテ handshake、Remote Control コマンド/画像 drop、SSH 折返し時の login URL hyperlink 化、workflow script の unicode quote 破損等)。 `/review <pr>` を single-pass に戻し multi-agent は `/code-review` に分離。 CHANGELOG に security/CVE/removed/deprecated/breaking の記載なし。
+  build script / depends / package() / wrapper script / `options=('!strip')` の変更なし。 upstream repo に build script は存在せず (closed-source CLI、prebuilt binary 配布のみ)、 package() は raw binary を `install -Dm755` するだけ。 新規 install hook なし。
+  sha256 は raw binary を `downloads.claude.ai/.../linux-{x64,arm64}/claude` から直接 download + `sha256sum` で **独立再計測** (Issue #361 記載値と byte 一致):
+  - x86_64: `71590202249892db3805ecd5b867f831f04b8129eaabd3f9a5bd4ba16b52c839`
+  - aarch64: `de5e0bb28e2b32409444ed4c1431e2931001c05ed270a3dc96c6706b0693867f`
+  PKGBUILD 改変は `pkgver` + 2 sha256 の 3 値のみ。 Closes #361。
+
+- **2026-07-04 / 2.1.201** — approve。Issue #344 調査済み (release author `ashwin-ant` = 過去 release と同一、source URL `downloads.claude.ai` 不変、npm `dependencies: {}` 空・maintainer 13 名不変・新規 typosquat 依存なし)。
+  `2.1.199 → 2.1.200 → 2.1.201` の連続リリース。 v2.1.200 で **デフォルト permission mode が `default` → `Manual` に変更** (挙動変更だが破壊的ではない、`--permission-mode manual` / `"defaultMode": "manual"` は後方互換で受理) + background/daemon 系のバグ修正多数 (`disabledMcpServers` non-array 時の crash 修正、stale `daemon.lock` PID 再利用問題、socket auth token 消失等)。 v2.1.201 は Sonnet 5 harness reminder の内部実装変更。 CHANGELOG に security/CVE/removed/deprecated/breaking の記載なし。
+  build script / depends / package() / wrapper script / `options=('!strip')` の変更なし。 upstream repo に build script は存在せず (closed-source CLI、prebuilt binary 配布のみ)、 package() は raw binary を `install -Dm755` するだけ。 新規 install hook なし。
+  sha256 は **二重に独立検証** (完全一致): (1) `downloads.claude.ai/.../linux-{x64,arm64}/claude` を直接 `curl | sha256sum`、 (2) GitHub Release `v2.1.201` の `claude-linux-{x64,arm64}.tar.gz` (署名済み `SHASUMS256.txt` の値 `0664deaf…` / `9af73a10…` と一致) を展開した inner binary の sha256 が (1) と byte 一致:
+  - x86_64: `a34809a6839fdefff21b9347d7fb5b6b58e6a9cc208a5e62853f29c83eb107a3`
+  - aarch64: `86b2eab34d382c7b428fc2e9f4c97f04e46805e950582472a13eb7d48de60516`
+  PKGBUILD 改変は `pkgver` + 2 sha256 の 3 値のみ。 Closes #344。
+
+- **2026-07-03 / 2.1.199** — approve。Issue #330 調査済み (release author `ashwin-ant` = 過去 release と同一、source URL `downloads.claude.ai` 不変、npm 側 maintainer 13 名・署名 keyid 不変)。
+  `2.1.178 → 2.1.199` の 22 version 分をまとめて追従 (cron 検知間隔が空いたための累積差分)。 v2.1.196 に **security fix 明記** (信頼していない workspace の `.mcp.json` server が自己承認で spawn される問題を修正、`⏸ Pending approval` 表示に変更)、
+  v2.1.178/183/187 も auto mode / sandbox credentials 周りのセキュリティ強化。 v2.1.197 で Claude Sonnet 5 が default に。 v2.1.178 で `TeamCreate`/`TeamDelete` tool 削除、 v2.1.198 で `/agents` wizard 削除 (いずれも実験的機能、 nekono の build/package には無関係)。
+  build script / depends / package() / wrapper script / `options=('!strip')` の変更なし。 npm `dependencies: {}` (外部依存なし) / `optionalDependencies` は platform binary の version 同期のみで新規 typosquat なし。 新規 install hook なし。
+  sha256 は raw binary を直接 download + `sha256sum` で **独立再計測** (Issue #330 記載値・GitHub Release cross-check と一致):
+  - x86_64: `b31dfd5e3dee23b51c42e0d8ddb405148978237d3aabc8cbbf77c5cf83367e27`
+  - aarch64: `14851b5170b154b01baca09bba970172e70cdd768b5a012bf347ba0f594b4ad3`
+  PKGBUILD 改変は `pkgver` + 2 sha256 の 3 値のみ。 Closes #330。
+
+- **2026-06-13 / 2.1.177** — approve。Issue #215 調査済み (release author `ashwin-ant` = 過去 release と同一、source URL `downloads.claude.ai` 不変)。
+  `2.1.174 → 2.1.175 → 2.1.176 → 2.1.177` の連続リリース (スキップなし)。 v2.1.176 に **セキュリティ強化** あり (hook `if` 条件の
+  ファイルパスパターン `Edit(src/**)` / `Read(~/.ssh/**)` / `Read(.env)` 等がドキュメント通り機能していなかった問題の修正、
+  `availableModels` 強制適用バイパス・`/fast` の allowlist 外切替の修正)。 v2.1.175 で `enforceAvailableModels` managed setting 追加、
+  v2.1.177 は release notes 空 body だが binary に実コード変更を含む genuine release。
+  build script / depends / package() / wrapper script / `options=('!strip')` の変更なし。 breaking change / 削除 / 新規 install hook なし。
+  sha256 は raw binary を直接 `curl | sha256sum` で **独立再計測** (Issue #215 記載値と一致確認):
+  - x86_64: `ff41753634b20c869ef6a32a20863521b33d4186ac0d6a49379ab48a48395ee7`
+  - aarch64: `baf3926dc166215772f959e367da9784ff4c75157aaafe4524fdc79ebff984b1`
+  PKGBUILD 改変は `pkgver` + 2 sha256 の 3 値のみ。 Closes #215。
+
+- **2026-06-12 / 2.1.174** — approve。Issue #200 調査済み (release author `ashwin-ant` = 過去 release と同一、source URL `downloads.claude.ai` 不変)。
+  v2.1.173 はタグなし (スキップ)。バグ修正・UX 改善リリース。**セキュリティ修正** あり (バックグラウンドセッションが別セッションの
+  `ANTHROPIC_*` 環境変数をデーモン起動元シェルから引き継ぐ問題)。 ほか `/model` ピッカー修正 / Bedrock GovCloud 推論プロファイル修正 /
+  シェル中断直後の終了ハング修正等。 breaking change / 削除 / 新規 install hook なし。
+  build script / depends / package() / wrapper script の変更なし。 npm dependencies は両版とも空 `{}`。
+  sha256 は raw binary を直接 `curl | sha256sum` 実測 (Issue #200 記載値と独立再計測で一致確認、 upstream SHASUMS256.txt との照合も Issue 側で済み):
+  - x86_64: `08a7c90925cc622003a94b813ae0fc544c08776f6d890532f6212e15962899a8`
+  - aarch64: `397896495a6cb90376e00797f1520af959b4ac1b9dddf7af9127b8cec1010071`
+  PKGBUILD 改変は `pkgver` + 2 sha256 の 3 値のみ。 Closes #200。
+
+- **2026-06-11 / 2.1.172** — approve。Issue #196 調査済み (release author `ashwin-ant` = 過去 release と同一、source URL `downloads.claude.ai` 不変)。
+  v2.1.171 はタグなし (スキップ)。sub-agent の多段生成 (最大 5 階層) / Bedrock region 自動検出 (`~/.aws` config) / workflow validation 修正
+  (script 内 `Date.now()` / `Math.random()` 文字列の誤検知) / 1M コンテキスト auto-compact スタック修正等。
+  breaking change / security fix なし。 build script / depends / package() / wrapper script の変更なし。
+  sha256 は raw binary を直接 `curl | sha256sum` 実測 (Issue #196 記載値と独立再計測で一致確認):
+  - x86_64: `c0915dd1691d569aeebc7978b12e029718323685ec0dd4b5c6a453108d6be1f7`
+  - aarch64: `4ef0d735bd4180c3bffc381f6dc38df979229a8637d294be751c6043d93d12e1`
+  PKGBUILD 改変は `pkgver` + 2 sha256 の 3 値のみ。 Closes #196。
+
+- **2026-06-10 / 2.1.170** — approve。Issue #187 (+ #185) 調査済み (release author `ashwin-ant` = 過去 release と同一、source URL `downloads.claude.ai` 不変)。
+  `2.1.168 → 2.1.169 → 2.1.170` の連続リリース (スキップなし)。 v2.1.169 で **セキュリティ修正** (信頼されていない project settings が
+  trust 確認なしに OTEL クライアント証明書パスを設定できた脆弱性) + `--safe-mode` フラグ / `/cd` コマンド / `disableBundledSkills` 設定の追加、
+  v2.1.170 で Claude Fable 5 (Mythos) 導入 + VS Code 統合ターミナル等から起動時に transcript が保存されず `--resume` に出ないバグ修正。
+  build script / depends / package() / wrapper script の変更なし。 breaking change / 削除なし。 install hook / `curl|sh` 等の新規追加なし。
+  sha256 は raw binary を直接 `curl | sha256sum` 実測:
+  - x86_64: `849e007277a0442ab27570d3e3d6d43787507946590e8dd1947e5a39b7081f9e`
+  - aarch64: `1bb9d032440a75532f7dd4cafbc687f220aaf16c63eba17e192dfbec2f04bd25`
+  PKGBUILD 改変は `pkgver` + 2 sha256 の 3 値のみ。 Closes #187 #185。
+
+- **2026-06-07 / 2.1.168** — approve。Issue #182 調査済み (release author `ashwin-ant` = 過去 release と同一、source URL `downloads.claude.ai` 不変)。
+  release notes は "Bug fixes and reliability improvements" の汎用テキストのみ (= 2.1.167 と同文)、 breaking change / 削除 / security fix の言及なし。
+  binary サイズが 2.1.167 比で微増 (linux-x64.tar.gz: 74,641,738 → 74,643,179 bytes) のため実コード変更を含む genuine release。
+  build script / depends / package() / wrapper script の変更なし。 install hook / `curl|sh` 等の新規追加なし。
+  sha256 は build host (nekono-pacman0) で raw binary を直接 `curl | sha256sum` 実測:
+  - x86_64: `e2f7cb50442bdee21bf2686ef3725a6af187a204e46c4af5c12d0f6d76326485`
+  - aarch64: `40d50e7c45742aaa3707fa3628d7f765c55ed503108b6f100513e38d32477aa0`
+  PKGBUILD 改変は `pkgver` + 2 sha256 の 3 値のみ。 Closes #182。
+
+- **2026-06-06 / 2.1.167** — approve。Issue #179 調査済み (release author `ashwin-ant` = 過去 release と同一、source URL `downloads.claude.ai` 不変)。
+  `2.1.163 → 2.1.165 → 2.1.166 → 2.1.167` の連続リリース (`v2.1.164` は GitHub タグ無し)。
+  バグ修正・信頼性向上が中心。 v2.1.166 で **セキュリティ強化** (`SendMessage` 経由でクロスセッション中継された
+  メッセージがユーザー権限を失う変更、 受信者は中継 permission を auto モードでもブロック) +
+  `fallbackModel` 設定 (最大 3 つ)・deny ルールの glob 対応・`MAX_THINKING_TOKENS=0` で thinking 無効化を追加。
+  build script / depends / package() / wrapper script の変更なし。 breaking change / 削除なし。
+  sha256 は raw binary を直接 `curl | sha256sum` 実測:
+  - x86_64: `d6d2995bfca3f8539d9e9aa513ff43c3daa0d556d6d1af07c6df681e050e522c`
+  - aarch64: `b8f383df1dca557dc8fb817e4e76335639f94a0a8c7b803ca2f5aef12d373f09`
+  PKGBUILD 改変は `pkgver` + 2 sha256 の 3 値のみ。 Closes #179。
+
+- **2026-06-05 / 2.1.163** — approve。Issue #168 調査済み (release author `ashwin-ant` = 過去 release と同一)。
+  バグ修正・UX 改善リリース、 breaking changes / security fix なし。 主な変更:
+  managed settings に `requiredMinimumVersion` / `requiredMaximumVersion` の version 強制ポリシー追加、
+  `/plugin list --enabled` / `--disabled` フィルタ、 `/btw` に "c to copy" ショートカット、
+  Stop / SubagentStop hook の `hookSpecificOutput.additionalContext` 拡張、
+  Skills の `\$` リテラルエスケープ、 stdio MCP の `--resume` 時 `CLAUDE_CODE_SESSION_ID` 受け渡し、
+  `$TMPDIR` オーバーライドのリグレッション修正 (2.1.154)、 Windows read-only / OneDrive ディレクトリの
+  Bash "EEXIST" 修正、 org managed permission rules / `$HOME` deny rule / hook `if:` 条件マッチング修正、
+  Bedrock/Vertex/Foundry + `CI=true` の `claude -p` 修正、 バックグラウンドシェルハング改善。
+  sha256 は raw binary を直接 `curl | sha256sum` 実測:
+  - x86_64: `5dddcb2c091da60cf9b1bef782e6c78a7fada2f2cd3db4f131c9ebc2478fd447`
+  - aarch64: `ca0010a80e3c4749e59c6e8429ec4a4e2ecbaafac36d3535636e04369bbb87c0`
+  PKGBUILD 改変は `pkgver` + 2 sha256 の 3 値のみ。 Closes #168。
+
+- **2026-06-04 / 2.1.162** — approve。Issue #161 調査済み (release author `ashwin-ant` = 過去 release と同一)。
+  バグ修正・UX 改善リリース、security fix なし。主な変更: `claude agents --json` の `waitingFor`
+  フィールド追加、 read-only config dir での起動ハング修正、 WebFetch preapproved ドメインの
+  permission rule 修正、 Windows の permission rule バックスラッシュ正規化、 MCP per-server timeout
+  下限 1s への切り上げ修正、 LSP workspaceSymbol 修正、 `claude agents` UI 修正多数。
+  sha256 は raw binary を直接 `curl | sha256sum` 実測:
+  - x86_64: `947a49b0de8688f6a74a6e753c24771ff3ddd17b2a6dae85f36304ec514e61d1`
+  - aarch64: `eca2a603dfebc3426a8469cbe797f9df95245738bc1c20ec842fc8f80af4010d`
+  PKGBUILD 改変は `pkgver` + 2 sha256 の 3 値のみ。 Closes #161。
+
+- **2026-06-03 / 2.1.161** — approve。 Issue #152 調査済み (release author `ashwin-ant` = 過去 release と同一)。
+  主な変更: Opus 4.8 サポート、 Dynamic Workflows、 plugin auto-loading、
+  **セキュリティ修正複数** (PowerShell `cd` バイパス / managed-settings バイパス / MCP secrets 漏洩 修正)。
+  v2.1.147 / v2.1.152 で `/simplify` → `/code-review` リネーム (breaking)。
+  sha256 は raw binary を直接 `curl | sha256sum` 実測:
+  - x86_64: `1f6a22f387a3bce496b6d869389a35dffb5a69c97d9831833f3bd6dc0e6c6c28`
+  - aarch64: `7dfa0a79a2fc9f332057cdc0302f808cba63df7b75e2ccb5a7c1ab62639804e3`
+  PKGBUILD 改変は `pkgver` + 2 sha256 の 3 値のみ。 Closes #152。
+
+- **2026-05-21 / 2.1.146** — approve。upstream tag commit: Issue #92 調査済み (release author `ashwin-ant`)。
+  バグ修正リリース (`/simplify` → `/code-review` リネーム、MCP paginating 修正、GNOME Terminal paste 修正 等)。
+  セキュリティ修正なし。sha256 は Issue #92 の供給値 (upstream `SHASUMS256.txt` cross-check 済み):
+  - x86_64: `825d5301380f1f5f466c5268de25a062927be658938fc1d630cfa02c521b8185`
+  - aarch64: `af25334c7a2632a531b34e3f4c0d69763b997149d31d5f0d748e44813758806f`
+  PKGBUILD 改変は `pkgver` + 2 sha256 の 3 値のみ。Closes #92。
+
+- **2026-05-21 / 2.1.145** — approve。upstream tag commit: Issue #72 調査済み。
+  **セキュリティ修正** (パーミッションプロンプトバイパス脆弱性を修正)。
+  release author は `ashwin-ant` (= 2.1.144 と同一)。sha256 は Issue #72 の
+  供給値 (= upstream `SHASUMS256.txt` と cross-check 済み):
+  - x86_64: `b3ffbc12689bfe81389d6577787fcea4cab81bd3b6bba9b719e73770b62d720e`
+  - aarch64: `75ad61d690d79440c82b5841444e1b42caae55736af37c97dd0e068ef20ce390`
+  PKGBUILD 改変は `pkgver` + 2 sha256 の 3 値のみ。Closes #72。
+
+- **2026-05-19 / 2.1.144** — approve。 upstream tag commit:
+  `69d707009ec5a9362ea3552b0580d0f658428f0a`。 主にバグ修正リリース (= breaking
+  changes / security fix なし)。 release author は `ashwin-ant` (= 2.1.143 と同一)。
+  Issue #38 (upstream-version-issue.yml) で `downloads.claude.ai` の binary を
+  GitHub Release の `SHASUMS256.txt` (= 同 author 公開) と cross-check 完全一致確認:
+  - x86_64: `147480774472e5720fd5e83617b3e9299344e7213efa84c326b25bd5a0f20b4e`
+  - aarch64: `c8ccccbfce12d684588bd3af366394132f614dcf3c86beb2066f86bde2704513`
+
+  PKGBUILD 改変は `pkgver` + 2 sha256 の 3 値のみ、 `package()` / wrapper script
+  / depends は無変更。 `/extra-usage` → `/usage-credits` のリネームと
+  `--bg` バックグラウンドセッション関連の改善が主。
+
+- **2026-05-17 / 2.1.143** — approve。upstream diff は CHANGELOG.md 追記 1
+  commit のみ、build script / depends / install script 変化なし。Issue #23
+  (upstream-version-issue.yml の事前調査) + PR #32 (claude-review.yml の独立
+  sha256 実測) で両アーキ一致確認。release author は `ashwin-ant` (Anthropic
+  社員、過去 release と同経路)。
+- **2026-05-15 / 2.1.142** — approve (初回 fork + review)。当時の sha256
+  実測値: `1249a1dadfe2d48f320bd4e1b657a1a0d82435da76deb11ce509822407cf24ec`
+  (x86_64) / `767b13fc28763ca9d663b00f90e501f134b356f1b72dcf0eea59b7e3bed86411`
+  (aarch64)。
