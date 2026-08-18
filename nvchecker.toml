@@ -119,6 +119,16 @@ github = "localsend/localsend"
 use_latest_release = true
 prefix = "v"
 
+[vikunja-bin]
+# Vikunja (self-hosted To-Do list / task manager)。source[] は github release
+# 本体ではなく dl.vikunja.io の CDN tarball だが、pkgver は go-vikunja/vikunja
+# の release tag と同期しているので version 監視はこちらを見る。release tag は
+# "vX.Y.Z" 形式なので prefix "v" を strip。
+source = "github"
+github = "go-vikunja/vikunja"
+use_latest_release = true
+prefix = "v"
+
 [sunshine-bin]
 # Sunshine (LizardByte) = Moonlight 用セルフホスト配信ホスト。moonlight-qt の対
 # (本機自身を配信ホスト化してリモート操作)。release tag は "v<CalVer>" 形式

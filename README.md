@@ -74,6 +74,7 @@
 | `nekonopaw`              | from-source (Go)        | PipeWire → PAM 連携デーモン |
 | `pam_pkcs11`             | from-source (C)         | PIV/PKCS#11 PAM 認証モジュール |
 | `pass-secret-service`    | from-source (Rust)      | pass を D-Bus secrets backend に |
+| `vikunja-bin`            | -bin (Go 静的バイナリ)   | self-hosted To-Do リスト / タスク管理サーバー |
 
 ### 音声・メディア
 
