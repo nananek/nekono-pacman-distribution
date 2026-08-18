@@ -2,7 +2,7 @@
 
 ## 状態
 
-**review 済み、approve** (復活: 2026-08-17 / 2.1.233)
+**review 済み、approve** (最新: 2026-08-18 / 2.1.234、復活: 2026-08-17 / 2.1.233)
 
 AUR の `claude-code` PKGBUILD を fork。改変なし。各 release の review 履歴は
 本ファイル末尾の「更新履歴」 section 参照。
@@ -28,16 +28,16 @@ AUR の `claude-code` PKGBUILD を fork。改変なし。各 release の review 
 
 ## 検証結果
 
-- [x] `source_x86_64` URL = `downloads.claude.ai/claude-code-releases/2.1.233/linux-x64/claude`
+- [x] `source_x86_64` URL = `downloads.claude.ai/claude-code-releases/2.1.234/linux-x64/claude`
   - Anthropic 公式 CDN、典型的な mirror spoof / DNS hijack に脆弱だが TLS で守られる
-- [x] `source_aarch64` URL = `downloads.claude.ai/claude-code-releases/2.1.233/linux-arm64/claude`
+- [x] `source_aarch64` URL = `downloads.claude.ai/claude-code-releases/2.1.234/linux-arm64/claude`
   - 同上
 - [x] `sha256sums_x86_64` が upstream binary と一致
-  - 実測 (2.1.233): `55d281096f57d411ebbdd94dbf5e9ff3accb7c05713e37348c2c11d4b83bf9d9`
-  - PKGBUILD 値: 一致 (AUR 記載値 + 本 review 時の `curl | sha256sum` 独立再計算で確認)
+  - 実測 (2.1.234): `3473601ea695d5bf769c5b202844d4cb4fbf723ae995450fcb6973204775c84a`
+  - PKGBUILD 値: 一致 (本 review 時の `curl | sha256sum` 独立再計算で確認)
 - [x] `sha256sums_aarch64` が upstream binary と一致
-  - 実測 (2.1.233): `42df1841f74e9b2ac13f2c1a2a820ef6b9ac5b2efb8646bb25c9a92b8bd69194`
-  - PKGBUILD 値: 一致 (AUR 記載値 + 本 review 時の `curl | sha256sum` 独立再計算で確認)
+  - 実測 (2.1.234): `24adda673591cd8345b03ec8245915bb151a259a1ebc3ef23649b57ba944aaa2`
+  - PKGBUILD 値: 一致 (Issue #548 記載値。aarch64 は build host が x86_64 のため実バイナリの直接実測は未実施、Issue 側の cross-channel 検証 (SHASUMS256.txt + tarball 展開後 byte 一致) に依拠)
 - [x] `source=("cc-legal::...legal-and-compliance.md")` の sha256 は `SKIP`
   - 法文 markdown は string、binary としては実行されないので SKIP は許容
   - 内容 churn が頻繁な doc に sha pin は意味薄い
@@ -82,6 +82,22 @@ upstream の新 release (2.1.143 等) が出たら:
    1 行追記
 
 ## 更新履歴
+
+- **2026-08-18 / 2.1.234** — approve。Issue #548 調査済み (release author `ashwin-ant` = 過去 release と同一)。
+  `2.1.233 → 2.1.234` の単一リリース (skip なし)。AUR 側 PKGBUILD も既に同 version に追従済みで
+  `depends`/`optdepends`/`options=('!strip')`/`package()` は本 repo の現行 PKGBUILD と完全一致確認、
+  build script / depends の改変不要。**セキュリティ強化**: remote file reads / session restore /
+  CLAUDE.md includes / workflow scripts / file uploads で Windows NT-namespace (`\??\`) パスを reject
+  するようになった (2.1.233 で入った NTLM credential-leak vector 対策の残りの経路を追加で塞ぐもの)。
+  新機能 (`CLAUDE_CODE_PROJECT_DIR_NAME` 環境変数、`selection:clear` keybinding、GitLab MR バッジ、
+  usage limit reset 時の自動セッション再開) やバグ修正多数を含むが、いずれも upstream CLI 内部挙動の
+  変更で [nekono] の配布物 (prebuilt binary の install のみ) には影響しない。breaking change は
+  `/config` の「Default teammate model」設定削除のみで install/配布形態に無関係。sha256 は raw binary を
+  `curl -fsSL <url> | sha256sum` で独立実測し Issue 記載値 (= AUR 最新値、GitHub Release
+  `SHASUMS256.txt` とのクロスチャネル検証済み) と一致確認:
+  - x86_64: `3473601ea695d5bf769c5b202844d4cb4fbf723ae995450fcb6973204775c84a`
+  - aarch64: `24adda673591cd8345b03ec8245915bb151a259a1ebc3ef23649b57ba944aaa2`
+  PKGBUILD 改変は `pkgver` + 2 sha256 の 3 値のみ。Closes #548。
 
 - **2026-08-17 / 2.1.233** — approve。**retire 復活** (2026-08-11 retire, PR #523 → 本 PR で再導入)。
   `2.1.227 → 2.1.233` の累積 bump (release は 2.1.228 / 2.1.229 / 2.1.231 / 2.1.232 / 2.1.233
