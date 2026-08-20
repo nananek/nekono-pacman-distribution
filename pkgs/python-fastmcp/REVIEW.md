@@ -2,7 +2,7 @@
 
 ## 状態
 
-**review 済み、 approve** (最新: 2026-06-06 / 3.4.2)
+**review 済み、 approve** (最新: 2026-08-20 / 3.4.7)
 
 AUR の `python-fastmcp` PKGBUILD を fork (+ 3.3.x の package split 対応)。
 
@@ -107,3 +107,4 @@ upstream で新 release (= v3.2.5 等) が出たら:
 | 2026-08-01 | 3.4.4-6 | (this PR) | — (pkgrel bump のみ) | `pkgrel` +1 (cascade: [nekono] dep rebuilt): python-py-key-value-aio 0.4.4-22 → 0.4.4-23 rebuild に追随 (build-all の cascade-warn 由来) |
 | 2026-08-04 | 3.4.4-7 | bot PR #475 | — (pkgrel bump のみ) | `pkgrel` +1 (deps changed): python-anyio 4.14.1-1 → 4.14.2-1, python-multipart 1.3.1-1 → 2.0.0-1, python-openai 2.29.0-1 → 2.45.0-1, python-opentelemetry-api 1.43.0-1 → 1.44.0-1, python-platformdirs 4.10.0-1 → 4.11.0-1, python-setuptools 1:82.0.1-1 → 1:83.0.0-1, python-websockets 16.0-1 → 16.1.1-1, uvicorn 0.49.0-1 → 0.52.0-1 |
 | 2026-08-06 | 3.4.4-8 | (this PR) | — (pkgrel bump のみ) | `pkgrel` +1 (cascade: [nekono] dep rebuilt): python-mcp 1.28.1-2 → 1.28.1-3 + python-py-key-value-aio 0.4.4-24 → 0.4.4-25 rebuild に追随 (build-all の cascade-warn 由来) |
+| 2026-08-20 | 3.4.7-1 | (this commit) | `PrefectHQ/fastmcp v3.4.7` (tag `v3.4.7`, `jlowin`, verified) | safe-to-bump: 3.4.4 → 3.4.7 (3 releases: 3.4.5 JWKS unsupported key skip fix + 4 fixes, 3.4.6 trusted proxy SSRF fix, 3.4.7 CIMD private_key_jwt audience fix = security). PyPI sdist diff で `pyproject.toml` (dependencies/build-system) byte 一致、build()/package()・depends/makedepends 変更なし、sha256 (slim `06b32a...`/meta `43117a...`) は PyPI JSON API + curl 実測で独立検証 (手動 nvchecker, GitHub Actions 停止中)。`pkgrel` reset 8→1。 |
