@@ -351,3 +351,12 @@ prefix = "v"
 source = "github"
 github = "VOICEVOX/voicevox"
 use_latest_release = true
+
+[aria-bin]
+# Misskey client aria (Flutter)。 poppingmoon/aria の GitHub Release から
+# linux tarball を取得する自家 PKGBUILD (AUR 不在、 miria-bin fork 元)。
+# release tag は "vX.Y.Z" 形式なので prefix "v" を strip。
+source = "github"
+github = "poppingmoon/aria"
+use_latest_release = true
+prefix = "v"
