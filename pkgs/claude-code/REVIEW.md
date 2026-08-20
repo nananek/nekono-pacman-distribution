@@ -2,7 +2,7 @@
 
 ## 状態
 
-**review 済み、approve** (最新: 2026-08-18 / 2.1.234、復活: 2026-08-17 / 2.1.233)
+**review 済み、approve** (最新: 2026-08-20 / 2.1.237、復活: 2026-08-17 / 2.1.233)
 
 AUR の `claude-code` PKGBUILD を fork。改変なし。各 release の review 履歴は
 本ファイル末尾の「更新履歴」 section 参照。
@@ -28,16 +28,16 @@ AUR の `claude-code` PKGBUILD を fork。改変なし。各 release の review 
 
 ## 検証結果
 
-- [x] `source_x86_64` URL = `downloads.claude.ai/claude-code-releases/2.1.234/linux-x64/claude`
+- [x] `source_x86_64` URL = `downloads.claude.ai/claude-code-releases/2.1.237/linux-x64/claude`
   - Anthropic 公式 CDN、典型的な mirror spoof / DNS hijack に脆弱だが TLS で守られる
-- [x] `source_aarch64` URL = `downloads.claude.ai/claude-code-releases/2.1.234/linux-arm64/claude`
+- [x] `source_aarch64` URL = `downloads.claude.ai/claude-code-releases/2.1.237/linux-arm64/claude`
   - 同上
 - [x] `sha256sums_x86_64` が upstream binary と一致
-  - 実測 (2.1.234): `3473601ea695d5bf769c5b202844d4cb4fbf723ae995450fcb6973204775c84a`
-  - PKGBUILD 値: 一致 (本 review 時の `curl | sha256sum` 独立再計算で確認)
+  - 実測 (2.1.237): `73975167f0108693cf6fd6614994781657ebb8456ebef5d247458734abfb3916`
+  - PKGBUILD 値: 一致 (本 review 時の `curl | sha256sum` 独立再計算で確認、2.1.235/2.1.236 も経由で連続検証)
 - [x] `sha256sums_aarch64` が upstream binary と一致
-  - 実測 (2.1.234): `24adda673591cd8345b03ec8245915bb151a259a1ebc3ef23649b57ba944aaa2`
-  - PKGBUILD 値: 一致 (Issue #548 記載値。aarch64 は build host が x86_64 のため実バイナリの直接実測は未実施、Issue 側の cross-channel 検証 (SHASUMS256.txt + tarball 展開後 byte 一致) に依拠)
+  - 実測 (2.1.237): `a701cfb6bb4703abc6f3ce47508c878ca8158ebdbeacd5c35c7d510c7bc70177`
+  - PKGBUILD 値: 一致 (本 review 時の `curl | sha256sum` 独立再計算で確認、2.1.235/2.1.236 も経由で連続検証)
 - [x] `source=("cc-legal::...legal-and-compliance.md")` の sha256 は `SKIP`
   - 法文 markdown は string、binary としては実行されないので SKIP は許容
   - 内容 churn が頻繁な doc に sha pin は意味薄い
@@ -82,6 +82,12 @@ upstream の新 release (2.1.143 等) が出たら:
    1 行追記
 
 ## 更新履歴
+
+- **2026-08-20 / 2.1.237** — approve。手動 nvchecker 相当の upstream 監視で `2.1.234 → 2.1.235 → 2.1.236 → 2.1.237` の 3 release 連続差分を一括 bump (GitHub Actions の `upstream-version-issue.yml` が停止中のため手動で調査)。全て release author `ashwin-ant` = 過去 release と同一、source URL (`downloads.claude.ai`) / `depends`/`optdepends`/`options=('!strip')`/`package()` は無変更、AUR 側 PKGBUILD も同 version 追従済みで `pkgver`+sha256 の 3 値のみ差分確認。2.1.235 は spellcheck 設定追加 + プロンプト/権限ダイアログ/UI の細かいバグ修正多数。2.1.236 は `ANTHROPIC_DEFAULT_MODEL` 環境変数/`notify_when_idle` 追加 + sandbox/macOS wildcard deny 強化 + `/model` picker 等の UX 修正、2.1.237 は LLM gateway 時の prompt caching 修正 + "Concise" output style 追加の small fix。いずれも upstream CLI 内部挙動の変更で [nekono] の配布物 (prebuilt binary の install のみ) には影響しない、breaking change なし、supply-chain 変化なし (sha は `curl -fsSL <url> | sha256sum` で 2.1.235/236/237 の 3 version ×2 arch を独立実測、GitHub Release `v2.1.235`/`v2.1.236`/`v2.1.237` の body と author を `gh api repos/anthropics/claude-code/releases/tags/v<ver>` で確認):
+  - 2.1.235: x86_64 `bfcf0ae2dbf94b2b6a106074aabf3938b9a10889c3b678e4cb5a00c03274d5d5` / aarch64 `cff9592faa292db0f6ac21874f151b8c3d44e23bf0ab9fd1bcca95edc3469549`
+  - 2.1.236: x86_64 `6c8818fa22187aa555c242be4abbacc44d6b71a32ac9631ee7b2b5d12f51f752` / aarch64 `c38d37deaf1643083326c48a6acc0afb09dada126e6bda77ef1a4410ae60ca12`
+  - 2.1.237: x86_64 `73975167f0108693cf6fd6614994781657ebb8456ebef5d247458734abfb3916` / aarch64 `a701cfb6bb4703abc6f3ce47508c878ca8158ebdbeacd5c35c7d510c7bc70177`
+  PKGBUILD 改変は `pkgver` + 2 sha256 の 3 値のみ。手動バンプのため Closes は無し (nvchecker 手動実行)。
 
 - **2026-08-18 / 2.1.234** — approve。Issue #548 調査済み (release author `ashwin-ant` = 過去 release と同一)。
   `2.1.233 → 2.1.234` の単一リリース (skip なし)。AUR 側 PKGBUILD も既に同 version に追従済みで
