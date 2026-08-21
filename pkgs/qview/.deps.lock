@@ -4,5 +4,5 @@
 # Format: 1 line per package: <name>=<full-version>
 
 hicolor-icon-theme=0.18-1
-qt6-base=6.11.1-1
-qt6-tools=6.11.1-4
+qt6-base=6.11.2-2
+qt6-tools=6.11.2-1
