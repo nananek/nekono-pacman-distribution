@@ -27,17 +27,20 @@ block から drop 済み (= build 完了後に Self-hosted block へ移行)。
 
 ## 検証結果
 
-- [x] `source` URL = `github.com/saivert/pwvucontrol/archive/refs/tags/0.5.2.tar.gz`
-  - upstream tag `0.5.2` (saivert/pwvucontrol)、AUR と同じ正規 release
+- [x] `source` URL = `github.com/saivert/pwvucontrol/archive/fd5c9d1e5458b625d45e4159634b5b072f66cde1/...`
+  - mutable な upstream tag `0.5.3` ではなく、再リリース後の commit を固定
+  - commit `fd5c9d1e5458b625d45e4159634b5b072f66cde1` は upstream maintainer
+    saivert による `Update cargo lock`。実際の SHA は下記履歴に記録
 - [x] `b2sums` (BLAKE2b-512) 独立検証
-  - 実測: `fb749511f886a0481edc5e6d8312241503d133724f316a76dfc1c3222c1b1874d4ed332fe847b358340cef8258ca04e56bd33ed2a72a713cacf8e06f992a7031`
-    (= `curl -fsSL <url> | b2sum` で tarball から計算)
+  - 実測: `a00b69ae226be9d4103ebf0de0a2566e3a47bb46b750b11d5a24057078be005876edc4095121393a5e4c4c6d47966a6c491803c4e08bf3d6b4c21314805d9492`
+    (= commit 固定 tarball を `b2sum` で計算)
   - PKGBUILD 値と一致
   - BLAKE2 は暗号学的に強固で破綻なし (pam_pkcs11 #14 の md5 → sha256
     のような置換は不要)
-- [⚠] Tag `0.5.2` の GPG 検証は未実施 (= saivert は commit signing を
-      運用していない様子)。tarball b2sum pin + GitHub release CI で
-      integrity 確保
+- [⚠] upstream は release 後に `0.5.3` tag を別 commit へ移動しており、
+      旧 tag の `Cargo.lock` / `build-aux/cargo-sources.json` と現在 tag の
+      lockfile が異なる。現在の commit は同一 maintainer による crate lock 更新で、
+      build script や runtime code の追加は確認できないが、commit signature は未検証。
 - [x] `build()`: `arch-meson --reconfigure && meson compile` — meson 標準、
       network fetch / eval / 動的コマンド構築なし
 - [x] `check()`: `meson test --print-errorlogs` — checkdepends に
@@ -54,8 +57,9 @@ block から drop 済み (= build 完了後に Self-hosted block へ移行)。
 
 ## 結論
 
-**approve** — そのまま build host で `bin/build-all pwvucontrol` で build
-+ sign + repo db 追加可。
+**approve with source pin** — upstream tag の差し替えを受け、commit 固定 source と
+再計算した `b2sums` を採用する。build host で `bin/build-all pwvucontrol` を実行し、
+build + sign + repo db 追加可。
 
 これにより:
 - `apt_packages/vars/Archlinux.yml` の Self-hosted block に `pwvucontrol`
@@ -67,8 +71,8 @@ block から drop 済み (= build 完了後に Self-hosted block へ移行)。
 upstream の新 release (0.5.3 等) が出たら:
 1. AUR PKGBUILD の pkgver / b2sums を確認
 2. 本 dir の PKGBUILD を差し替え
-3. b2sum を独立再計算 (= `curl -fsSL <url> | b2sum` で照合)
-4. tag commit author を GitHub API で確認 (= saivert が変わってないか)
+3. b2sum を独立再計算 (= commit 固定 tarball を `b2sum` で照合)
+4. upstream commit author を GitHub API で確認 (= saivert が変わってないか)
 5. REVIEW.md に確認日 + 結論 update
 
 ## 更新履歴
@@ -84,3 +88,4 @@ upstream の新 release (0.5.3 等) が出たら:
 | 2026-06-29 | 0.5.2-8 | bot PR #307 | — (pkgrel bump のみ) | `pkgrel` +1 (deps changed): libadwaita 1:1.9.1-1 → 1:1.9.2-1 |
 | 2026-07-01 | 0.5.2-9 | bot PR #316 | — (pkgrel bump のみ) | `pkgrel` +1 (deps changed): rust 1:1.96.0-1 → 1:1.96.1-1 |
 | 2026-07-10 | 0.5.3-1 | upstream tag `0.5.3` | upstream tag `0.5.3` | pkgver bump 0.5.2 → 0.5.3 (Issue #375, safe-to-bump)。system color scheme 追従 fix (`gtk::init()` → `adw::init()`)。build()/package()・depends 無変更、b2sums 差し替えのみ。makepkg --verifysource で b2 検証済み |
+| 2026-08-21 | 0.5.3-2 | (this PR) | `fd5c9d1e5458b625d45e4159634b5b072f66cde1` | upstream が `0.5.3` tag を再配置。commit 固定 source、b2sums 更新、pkgrel 1 → 2。Cargo lock の crate 更新のみ、build()/package()/depends 無変更 |
