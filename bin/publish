@@ -74,8 +74,13 @@ rclone_run sync --copy-links --checkers 4 --transfers 4 -v \
 # Pass 2: force-refresh the in-place-mutating db metadata + signatures. Without
 # --ignore-times the same-size *.sig files are skipped and the published sig no
 # longer matches the published db (see header). `copy` never deletes.
+# This applies to BOTH the repo db (nekono.db*) and every detached package
+# signature (*.sig, always 119 bytes) — a rebuilt package with the same
+# filename keeps the same 119-byte size, so `sync` (size-only on WebDAV)
+# would silently keep the stale signature and clients fail
+# "signature is invalid" (regression: 14 stale *.sig on 2026-08-22).
 echo "[*] Publishing (pass 2/2: force db metadata + sigs)"
-rclone_run copy --copy-links --ignore-times --include "nekono.*" -v \
+rclone_run copy --copy-links --ignore-times --include "nekono.*" --include "*.sig" -v \
     /data/x86_64 dist:x86_64
 
 echo "[OK] publish complete"
