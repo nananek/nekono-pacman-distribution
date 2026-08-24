@@ -183,8 +183,15 @@ GitHub には PKGBUILD と build 用スクリプトのみ載る。
 
 ### `upstream-version-issue.yml` (daily, 02:50 UTC = JST 11:50)
 
-**何をする**: 各 pkg の **upstream の新 version** を検知 → Claude が事前
-調査 → **GitHub Issue を立てる** (PR ではない)。
+**何をする**: 各 pkg の **upstream の新 version** を検知 → **決定的な
+(AI 判定を挟まない) GitHub Issue を立てる** (PR ではない)。
+
+旧実装は Claude code action が事前調査 + verdict (safe-to-bump /
+needs-attention / block) を Issue に付与していたが、**pre-push review
+gate (旧 `claude-review.yml` 廃止と同じ理由: Actions 上の AI 判定を repo
+の信頼境界に置きたくない、遅い) に倣い廃止**。 現在は
+`.github/scripts/create_upstream_issue.py` が機械的に Issue を立てるだけで、
+supply-chain 監査 / build script diff / depends 差分確認は行わない。
 
 1. `nvchecker.toml` を元に upstream の latest version を fetch
 2. PKGBUILD の現 `pkgver` と比較 → 差分のある pkg list を出す
@@ -192,16 +199,15 @@ GitHub には PKGBUILD と build 用スクリプトのみ載る。
 3. 各 pkg について matrix job:
    - 冪等性 check: Issue title `[<pkg>] upstream version: <new_pkgver>`
      を fingerprint に `gh issue list --state all` で重複 search、あれば skip
-   - Claude code action が走り:
-     - 新旧 upstream tarball の build script diff
-     - dependency 変更
-     - CHANGELOG / Release notes 要約
-     - **supply-chain 監査** (source URL / sha256 / install script 追加 /
-       maintainer 変化 / 新 dep の typosquat 等)
-     を行い、結果を markdown で Issue 本文に書いて `gh issue create`
-4. **PKGBUILD は触らない**。人間が Issue を読んで build host で手作業更新
-   する。その後 PR を立てると、push 時の pre-push gate (`bin/prepush-review`)
-   が機械チェックし、PR 処理時に人間が judgment review する (= 2 段審査)。
+   - `.github/scripts/create_upstream_issue.py` が現 PKGBUILD の `source=`
+     行を引用し、human review checklist (upstream source 確認 / sha256
+     実測 / build 差分確認 / REVIEW.md 更新 等) を書いた Issue 本文を
+     `gh issue create` で投稿
+4. **PKGBUILD は触らない**。upstream 調査 (build script diff / dependency
+   変更 / release notes / supply-chain 監査) は **Issue 処理時に人間
+   (または Claude CLI セッション) が都度実施**する。 その後 PR を立てると、
+   push 時の pre-push gate (`bin/prepush-review`) が機械チェックし、PR
+   処理時に人間が judgment review する (= 2 段審査)。
 
 **新規 pkg を足したら**: ルート `nvchecker.toml` に section 追加が必要。
 ファイルの head コメント参照。
@@ -238,8 +244,9 @@ Arch host で .SRCINFO の depends + makedepends について `pacman -Si <dep>`
 - `.deps.lock` の `# MISSING ...` 行は「Arch 公式 repo に無い (virtual
   provides / AUR-only) ので監視対象外」を意味、`dep_version_check.py` は
   これを silently skip
-- secrets: `CLAUDE_CODE_OAUTH_TOKEN` (workflow A の Claude 起動)、`GITHUB_TOKEN`
-  (default 付与、Issue / PR / git push 用)
+- secrets: `GITHUB_TOKEN` (default 付与、Issue / PR / git push 用)。 両 workflow
+  とも Actions 上で AI (Claude code action) を起動しないため
+  `CLAUDE_CODE_OAUTH_TOKEN` は不要 (repo secret として残っていれば削除可)。
 
 ### PR review 時の個別事情 (人間判断要)
 
@@ -301,13 +308,25 @@ gh pr list --state open  →  deps/<pkg>-pkgrel-<N> の PR を列挙
 gh issue list --state open  →  [<pkg>] upstream version: <new_pkgver> の Issue を列挙
 ```
 
-各 Issue に対して:
+Issue 本文は `.github/scripts/create_upstream_issue.py` が機械的に生成した
+もので、verdict も supply-chain 監査結果も付いていない (現 PKGBUILD の
+`source=` 行の引用 + human review checklist のみ)。**Issue に書かれた
+checklist に沿った調査を Claude 自身がこのセッション内で行い**、その結果
+で以下のように分岐する:
 
-| verdict | Claude の動作 |
+1. upstream の公式 release/tag ページを確認 (source URL が typosquat /
+   domain spoof されていないか)
+2. 新 source の sha256 を実測して pin 候補を得る
+3. 新旧 upstream tarball の `build()`/`package()`/`prepare()` に影響する
+   ファイル (Makefile / Cargo.toml / pyproject.toml 等) の diff、
+   dependency 変更、release notes ( breaking change / security fix ) を確認
+4. 上記から自分で verdict 相当の判断をする:
+
+| 調査結果 | Claude の動作 |
 |---|---|
-| `safe-to-bump` | Issue 本文の "Suggested PKGBUILD changes" に従い PKGBUILD/sha256/.SRCINFO/REVIEW.md を更新 → `git commit -S` → `gh pr create` (push 時に pre-push gate 通過) → `gh pr merge` → ユーザに `bin/build-all <pkg>` を提示 |
-| `needs-attention` | Issue 本文の build script / dep 変化 section を読み込み、PKGBUILD を適切に改修 → あとは safe-to-bump と同じ |
-| `block` | ユーザに内容を要約して報告し、判断を仰ぐ。自動では何もしない |
+| pkgver + sha256sums の機械的更新のみで良い (safe-to-bump 相当) | PKGBUILD/sha256/.SRCINFO/REVIEW.md を更新 → `git commit -S` → `gh pr create` (push 時に pre-push gate 通過) → `gh pr merge` → ユーザに `bin/build-all <pkg>` を提示 |
+| build/depends の手当が必要 (needs-attention 相当) | 調査結果を踏まえ PKGBUILD を適切に改修 → あとは上と同じ |
+| supply-chain 上の懸念あり、または breaking change で依存 pkg (= [nekono] 内の他 pkg) との互換性が壊れる (block 相当) | ユーザに調査結果を要約して報告し、判断を仰ぐ。自動では何もしない (Issue は open のまま、コメントで保留理由を記録) |
 | 誤検知疑い (nvchecker の誤検知等) | 内容を示しユーザに確認してから close |
 
 ### build host 作業 (Claude には実行できない)
@@ -331,18 +350,21 @@ Claude に「PR 消化して」と伝えれば上記の全自動フローで処�
 
 ### Issues タブ (upstream-version-issue 経由)
 
-新規 Issue title は `[<pkg>] upstream version: <new_pkgver>`。本文の 1 行目
-に Claude が付ける **verdict**:
+新規 Issue title は `[<pkg>] upstream version: <new_pkgver>`。本文は
+`create_upstream_issue.py` が機械生成した human review checklist のみ
+(verdict や supply-chain 監査結果は含まれない。Actions 上の AI 事前調査は
+廃止済み、上記「自動化 (GitHub Actions)」section 参照)。Issue 処理時に
+**Claude がこの checklist に沿って自分で調査**し、判断する:
 
-| verdict | 対応 |
+| 調査結果 | 対応 |
 |---|---|
-| `safe-to-bump` | PKGBUILD の pkgver / sha256sums を本文の Suggested PKGBUILD changes に従って差し替え → `.SRCINFO` 同期 → `git commit -S` → PR open (push 時に pre-push gate 通過) → judgment review して merge → `bin/build-all <pkg>` → Issue close。 |
-| `needs-attention` | build script / depends 変化あり。Claude が事前調査 section を読み込み PKGBUILD を改修。あとは safe-to-bump と同じ流れ。 |
-| `block` | supply-chain 上の懸念あり。Claude がユーザに報告して止まる。 |
+| pkgver + sha256sums の機械的更新のみで良い | PKGBUILD の pkgver / sha256sums を更新 → `.SRCINFO` 同期 → `git commit -S` → PR open (push 時に pre-push gate 通過) → judgment review して merge → `bin/build-all <pkg>` → Issue close。 |
+| build script / depends 変化あり | Claude が build script diff / dependency 変化を調査した上で PKGBUILD を改修。あとは上と同じ流れ。 |
+| supply-chain 上の懸念、または [nekono] 内の依存 pkg との breaking change | Claude がユーザに報告して止まる。 |
 
-verdict 判定に疑義がある場合 (例: nvchecker の誤検知で立った Issue) は、
-内容を読んで close する。冪等性 key は title なので、close されていても
-同 title の再検知は skip される (= 二重立て防止)。
+疑義がある場合 (例: nvchecker の誤検知で立った Issue) は、内容を読んで
+close する。冪等性 key は title なので、close されていても同 title の
+再検知は skip される (= 二重立て防止)。
 
 ### Pull Requests タブ
 
