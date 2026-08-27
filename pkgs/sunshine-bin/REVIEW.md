@@ -84,3 +84,4 @@ upstream の新 release (v2026.5xx.xxxxxx 等) が出たら:
 | 2026-07-15 | 2026.516.143833-2 | (this PR) | `pkgrel` +1 (deps changed): libpipewire 1:1.6.7-1 → 1:1.6.8-1 |
 | 2026-08-04 | 2026.516.143833-3 | bot PR #477 | `pkgrel` +1 (deps changed): vulkan-icd-loader 1.4.350.1-1 → 1.4.357.0-1 |
 | 2026-08-20 | 2026.516.143833-4 | (this PR) | `pkgrel` +1 (deps changed): libevdev 1.13.6-1 → 1.13.7-1 |
+| 2026-08-30 | 2026.516.143833-5 | (this PR) | `pkgrel` +1 (deps changed): libayatana-appindicator 0.6.0-1 → 0.6.0-2、openssl 3.6.3-1 → 3.6.4-1 |
