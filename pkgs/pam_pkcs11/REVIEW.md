@@ -117,3 +117,5 @@ upstream の新 release (0.6.14 等) が出たら:
 | 2026-07-28 | 0.6.13-9 | bot PR #447 | — (pkgrel bump のみ) | `pkgrel` +1 (deps changed): libtool 2.6.2-1 → 2.6.2-2、pkgconf 3.0.3-1 → 3.0.4-1 |
 | 2026-07-29 | 0.6.13-10 | bot PR #450 | — (pkgrel bump のみ) | `pkgrel` +1 (deps changed): libtool 2.6.2-2 → 2.6.2-3 |
 | 2026-08-06 | 0.6.13-11 | bot PR #484 | — (pkgrel bump のみ) | `pkgrel` +1 (deps changed): pkgconf 3.0.4-1 → 3.0.5-1 |
+| 2026-08-27 (backfill) | 0.6.13-12 | `1ea3568` | — (pkgrel bump のみ) | `pkgrel` +1 (deps changed): libtool 2.6.2-3 → 2.6.2-5 (REVIEW.md 追記漏れの backfill) |
+| 2026-08-30 | 0.6.13-13 | (this PR) | — (pkgrel bump のみ) | `pkgrel` +1 (deps changed): openssl 3.6.3-1 → 3.6.4-1 |
