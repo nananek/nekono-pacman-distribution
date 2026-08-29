@@ -2,7 +2,7 @@
 
 ## 状態
 
-**review 済み、approve** (最新: 2026-08-20 / 2.1.237、復活: 2026-08-17 / 2.1.233)
+**review 済み、approve** (最新: 2026-08-30 / 2.1.251、復活: 2026-08-17 / 2.1.233)
 
 AUR の `claude-code` PKGBUILD を fork。改変なし。各 release の review 履歴は
 本ファイル末尾の「更新履歴」 section 参照。
@@ -82,6 +82,12 @@ upstream の新 release (2.1.143 等) が出たら:
    1 行追記
 
 ## 更新履歴
+
+- **2026-08-30 / 2.1.251** — approve。`upstream-version-issue.yml` が Issue #561/564/567/570/576/581 で `2.1.241 → 2.1.243 → 2.1.246 → 2.1.247 → 2.1.250 → 2.1.251` の連続差分を検知していたのを一括 bump。release author は全て `ashwin-ant` = 過去 release と同一 (`gh api repos/anthropics/claude-code/releases/tags/v2.1.251` で確認)。sha256 は GitHub Release の `claude-linux-{x64,arm64}.tar.gz` を独立取得・展開し、内部の `claude` binary の sha256 が `downloads.claude.ai/claude-code-releases/2.1.251/linux-{x64,arm64}/claude` の直接取得値と完全一致することを確認 (= 両者は同一 build 成果物):
+  - x86_64: `fd5f10ff0eb58daec04900466b143ea98aab50abf208a422bc008eaec13f61f7`
+  - aarch64: `65445bd4dd042079cc3fa43791b561370a05c8599e8ec47580e25a81050abbdd`
+
+  CHANGELOG.md (2.1.238〜2.1.251) は permission-bypass 系のセキュリティ修正複数 (symlink 差し替えによる file tool の path 逸脱、plugin marketplace の path-traversal、Workflow tool の scriptPath 権限逸脱、sandboxed Bash の出力ファイル差し替え等) を含むが、いずれも upstream CLI 内部のセキュリティ強化であり [nekono] の配布物 (prebuilt binary の install のみ、`package()`/wrapper script/depends 無変更) には影響しない。source URL (`downloads.claude.ai`)、`depends`/`optdepends`/`options=('!strip')` も無変更、breaking change なし、supply-chain 変化なし。Closes #561, #564, #567, #570, #576, #581。
 
 - **2026-08-20 / 2.1.237** — approve。手動 nvchecker 相当の upstream 監視で `2.1.234 → 2.1.235 → 2.1.236 → 2.1.237` の 3 release 連続差分を一括 bump (GitHub Actions の `upstream-version-issue.yml` が停止中のため手動で調査)。全て release author `ashwin-ant` = 過去 release と同一、source URL (`downloads.claude.ai`) / `depends`/`optdepends`/`options=('!strip')`/`package()` は無変更、AUR 側 PKGBUILD も同 version 追従済みで `pkgver`+sha256 の 3 値のみ差分確認。2.1.235 は spellcheck 設定追加 + プロンプト/権限ダイアログ/UI の細かいバグ修正多数。2.1.236 は `ANTHROPIC_DEFAULT_MODEL` 環境変数/`notify_when_idle` 追加 + sandbox/macOS wildcard deny 強化 + `/model` picker 等の UX 修正、2.1.237 は LLM gateway 時の prompt caching 修正 + "Concise" output style 追加の small fix。いずれも upstream CLI 内部挙動の変更で [nekono] の配布物 (prebuilt binary の install のみ) には影響しない、breaking change なし、supply-chain 変化なし (sha は `curl -fsSL <url> | sha256sum` で 2.1.235/236/237 の 3 version ×2 arch を独立実測、GitHub Release `v2.1.235`/`v2.1.236`/`v2.1.237` の body と author を `gh api repos/anthropics/claude-code/releases/tags/v<ver>` で確認):
   - 2.1.235: x86_64 `bfcf0ae2dbf94b2b6a106074aabf3938b9a10889c3b678e4cb5a00c03274d5d5` / aarch64 `cff9592faa292db0f6ac21874f151b8c3d44e23bf0ab9fd1bcca95edc3469549`
