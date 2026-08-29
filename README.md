@@ -61,6 +61,7 @@
 | `nekono-btkeycast` | from-source (Python)        | キーボードを BLE HOGP で iPad へ転送 |
 | `qview`          | from-source (Qt6)             | 画像ビューア |
 | `localsend-bin`  | -bin (Flutter prebuilt)       | AirDrop 代替 (LAN ファイル転送) |
+| `freetube-bin`   | -bin (Electron prebuilt .deb) | privacy 重視の YouTube クライアント |
 | `pwvucontrol`    | from-source (Rust/GTK4)       | PipeWire 音量コントロール |
 | `lswt`           | from-source (C)               | Wayland toplevel 一覧 |
 
