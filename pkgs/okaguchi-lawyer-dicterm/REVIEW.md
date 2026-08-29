@@ -106,3 +106,4 @@ upstream で更新があれば:
 | 2026-06-25 | 20201122-5 | (this PR) | `pkgrel` +1 (deps changed): protobuf / python-protobuf 35.0-2 → 35.1-1 |
 | 2026-08-15 | 20201122-6 | (this PR) | `pkgrel` +1 (deps changed): python 3.14.6-1 → 3.14.7-1 |
 | 2026-08-24 | 20201122-7 | (this PR) | `pkgrel` +1 (deps changed): protobuf / python-protobuf 35.1-1 → 35.1-2 |
+| 2026-08-30 | 20201122-8 | (this PR) | `pkgrel` +1 (deps changed): protobuf / python-protobuf 35.1-2 → 36.0-1 |
