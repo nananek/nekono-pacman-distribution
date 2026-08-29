@@ -51,6 +51,7 @@ rename のみで、実行 binary は upstream そのまま。
 |---|---|---|---|---|
 | 2026-06-21 | 1.17.0-2 | (this PR) | — (pkgrel bump のみ) | `pkgrel` +1 (deps changed): libayatana-appindicator 0.5.94-1 → 0.6.0-1 |
 | 2026-08-11 | 1.18.0 (build fix) | — (upstream bump) | `82471a523411906d52f410e71503093c563ba44a` | pkgver bump、depends 変更なし。v1.18.0 の `.deb` が `data.tar.zst` と `opt/localsend_app` を使用するため `prepare()` / `package()` の対象を更新。実行ファイルの配置方針は不変、checksum 検証機能追加と Rust コアリライトは upstream CI 内で完結 |
+| 2026-08-30 | 1.18.2 | (this PR) | `v1.18.2` (release author `github-actions[bot]`、CI 発行) | safe-to-bump (Issue #562)。v1.18.0→1.18.2 累積 diff (42 commits/110 files) は主に 1.17.0 以前との後方互換性回復、drag&drop 改善、web share ページのカスタマイズ機能追加。**security fix 含む**: peer が送る HTTP redirect を追従しないよう変更 (SSRF/redirect 悪用対策)。`.deb` の内部構造 (`data.tar.zst`、`opt/localsend_app/localsend_app`、`usr/share/applications/localsend_app.desktop`、`usr/share/icons/hicolor/{128x128,256x256}/apps/localsend_app.png`) は 1.18.0 と完全一致、`prepare()`/`build()`/`package()` 変更不要。depends 変更なし。sha256sums_x86_64/aarch64 を独立実測で更新。Closes #562。 |
 
 ## 更新方針
 
