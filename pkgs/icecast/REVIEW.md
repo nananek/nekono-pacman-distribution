@@ -98,3 +98,5 @@ build host で `bin/build-all icecast` 実行可。
 | 2026-07-22 | 2.5.0-6 | bot PR #420 | — (pkgrel bump のみ) | `pkgrel` +1 (deps changed): libtool 2.6.1-2 → 2.6.2-1 |
 | 2026-07-28 | 2.5.0-7 | bot PR #446 | — (pkgrel bump のみ) | `pkgrel` +1 (deps changed): glibc 2.43+r37 → 2.44+r3、libtool 2.6.2-1 → 2.6.2-2 |
 | 2026-07-29 | 2.5.0-8 | bot PR #449 | — (pkgrel bump のみ) | `pkgrel` +1 (deps changed): glibc 2.44+r3 → 2.44+r5、libtool 2.6.2-2 → 2.6.2-3 |
+| 2026-08-15 (backfill) | 2.5.0-9 | `9f322e9` | — (pkgrel bump のみ) | `pkgrel` +1 (deps changed): glibc 2.44+r5 → 2.44+r24、libtool 2.6.2-3 → 2.6.2-5 (REVIEW.md 追記漏れの backfill) |
+| 2026-08-30 | 2.5.0-10 | (this PR) | — (pkgrel bump のみ) | `pkgrel` +1 (deps changed): openssl 3.6.3-1 → 3.6.4-1 |
