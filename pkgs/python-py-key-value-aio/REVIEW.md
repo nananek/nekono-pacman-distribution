@@ -83,3 +83,6 @@ upstream で新 release が出たら nvchecker (= `[python-py-key-value-aio]` se
 | 2026-08-04 | 0.4.4-24 | bot PR #476 | — (pkgrel bump のみ) | `pkgrel` +1 (deps changed): python-cachetools 7.1.6-1 → 7.1.7-1 |
 | 2026-08-06 | 0.4.4-25 | bot PR #491 | — (pkgrel bump のみ) | `pkgrel` +1 (deps changed): python-uv-build 0.12.1-1 → 0.12.2-1 |
 | 2026-08-09 | 0.4.4-26 | bot PR #506 | — (pkgrel bump のみ) | `pkgrel` +1 (deps changed): python-uv-build 0.12.2-1 → 0.12.3-1 |
+| 2026-08-13 | 0.4.4-27 | `252519c` | — (pkgrel bump のみ) | `pkgrel` +1 (deps changed): python 3.14.6-1 → 3.14.7-1、python-wheel 0.47.0-1 → 0.48.0-1 (REVIEW.md 追記漏れの backfill) |
+| 2026-08-16 | 0.4.4-28 | `c92fffa` | — (pkgrel bump のみ) | `pkgrel` +1 (deps changed): python-uv-build 0.12.3-1 → 0.12.5-1 (REVIEW.md 追記漏れの backfill) |
+| 2026-08-30 | 0.4.4-29 | (this PR) | — (pkgrel bump のみ) | `pkgrel` +1 (deps changed): python-uv-build 0.12.5-1 → 0.12.6-1 |
