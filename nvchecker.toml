@@ -360,3 +360,18 @@ source = "github"
 github = "poppingmoon/aria"
 use_latest_release = true
 prefix = "v"
+
+[freetube-bin]
+# FreeTube (Electron 製 YouTube privacy client)。 release tag は常に
+# "vX.Y.Z-beta" 形式で打たれ、 GitHub 上は全 release が prerelease 扱い
+# (= "beta" は upstream の恒常的な命名慣習であって不安定版という意味ではない)。
+# use_latest_release だけだと prerelease は無視されるため include_prereleases
+# が必須。 prefix "v" 除去後、 from_pattern/to_pattern で "-beta" suffix を strip
+# して PKGBUILD の pkgver (= X.Y.Z) と比較できる形にする。
+source = "github"
+github = "FreeTubeApp/FreeTube"
+use_latest_release = true
+include_prereleases = true
+prefix = "v"
+from_pattern = "-beta$"
+to_pattern = ""

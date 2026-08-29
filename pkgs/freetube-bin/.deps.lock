@@ -1,0 +1,6 @@
+# Snapshot of Arch official repo versions for depends + makedepends of freetube-bin.
+# Auto-generated and updated by .github/workflows/dep-version-pr.yml.
+# Source: pkgs/freetube-bin/.SRCINFO (depends + makedepends entries).
+# Format: 1 line per package: <name>=<full-version>
+
+ttf-liberation=2.1.5-2
