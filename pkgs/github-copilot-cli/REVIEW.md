@@ -129,6 +129,7 @@ upstream の新 release が出たら:
 
 | 日付 | release | review した PKGBUILD repo SHA | upstream tag commit | findings |
 |---|---|---|---|---|
+| 2026-08-30 | 1.0.81-1 | (this PR) | `v1.0.81` (GitHub Release, 2026-08-27) | safe-to-bump: Issue #577 調査済み。3 source (`@github/copilot` / `@github/copilot-linux-x64` / CHANGELOG) を npm registry から独立再取得、b2sums 完全一致確認 (`detect-libc` は 2.1.2 のまま version 据え置き、既存 pin と再検証一致)。release note は plugins dashboard 一般公開、MCP 2026-07-28 対応、OTel trace context 付き hooks 等の機能追加のみ、security/breaking なし。platform tarball のレイアウト確認: `prebuilds/linux-x64`、`foundry-local-sdk` prebuilds、`ripgrep/bin/linux-x64`、`pvrecorder-node` は健在。`mxc-bin` / `clipboard/node_modules/@teddyzhu` は tarball から消失 (upstream 依存整理と推測、package() 側は `if [ -d ... ]` guard 済みで no-op化するだけ、build 影響なし)。Closes #577。
 | 2026-08-15 | 1.0.80-1 | (this PR) | — (deps.lock sync) | .deps.lock 更新: gcc-libs 16.1.1+r595+g171d15ac6959-1 → 16.2.1+r23+gd564253eb6c8-1, glibc 2.44+r5+g7cba77790f32-1 → 2.44+r24+g16be1518495f-1 (pkgrel-2 PR #524 は pkgver bump で superseded のため close) |
 | 2026-08-14 | 1.0.80-1 | (this PR) | `ef627e1b` (v1.0.80) | safe-to-bump: 機械的 pkgver bump、npm package 1.0.77→1.0.80 diff 済み (新規は SKILL.md / doc / .d.ts のみ、実行コード変更なし)、build/depends/makedepends 変更なし、maintainer 1 名削除 (publish は OIDC 経由のため risk 無し)、b2sums 独立検証済み。Closes #541 |
 | 2026-08-11 | 1.0.77-1 | (初版) | `aee1edd2` (v1.0.77) | 新規追加。AUR fork + npm 依存の offline vendor 化。4 source の b2sums を registry download で独立検証、offline install / bin / completion を実地確認。approve |
