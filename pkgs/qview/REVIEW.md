@@ -52,3 +52,4 @@ upstream の新 tag が出たら:
 | 2026-06-15 | 7.1-3 | (this PR) | — (pkgrel bump のみ) | `pkgrel` +1 (deps changed): qt6-tools 6.11.1-1 → 6.11.1-3 |
 | 2026-07-31 | 7.1-4 | (this PR) | — (pkgrel bump のみ) | `pkgrel` +1 (deps changed): qt6-tools 6.11.1-3 → 6.11.1-4 |
 | 2026-08-21 | 7.1-5 | (this PR) | — (pkgrel bump のみ) | `pkgrel` +1 (deps changed): qt6-base 6.11.1-1 → 6.11.2-2、qt6-tools 6.11.1-4 → 6.11.2-1 |
+| 2026-08-30 | 7.1-6 | (this PR) | — (pkgrel bump のみ) | `pkgrel` +1 (deps changed): qt6-base 6.11.2-2 → 6.11.2-3 |
