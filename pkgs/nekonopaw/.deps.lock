@@ -1,7 +1,0 @@
-# Snapshot of Arch official repo versions for depends + makedepends of nekonopaw.
-# Auto-generated and updated by .github/workflows/dep-version-pr.yml.
-# Source: pkgs/nekonopaw/.SRCINFO (depends + makedepends entries).
-# Format: 1 line per package: <name>=<full-version>
-
-go=2:1.27.0-1
-pipewire=1:1.6.8-1

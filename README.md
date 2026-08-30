@@ -61,21 +61,15 @@
 | `nekono-btkeycast` | from-source (Python)        | キーボードを BLE HOGP で iPad へ転送 |
 | `qview`          | from-source (Qt6)             | 画像ビューア |
 | `localsend-bin`  | -bin (Flutter prebuilt)       | AirDrop 代替 (LAN ファイル転送) |
-| `freetube-bin`   | -bin (Electron prebuilt .deb) | privacy 重視の YouTube クライアント |
 | `pwvucontrol`    | from-source (Rust/GTK4)       | PipeWire 音量コントロール |
-| `lswt`           | from-source (C)               | Wayland toplevel 一覧 |
 
 ### システム・インフラ
 
 | package | source 方針 | 役割 |
 |---|---|---|
-| `claude-code`            | -bin (npm tarball)      | Anthropic Claude Code CLI |
-| `github-copilot-cli`     | from-source (npm vendor) | GitHub Copilot CLI (npm wrapper + platform binary を offline install) |
 | `docker-rootless-extras` | from-source             | Docker rootless mode 補助バイナリ |
-| `nekonopaw`              | from-source (Go)        | PipeWire → PAM 連携デーモン |
 | `pam_pkcs11`             | from-source (C)         | PIV/PKCS#11 PAM 認証モジュール |
 | `pass-secret-service`    | from-source (Rust)      | pass を D-Bus secrets backend に |
-| `vikunja-bin`            | -bin (Go 静的バイナリ)   | self-hosted To-Do リスト / タスク管理サーバー |
 
 ### 音声・メディア
 
@@ -86,23 +80,6 @@
 | `libigloo`                | from-source (C)          | Icecast 2.5.x 必須共通フレームワーク |
 | `shairport-sync-airplay2` | from-source (C)          | AirPlay 2 受信 (nqptp 連携) |
 | `voicevox-bin`            | -bin (Electron AppImage) | VOICEVOX エディタ GUI |
-
-### MCP サーバー
-
-| package | source 方針 | 役割 |
-|---|---|---|
-| `nekono-pipewire-mcp`  | from-source (Go)     | PipeWire 操作 MCP server |
-| `nekono-voicevox-mcp`  | from-source (Python) | VOICEVOX 音声合成 MCP server |
-
-### MCP サーバー Python 依存
-
-`nekono-voicevox-mcp` / `nekono-pipewire-mcp` の依存 chain。Arch 公式・AUR 未収録のため自家管理。
-
-`python-fastmcp` / `python-mcp` / `python-cyclopts` / `python-beartype` /
-`python-rich-rst` / `python-docstring-parser` / `python-sse-starlette` /
-`python-openapi-pydantic` / `python-jsonschema-path` /
-`python-jsonref` / `python-pdm-pep517` / `python-py-key-value-aio` /
-`python-uncalled-for`
 
 ### 辞書
 
