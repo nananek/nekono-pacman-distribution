@@ -29,22 +29,6 @@
 oldver = "oldver.json"
 newver = "newver.json"
 
-[claude-code]
-# Anthropic Claude Code CLI。downloads.claude.ai 経由配布だが npm registry
-# にも同 version で publish される (@anthropic-ai/claude-code)。npm の方が
-# version 取得が安定。
-source = "npm"
-npm = "@anthropic-ai/claude-code"
-
-[github-copilot-cli]
-# GitHub Copilot CLI。npm registry の @github/copilot (= npm-loader.js の薄い
-# wrapper) が pkgver と完全 version sync しており (= optionalDependencies で
-# platform package を同 version pin)、最新を拾うにはこれが最適。
-# PKGBUILD は wrapper + detect-libc + @github/copilot-linux-x64 の 3 tarball を
-# vendor して --offline install する方針 (= REVIEW.md「依存方針」参照)。
-source = "npm"
-npm = "@github/copilot"
-
 [docker-rootless-extras]
 # Docker Engine と version sync (rootless extras は moby/moby tree の subset)。
 # release tag は "docker-vX.Y.Z" 形式なので prefix を strip。use_latest_release
@@ -100,32 +84,10 @@ source = "github"
 github = "xiph/igloo"
 use_max_tag = true
 
-[lswt]
-# Wayland toplevel 一覧ツール。xdg-desktop-portal-wlr の window chooser が
-# 要求する ext-foreign-toplevel-list-v1 の identifier を取るのに使う。
-# upstream が sr.ht のため github/gitlab source が使えず、nvchecker builtin
-# の git source (git ls-remote) で tag を見る。
-# sr.ht に release 機能が無いので use_latest_release 不可 → use_max_tag。
-# tag は "vX.Y.Z" 形式なので prefix で strip して PKGBUILD の pkgver と比較。
-source = "git"
-git = "https://git.sr.ht/~leon_plickat/lswt"
-use_max_tag = true
-prefix = "v"
-
 [localsend-bin]
 # release tag "vX.Y.Z" 形式。
 source = "github"
 github = "localsend/localsend"
-use_latest_release = true
-prefix = "v"
-
-[vikunja-bin]
-# Vikunja (self-hosted To-Do list / task manager)。source[] は github release
-# 本体ではなく dl.vikunja.io の CDN tarball だが、pkgver は go-vikunja/vikunja
-# の release tag と同期しているので version 監視はこちらを見る。release tag は
-# "vX.Y.Z" 形式なので prefix "v" を strip。
-source = "github"
-github = "go-vikunja/vikunja"
 use_latest_release = true
 prefix = "v"
 
@@ -145,31 +107,6 @@ prefix = "v"
 source = "github"
 github = "nananek/nekono-btkeycast"
 use_latest_release = true
-prefix = "v"
-
-[nekono-pipewire-mcp]
-# 自家 source、 claude-code MCP server (wpctl wrapper)。 release tag は
-# v X.Y.Z 形式 (prefix "v")。
-source = "github"
-github = "nananek/nekono-pipewire-mcp"
-use_latest_release = true
-prefix = "v"
-
-[nekono-voicevox-mcp]
-# 自家 package。 GitHub Release を切る運用、 v0.1.0 から開始。
-# voicevox-engine-cuda (= nekono-pacman0 で daemon 化) の HTTP API client を
-# stdio MCP server として ayaka 上の claude-code に exposing する。
-source = "github"
-github = "nananek/nekono-voicevox-mcp"
-use_latest_release = true
-prefix = "v"
-
-[nekonopaw]
-# 自作 package (nananek/nekonopaw)。GitHub Release は未運用で tag のみ
-# (vX.Y.Z 形式) push しているので use_max_tag で semver 最大 tag を取る。
-source = "github"
-github = "nananek/nekonopaw"
-use_max_tag = true
 prefix = "v"
 
 [pam_pkcs11]
@@ -192,123 +129,6 @@ prefix = "v"
 source = "github"
 github = "saivert/pwvucontrol"
 use_latest_release = true
-
-[python-beartype]
-# python-py-key-value-aio の dep (= fastmcp の dep audit で発覚)、 AUR
-# python-beartype を fork。 release tag は v X.Y.Z 形式 (prefix "v")。
-source = "github"
-github = "beartype/beartype"
-use_latest_release = true
-prefix = "v"
-
-[python-cyclopts]
-# fastmcp の直接依存 (= fastmcp の dep audit で発覚)、 AUR python-cyclopts
-# を fork。 release tag は v X.Y.Z 形式 (prefix "v")、 upstream は
-# BrianPugh/cyclopts。
-source = "github"
-github = "BrianPugh/cyclopts"
-use_latest_release = true
-prefix = "v"
-
-[python-docstring-parser]
-# python-cyclopts の dep (= fastmcp の dep audit で発覚)、 AUR
-# python-docstring-parser を fork。 release tag は素の X.Y.Z 形式
-# (prefix 無し)、 upstream は rr-/docstring_parser。
-source = "github"
-github = "rr-/docstring_parser"
-use_latest_release = true
-
-[python-fastmcp]
-# fastmcp chain の頂点、 ayaka 上の MCP server runtime を支える。
-# AUR python-fastmcp を fork。 release tag は v X.Y.Z 形式 (prefix "v")。
-# 3.3.0 以降は fastmcp-slim が実コード (fastmcp は空 meta-pkg)。
-# jlowin/fastmcp → PrefectHQ/fastmcp に migration 済み (2026-05-21 更新)。
-source = "github"
-github = "PrefectHQ/fastmcp"
-use_latest_release = true
-prefix = "v"
-
-[python-jsonschema-path]
-# fastmcp 依存 chain (= fastmcp → mcp → openapi-pydantic → jsonschema-path)。
-# Arch 公式 + AUR 不在で [nekono] 自家 PyPI sdist vendor。 source = github、
-# release tag は素の X.Y.Z 形式 (prefix 無し)。
-# (= PR #54 で merge し忘れた entry を本 PR の sweep として retroactive 追加)
-source = "github"
-github = "p1c2u/jsonschema-path"
-use_latest_release = true
-
-[python-jsonref]
-# fastmcp の直接依存 (= upstream pyproject.toml audit で発覚)、 AUR
-# python-jsonref を fork。 PyPI sdist 直接 vendor (= upstream
-# gazpachoking/jsonref の GitHub Releases 経路で監視)。 release tag は
-# vX.Y.Z 形式 (prefix "v")。
-source = "github"
-github = "gazpachoking/jsonref"
-use_latest_release = true
-prefix = "v"
-
-[python-mcp]
-# fastmcp の直接依存 (= fastmcp → mcp)、 AUR python-mcp を fork。
-# Model Context Protocol SDK 本体。 release tag は v X.Y.Z 形式 (prefix "v")。
-source = "github"
-github = "modelcontextprotocol/python-sdk"
-use_latest_release = true
-prefix = "v"
-
-[python-openapi-pydantic]
-# fastmcp 依存 chain transitive (= fastmcp → mcp → openapi-pydantic)、 AUR
-# python-openapi-pydantic を fork。 release tag は v X.Y.Z 形式 (prefix "v")。
-# 注意: 当 PKGBUILD は AUR と同じく 0.5.1 release 後の commit (= Python 3.14
-# 対応 PR #73 merge) を snapshot pin。 nvchecker は upstream release を見るので、
-# 0.6.0 等 clean tag が出たらそちらに乗り換える判断材料を issue で提供する。
-source = "github"
-github = "mike-oakley/openapi-pydantic"
-use_latest_release = true
-prefix = "v"
-
-[python-pdm-pep517]
-# python-jsonref の build-backend (pdm.pep517.api)、 AUR python-pdm-pep517
-# を fork。 upstream pdm-pep517 は PyPI で 1.1.4 frozen (後継は pdm-backend)。
-# GitHub タグ監視は pdm-backend のタグ (v2.x) を誤検知するため PyPI に変更。
-source = "pypi"
-pypi = "pdm-pep517"
-
-[python-py-key-value-aio]
-# fastmcp の直接依存 (= upstream pyproject.toml の
-# 'py-key-value-aio[filetree,keyring,memory]>=0.4.4')、 AUR
-# python-py-key-value-aio を fork。 release tag は v X.Y.Z 形式 (prefix "v")。
-source = "github"
-github = "chrisguidry/py-key-value-aio"
-use_latest_release = true
-prefix = "v"
-
-[python-rich-rst]
-# python-cyclopts の dep (= fastmcp の dep audit で発覚)、 AUR
-# python-rich-rst を fork。 release tag は v X.Y.Z 形式 (prefix "v")、
-# upstream は wasi-master/rich-rst。
-source = "github"
-github = "wasi-master/rich-rst"
-use_latest_release = true
-prefix = "v"
-
-[python-sse-starlette]
-# fastmcp 依存 chain transitive (= fastmcp → mcp → sse-starlette)、 AUR
-# python-sse-starlette を fork。 release tag は v X.Y.Z 形式 (prefix "v")。
-source = "github"
-github = "sysid/sse-starlette"
-use_latest_release = true
-prefix = "v"
-
-[python-uncalled-for]
-# fastmcp の transitive 依存 (= fastmcp → uncalled-for)、 AUR
-# python-uncalled-for を fork。 release tag は素の X.Y.Z 形式 (prefix 無し)。
-# 注意: upstream は 0.3.x まで進んでいるが fastmcp 3.2.4 が 0.2.0 を要求するため
-# 当面 0.2.0 で固定 (= 検知 issue が立ったら fastmcp 側 bump と整合判断)。
-source = "github"
-github = "chrisguidry/uncalled-for"
-use_latest_release = true
-
-prefix = "v"
 
 [qview]
 # release tag は素の X.Y.Z 形式 (prefix 無し)。
@@ -361,17 +181,3 @@ github = "poppingmoon/aria"
 use_latest_release = true
 prefix = "v"
 
-[freetube-bin]
-# FreeTube (Electron 製 YouTube privacy client)。 release tag は常に
-# "vX.Y.Z-beta" 形式で打たれ、 GitHub 上は全 release が prerelease 扱い
-# (= "beta" は upstream の恒常的な命名慣習であって不安定版という意味ではない)。
-# use_latest_release だけだと prerelease は無視されるため include_prereleases
-# が必須。 prefix "v" 除去後、 from_pattern/to_pattern で "-beta" suffix を strip
-# して PKGBUILD の pkgver (= X.Y.Z) と比較できる形にする。
-source = "github"
-github = "FreeTubeApp/FreeTube"
-use_latest_release = true
-include_prereleases = true
-prefix = "v"
-from_pattern = "-beta$"
-to_pattern = ""

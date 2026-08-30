@@ -1,4 +1,0 @@
-python=3.14.7-1
-# MISSING (not in Arch official repo, likely AUR-only or virtual): python-pdm-pep517
-python-build=1.4.3-1
-python-installer=1.0.0-1

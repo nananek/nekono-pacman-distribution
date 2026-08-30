@@ -1,6 +1,0 @@
-# Snapshot of Arch official repo versions for depends + makedepends of lswt.
-# Auto-generated and updated by .github/workflows/dep-version-pr.yml.
-# Source: pkgs/lswt/.SRCINFO (depends + makedepends entries).
-# Format: 1 line per package: <name>=<full-version>
-
-wayland=1.26.0-1
