@@ -3,10 +3,9 @@
 # Source: pkgs/icecast/.SRCINFO (depends + makedepends entries).
 # Format: 1 line per package: <name>=<full-version>
 
-# MISSING libigloo  -- nekono repo package (not in Arch official repos)
 autoconf=2.73-1
 automake=1.18.1-1
-curl=8.21.0-1
+curl=8.22.0-1
 glibc=2.44+r24+g16be1518495f-1
 libogg=1.3.6-1
 libtheora=1.2.0-1
