@@ -4,7 +4,7 @@
 # Format: 1 line per package: <name>=<full-version>
 
 avahi=1:0.9rc5-1
-curl=8.21.0-1
+curl=8.22.0-1
 libayatana-appindicator=0.6.0-2
 libcap=2.78-1
 libdrm=2.4.134-1
