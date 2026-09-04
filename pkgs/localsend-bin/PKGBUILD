@@ -8,12 +8,12 @@
 
 pkgname=localsend-bin
 pkgver=1.18.2
-pkgrel=1
+pkgrel=2
 pkgdesc='An open source cross-platform alternative to AirDrop'
 url=https://github.com/localsend/localsend
 arch=('x86_64' 'aarch64')
 license=(Apache-2.0)
-depends=(fuse2 xdg-user-dirs libayatana-appindicator)
+depends=(fuse2 xdg-user-dirs libayatana-appindicator libayatana-indicator)
 conflicts=('localsend')
 provides=('localsend')
 options=(!debug)
