@@ -2,13 +2,12 @@
 
 ## 状態
 
-**review 済み、approve** (2026-05-24、upstream 5.0.4 へ bump)
+**review 済み、approve** (最新: 2026-09-06 / upstream 5.5)
 
-upstream の最新 stable (5.0.4、 2026-04-27 release) を pin。 初版 (2026-05-23、
-4.3.5、 extra/shairport-sync 4.3.5-4 fork) で立ち上げたが、 extra はまだ 4.3.5
-止まりで upstream の bug fix / feature を取り込めないため、 本 fork は extra に
-追従するのではなく **upstream を直接追従する方針** に切替える (= nvchecker
-の monitoring が「upstream の release」なのと整合)。
+upstream の最新 stable を pin。初版 (2026-05-23、4.3.5、当時の
+extra/shairport-sync 4.3.5-4 fork) で立ち上げた後、Arch 公式の更新周期から
+独立して security fix / bug fix を早期に取り込むため、**upstream release を
+直接追従する方針**へ切り替えた (= nvchecker の監視先とも整合)。
 
 configure flags は本 fork の目的 `--with-airplay-2` を追加した上で、 extra
 4.3.5 の build 構成 (= 全 backend / metadata / dbus / mpris / mqtt 込み) を
@@ -16,11 +15,11 @@ configure flags は本 fork の目的 `--with-airplay-2` を追加した上で�
 `--with-pw` → `--with-pipewire`、 `--with-systemd` → `--with-systemd-startup`)
 を反映。
 
-extra 版 (= 同 pkgname `shairport-sync`) は `--with-airplay-2` を付けずに
-ビルドされている (AirPlay 1 のみ)。 本 fork で AirPlay 2 を有効化した別
-pkgname を作り、 `provides`/`conflicts`/`replaces=shairport-sync` を宣言して
-extra 版を **明示的に置換 install** する形を取る (= `[nekono]` と `[extra]`
-の pacman.conf 並び順に依存しない決定論的切替)。
+Arch 公式版も現在は 5.0.4-3 で `--with-airplay-2` と nqptp / libplist /
+ffmpeg を採用しており、「公式版は AirPlay 1 のみ」という初版時の差は解消済み。
+本 fork は別 pkgname と upstream 最新追従を維持し、`provides`/`conflicts`/
+`replaces=shairport-sync` により公式版を **明示的に置換 install** する
+(= pacman.conf の repo 順に依存しない決定論的切替)。
 
 ## 用途
 
@@ -34,22 +33,20 @@ shairport-sync-airplay2` で install し、 shairport-sync 本体は **systemd-u
 として PipeWire default sink にルーティングする (= 既存 ayaka の運用形態を
 維持。 AirPlay 2 化しても systemd-user 起動は変えない)。
 
-**iOS 26 系の "isRemoteControlOnly" 互換性問題 (upstream issue #2179、 open)**
-が現時点 (2026-05-24) で fix 未 merge のため、 5.0.4 でも audio が流れない
-状態は継続見込み。 本 PKGBUILD は upstream の修正が降りた時に bump で取り
-込める受け皿として整備する位置付け。 ayaka 側 ansible は AirPlay 1 (=
-extra/shairport-sync) に戻して運用している。
+**iOS 26 系の "isRemoteControlOnly" 互換性問題 (upstream issue #2179)** は
+直接 fix されないまま 2026-06-11 に stale close。5.1 以降の
+`service_type=auto` fallback が運用回避策になり得るが、ayaka 側での再有効化は
+実機検証と ansible の切替を別途行う。
 
 ## Source
 
-- 元 PKGBUILD: Arch 公式 extra/shairport-sync 4.3.5-4 を baseline 雛形として
-  fork 済み (configure_args 構成 / makedepends / sysusers.d 経路 / patch 経路
-  はそのまま継承)
+- 元 PKGBUILD: Arch 公式 extra/shairport-sync 4.3.5-4 を歴史的 baseline 雛形
+  として fork。公式 main は現在 5.0.4-3 で AirPlay 2 対応済み
   https://gitlab.archlinux.org/archlinux/packaging/packages/shairport-sync
   - maintainer: Anatol Pomozov
-- Upstream tarball: https://github.com/mikebrady/shairport-sync (tag 5.0.4)
+- Upstream tarball: https://github.com/mikebrady/shairport-sync (tag 5.5)
   - 作者: Mike Brady、 GPL
-  - 2026-04-27 release、 PulseAudio bugfix release (= 5.0.x 系)
+  - 2026-09-04 release、複数の未認証 remote vulnerability を修正する security release
 - 補助ファイル:
   - `shairport-sync.sysusers` は extra packaging から直 copy (4.3.5 ↔ 5.0.4
     で内容変化無し)
@@ -58,20 +55,19 @@ extra/shairport-sync) に戻して運用している。
 
 ## 検証結果
 
-- [x] `source` 1 番目 = `github.com/mikebrady/shairport-sync/archive/5.0.4.tar.gz`
-  - 実測 (2026-05-24): `b89d4af74cffadd83d1be6eaf4e967180aa5a6aed32f561c937ae1d787909c25`
+- [x] `source` 1 番目 = `github.com/mikebrady/shairport-sync/archive/5.5.tar.gz`
+  - 実測 (2026-09-06): `5fcce2ee6b6fbda5fcfb381d0000ab799ec7ce4c285098da6bef82a17237945f`
 - [x] `source` 2 番目 = `shairport-sync.sysusers` (= extra packaging から直 copy、
-      4.3.5 / 5.0.4 で同一)
+      4.3.5 / 5.5 で同一)
   - sha256: `bc2d92254910996e837d1c4c7dd81eddfb96a9f5f0cb2faad9fcb0414ea79a1d`
-- [x] `source` 3 番目 = `remove_useradd.patch` (= 5.0.4 用に hunk 行ずれ再生成)
+- [x] `source` 3 番目 = `remove_useradd.patch` (= 5.0.4 用に hunk 行ずれ再生成、5.5 にも適用可)
   - sha256: `38f5c7aa7a35d1fd1a591b28d50293798cb29c3d9c600c0a750cb4209aed42f1`
   - 中身: `Makefile.am` の `install-systemd-local` target から
     `$(INSTALL_USER_TARGET)` 依存を削るだけの 1 行 diff。 内容は前版と同一
-  - 5.0.4 upstream の Makefile.am で `patch -p1 --dry-run` が成功すること
-    を確認済み
-- [⚠] Tag `5.0.4` の git commit GPG 署名は **無し** — mikebrady project は
-      commit signing を運用していない。 tarball sha256 pin で integrity 確保、
-      author = Mike Brady を nqptp 側と同一人物として確認
+  - 5.5 upstream の Makefile.am で `patch -p1 --dry-run` が offset +21 で成功
+- [⚠] Tag `5.5` の target commit に GPG 署名は **無し**。tarball sha256 pin で
+      integrity 確保、
+      target commit `663499543b535de0e61e0b67afce27f2d637f938`、author = Mike Brady を確認
 - [x] `prepare()`: `patch -p1 < remove_useradd.patch` のみ、 network / eval 無し
 - [x] `build()`: `autoreconf -i -f && ./configure ... && make` + `sed` で
       systemd unit 内の `/usr/local/bin/` → `/usr/bin/` 置換
@@ -85,23 +81,20 @@ extra/shairport-sync) に戻して運用している。
       sample conf 削除 (extra 継承、 変更なし)
 - [x] `depends`: openssl avahi libsoxr popt alsa-lib libconfig libpipewire
       libpulse jack mosquitto nqptp libplist libsodium libsndfile ffmpeg
-  - 5.0.x で新たに required な lib は無し (= 既存追加分でカバー)
+  - 5.2.3 → 5.5 で新たに required な lib は無し (= 既存追加分でカバー)
 - [x] `makedepends`: glib2-devel xmltoman vim (= xxd)、 変更なし
 - [x] `provides=(shairport-sync)` / `conflicts=(shairport-sync)` /
       `replaces=(shairport-sync)` を 3 点セットで宣言、 変更なし
 
-## extra との意図的差分
+## Arch 公式 5.0.4-3 との主な差分
 
 | 変更 | 理由 |
 |---|---|
 | `pkgname=shairport-sync-airplay2` | extra の同名 install 衝突を避け、 user 指示「名前被りは混乱の元」に従う |
-| `pkgver=5.0.4` (extra は 4.3.5) | 本 fork は upstream を直接追従、 extra に lock しない (= nvchecker も upstream を見ている) |
+| `pkgver=5.5` (公式は 5.0.4) | 本 fork は upstream を直接追従、Arch 公式の更新周期に lock しない (= nvchecker も upstream を見ている) |
 | `provides`/`conflicts`/`replaces=shairport-sync` | 別 pkgname にしつつ extra 版を明示的に置換 install させる (`/etc/pacman.conf` の repo 並び順に依存しない) |
-| configure flag `--with-airplay-2` を追加 | 本 fork の目的そのもの (AirPlay 2 mode の有効化) |
-| configure flag `--with-pa` → `--with-pulseaudio`、 `--with-pw` → `--with-pipewire`、 `--with-systemd` → `--with-systemd-startup` | 5.0.x の rename 反映 (extra の flag のままだと configure error) |
-| depends に `nqptp`/`libplist`/`libsodium`/`libsndfile`/`ffmpeg` を追加 | AirPlay 2 mode が link / require、 upstream BUILD.md 準拠 |
-| source archive 形式を `.zip` → `.tar.gz` | nekono 他 pkg と慣習統一 (sha256 は再計算) |
-| `remove_useradd.patch` を 5.0.4 用に hunk 行ずれ再生成 | 4.3.5 用の `-297` 文脈は 5.0.4 で `-286` にずれた (内容は同一の 1 行 diff) |
+| depends に `libsodium` / `libsndfile` を明示 | AirPlay 2 build の upstream 要件として直接表現。nqptp / libplist / ffmpeg と `--with-airplay-2` は公式版も現在採用済み |
+| `remove_useradd.patch` は本 fork snapshot を維持 | 4.3.5 用 hunk を 5.0.4 で再生成したもの。5.5 にも offset のみで適用可能 |
 
 ## 結論
 
@@ -111,14 +104,14 @@ extra/shairport-sync) に戻して運用している。
 build 順は **nqptp が先**で次に shairport-sync-airplay2 (= depends に nqptp
 を持つため、 `bin/build-all` の topological sort で自然にこの順になる)。
 
-完了後、 ansible-nekonodesk の `roles/airplay` を AirPlay 2 化に再切替する
-時 (= upstream issue #2179 が fix されたら) に、 そのまま `pacman -S
+完了後、 ansible-nekonodesk の `roles/airplay` を AirPlay 2 化に再切替して
+実機検証する時に、そのまま `pacman -S
 shairport-sync-airplay2` で install すれば `provides`/`conflicts`/`replaces`
 の自動処理で extra/shairport-sync が無くなり本 pkg だけが残る。
 
 ## 更新方針
 
-upstream の新 release (5.0.5, 5.1.x 等) が出たら:
+upstream の新 release (5.5.1, 5.6.x 等) が出たら:
 
 1. 本 dir の PKGBUILD の `pkgver` を更新
 2. `curl -fsSL <archive URL> | sha256sum` で sha256 再計算し `sha256sums[0]` 更新
@@ -129,8 +122,8 @@ upstream の新 release (5.0.5, 5.1.x 等) が出たら:
    確認、 必要に応じて configure_args を更新
 5. `.SRCINFO` を `makepkg --printsrcinfo` で同期
 6. REVIEW.md「更新履歴」に 1 行追加
-7. upstream の release notes / open issue (= 特に iOS 26 関連 issue #2179) を
-   確認、 ayaka 側 ansible で AirPlay 2 再挑戦できるか判断
+7. upstream の release notes / iOS 26 互換性を確認し、ayaka 側 ansible で
+   AirPlay 2 再挑戦できるか判断
 
 extra/shairport-sync の追従は **本 fork の更新方針からは外す**。 extra が
 5.x に上がった時の依存変化 (pacman 公式 lib の SONAME 変化等) は
@@ -162,3 +155,4 @@ extra/shairport-sync の追従は **本 fork の更新方針からは外す**。
 | 2026-07-29 | 5.2-1 | (this PR) | upstream tag `5.2` (`42bd29d6dac605d37356f847334246a78a569276`) | safe-to-bump (Issue #452)。feature + bugfix release (security fix 無し): MQTT `queue_next` コマンド追加、新 exit handler (cleanup 付き終了処理)、metadata 受信方式の互換性回復、convolution/loudness の rate 取り違えバグ修正、`log-to-syslog` オプション廃止 (systemd unit の `ExecStart` から自動除去、build 影響なし)。`configure.ac`/`Makefile.am` は version 文字列 diff のみで `--with-*` フラグ・`PKG_CHECK_MODULES`/`AC_CHECK_LIB` 増減なし、depends/makedepends 無変化。`remove_useradd.patch` は 5.2 でも dry-run 適用確認済み (context 一致、offset のみ増)。sha256sums[0] のみ更新 (独立実測 `17bd4c2d…`)、sysusers/patch (sha[1]/[2]) 据え置き。commit author 一覧に不審な新規 maintainer 無し (Mike Brady 本人 + 既存 contributor + dependabot のみ)。pkgrel reset 1→1 (旧版は 5.1-1 のまま bump なしだったため実質変化なし) |
 | 2026-07-30 | 5.2.1-1 | (this PR) | upstream tag `5.2.1` (`08af668a5d17b4714da38981dea4c9039263a4cc`) | safe-to-bump (Issue #459)。pure build-fix release (機能追加/security fix 無し): `--with-libdaemon` 使用時のみ発生する `log_to_syslog()` 未定義参照の残骸 1 箇所を削除 (外部 contributor Daeho Ro 初回貢献、Mike Brady が review・merge)。本 PKGBUILD は `--with-libdaemon` 不使用のため影響無し。diff は `configure.ac`(version 文字列のみ) と `shairport.c`(該当 1 行コメントアウト) の 2 ファイルのみ、depends/makedepends/configure_args 変更不要。tag commit は本 project 従来通り unsigned (既知の運用、tarball sha256 pin で integrity 確保)。sha256sums[0] のみ更新 (独立実測 `8f97d1a6…`)、sysusers/patch (sha[1]/[2]) 据え置き。`remove_useradd.patch` は 5.2.1 でも dry-run 適用確認済み (context 一致、offset のみ増) |
 | 2026-08-30 | 5.2.3-1 | (this PR) | upstream tag `5.2.3` | safe-to-bump (Issue #563/#565/#569、5.2.2/5.2.2.1/5.2.2.2/5.2.3 の累積 diff を一括 bump)。`compare/5.2.1...5.2.3` (28 commits) は audio rate/format matching のバグ修正 2 件、convolution コードのメモリ確保バグ修正 (frame length 基準に変更)、AirPlay 2 buffered latency offset の補正修正、MPRIS ドキュメント更新、GitHub Actions dependabot bump のみ。security fix なし。`configure.ac`/`Makefile.am` は version 文字列のみで `--with-*` フラグ・`PKG_CHECK_MODULES`/`AC_CHECK_LIB` 増減なし、depends/makedepends/configure_args 変更不要。tag commit は従来通り unsigned (tarball sha256 pin で integrity 確保)。sha256sums[0] のみ更新 (独立実測 `890eacbc…`)、sysusers/patch (sha[1]/[2]) 据え置き。`remove_useradd.patch` は 5.2.3 でも dry-run 適用確認済み (Hunk #1 offset +21 で成功、context 一致、再生成不要)。commit author 一覧に不審な新規 maintainer 無し (Mike Brady 本人 + 既存 contributor + dependabot のみ)。Closes #563, #565, #569。 |
+| 2026-09-06 | 5.5-1 | (this PR) | upstream tag `5.5` (`663499543b535de0e61e0b67afce27f2d637f938`) | **security update、優先 publish** (Issue #600)。5件の High advisory (GHSA-3v9c-6fg5-25pp / GHSA-jgrm-g4c3-wq2r / GHSA-6g79-wrcj-h8xw / GHSA-hf47-mx7r-cr8q / GHSA-536j-295w-5jxr) を修正し、現 AirPlay 2 build は少なくとも前4件の未認証 OOB read / NULL dereference / stack overflow / daemon crash の影響あり。5.2.3...5.5 は17 commits、実効6 files +51/-9。`configure.ac` は version のみ、Makefile / build flags / dependency check / install target は不変で depends/makedepends 改変不要。tag は従来どおり unsigned lightweight tag、release author/target commit は Mike Brady。GitHub archive と codeload の byte一致、tar埋込commit一致、sha256sums[0] を独立実測 `5fcce2ee…` へ更新。sysusers/patch据え置き、patch dry-runはoffset +21で成功。Arch公式mainも現在AirPlay 2対応済みのため古い説明を訂正。`.deps.lock` は現行 Arch repo (ffmpeg 9.0.1-4等) へrefresh。Closes #600。 |
