@@ -109,3 +109,4 @@ upstream で新 release が出たら:
 | 2026-05-21 | 6.3.1 | (本 commit 後に確定) | v6.3.1 (6bffdf3da2d386117f941df2f483d48aafb6ace3) | pkgrel=3: バージョン stamp 付き flag file に変更 (`.genshin-dict-{pkgver}-imported`)。upgrade 時に自動再 import、古い flag を cleanup |
 | 2026-06-03 | 6.6.1 | (this PR) | v6.6.1 (`ff3c2efcccfc`) | safe-to-bump: 辞書エントリ追加のみ (水仙十字関係人物名・書籍名等)。PKGBUILD 構造変化なし、 sha256 独立検証済み |
 | 2026-08-09 | 7.0.0 | (this commit) | v7.0.0 (`ea720de5239066c10ef3296b79290afdbf7ceb52`) | safe-to-bump: 辞書エントリ追加のみ (観月者計画・スネージナヤ関連人名/地名、マリアネッテ)。PKGBUILD 構造変化なし、sha256 独立検証済み (issue #508 記載値と一致確認) |
+| 2026-09-06 | 7.0.1 | (this commit) | v7.0.1 (`974ee1970c28b47d5deb1fc126bdb61a733eeb8d`) | safe-to-bump: 辞書エントリ追加のみ (artifact/material/weapon/person/region/world 系 worddata 更新)。scripts/build.ts の diff もあるが PKGBUILD では未実行 (静的 TSV/LICENSE のみ package)。build()/package() 構造変化なし、sha256 独立検証済み (issue #608) |
