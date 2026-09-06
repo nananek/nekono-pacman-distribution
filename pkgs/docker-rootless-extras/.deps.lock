@@ -3,7 +3,7 @@
 # Source: pkgs/docker-rootless-extras/.SRCINFO (depends + makedepends entries).
 # Format: 1 line per package: <name>=<full-version>
 
-bash=5.3.9-1
-docker=1:29.5.0-1
-rootlesskit=3.0.0-1
-slirp4netns=1.3.3-1
+bash=5.3.15-1
+docker=1:29.7.2-1
+rootlesskit=3.1.0-1
+slirp4netns=1.3.5-1
