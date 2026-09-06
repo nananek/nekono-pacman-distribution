@@ -2,14 +2,13 @@
 
 ## 状態
 
-**review 済み、approve** (最新: 2026-08-09 / 29.7.2)
+**review 済み、approve** (最新: 2026-09-06 / 29.8.0)
 
-AUR の `docker-rootless-extras` PKGBUILD を **純 fork**。diff は
-`# Maintainer:` → `# Contributor:` の置換 + fork 説明コメント追加、および
-v29.5.0 bump 時に `optdepends` に `gvisor-tap-vsock` を追加 (upstream で
-slirp4netns の代替 driver として導入されたため)。関数本体・install hook
-は無改変。各 release の review 履歴は本ファイル末尾の「更新履歴」 section
-参照。
+AUR の `docker-rootless-extras` 由来。package/install の主要処理は継承しつつ、
+安定供給できる `slirp4netns` を hard dependency に維持し、利用可能な network
+driver を optdepends に明示する依存方針を採用。AUR の shellcheck 用 no-op guards
+はpackage動作に影響しないため未追従。各 release の review 履歴は本ファイル
+末尾の「更新履歴」 section参照。
 
 ## 用途
 
@@ -31,18 +30,19 @@ maintainer の意図的設計)。Debian apt の同名 package とは flow が異
   - maintainer: Ľubomír 'the-k' Kučera
   - contributors: Hugo Osvaldo Barrera / PastLeo / koba1t
 - Upstream: https://github.com/moby/moby (= Docker / Moby project)
-  - 2 つの shell script を `docker-v29.5.0` annotated tag から取得
-  - tag commit: `9cfd86615a90644b86d33978ee0df3702e5021b0`
+  - 2 つの shell script を `docker-v29.8.0` annotated tag から取得
+  - tag commit: `3ce5872b7950c63ba2ffbc5123101019ff3e6682`
   - release author: `vvoland` (既知 moby maintainer)、prerelease: false
 
 ## 検証結果
 
-- [x] `source` URL = `raw.githubusercontent.com/moby/moby/docker-v29.5.0/...`
+- [x] `source` URL = `raw.githubusercontent.com/moby/moby/docker-v29.8.0/...`
   - Docker 公式 upstream repo、typosquat / なりすましリスクなし
-- [x] `sha256sums` 4 件すべて独立検証 (Issue #24 事前調査 + PR #33 の
-      claude-review.yml で再計算済み、両者一致)
-  - `dockerd-rootless.sh` (29.5.0): `904c9b9e35f6927c0a5e65afb4d35b6bc9eb1278c878044501281fc728c9be46`
-  - `dockerd-rootless-setuptool.sh` (29.5.0): `1c9f0dc93ebb3d75255254ec760d26a912affba7f329ab8abffe8e25eb0b3f94`
+- [x] `sha256sums` 4 件すべてを 2026-09-06 に独立検証
+  - upstream 2 scripts は raw URL の直接取得値を GitHub Contents API の blob と照合
+  - local 2 files は repository 上の実体から再計算
+  - `dockerd-rootless.sh` (29.8.0): `200203633806081a401e60aefdf68a8fa73fc7dc80aa854c52a69d47710a3488`
+  - `dockerd-rootless-setuptool.sh` (29.8.0): `1c9f0dc93ebb3d75255254ec760d26a912affba7f329ab8abffe8e25eb0b3f94`
   - `docker.socket` (ローカル AUR snapshot、変更なし): `d8695293e5d4a814763f13e1d36ed37273040666b4b91363d6c33171df8934c7`
   - `99-docker-rootless.conf` (ローカル AUR snapshot、変更なし): `d0d790d4c3d887b10b2b155b83a58a44980b9fa638f8c0f1faec0739dc0ef473`
 - [x] `package()`:
@@ -62,6 +62,9 @@ maintainer の意図的設計)。Debian apt の同名 package とは flow が異
     AUR のみ存在、現状 orphaned (maintainer: None) なので、optdepends として
     install したいユーザは AUR / foreign repo 対応が必要**。本 pkg の機能
     上は optdepends なので非必須、build / 配布には影響なし。
+  - `lxc`: experimental `lxc-user-nic` network driver
+  - `passt`: experimental `pasta` network / `pesto` port driver。pesto は
+    RootlessKit 3.1.0 + passt 2026_05_07.1afd4ed 以降、IPv4 only
 - [x] `install` hook (`docker-rootless-extras.install`):
   - `sysctl --system` で `99-docker-rootless.conf` の `kernel.
     unprivileged_userns_clone=1` を即時反映
@@ -72,8 +75,8 @@ maintainer の意図的設計)。Debian apt の同名 package とは flow が異
       / `docker-rootless-extras-bin` を network 互換に list
 - [x] `secrets` 混入なし (`.git` 削除済、秘密鍵 / token / `.gpg` ファイル
       等なし)
-- [x] AUR との diff: 純 fork (= 機能部分完全一致、`# Maintainer:` →
-      `# Contributor:` + コメント追記のみ)
+- [x] AUR との diff: package/install の主要処理は同一。依存方針とlint用
+      no-op guardsのみ意図的差分 (`# Maintainer:` → `# Contributor:` + コメント追記含む)
 
 ## セキュリティ所見
 
@@ -86,26 +89,28 @@ maintainer の意図的設計)。Debian apt の同名 package とは flow が異
 
 ## 依存方針 (AUR との意図的 diff)
 
-AUR の現行 PKGBUILD (v29.5.0) と本 repo の PKGBUILD で `depends` /
+AUR の現行 PKGBUILD (v29.8.0) と本 repo の PKGBUILD で `depends` /
 `optdepends` の振り方に意図的な差異がある:
 
-| | AUR v29.5.0 | 本 repo |
+| | AUR v29.8.0 | 本 repo |
 |---|---|---|
 | `slirp4netns` | `optdepends` (recommended) | **`depends` (必須)** |
 | `gvisor-tap-vsock` | (記載なし) | `optdepends` |
+| `lxc` / `passt` | `optdepends` | `optdepends` |
+| shell / version floor | `sh`、`docker>=1:29.5.0`、`rootlesskit>=3.0.0` | `bash`、`docker`、`rootlesskit` (Arch rolling の現行版を `.deps.lock` で監視) |
+| shellcheck用 no-op guards | あり | なし (package動作に影響しないため) |
 
 **本 repo が `slirp4netns` を depends に keep する理由**:
 
-AUR は v29.5.0 で `gvisor-tap-vsock` を主推奨 network driver に切替え、
-`slirp4netns` を optional に降格した。しかし `gvisor-tap-vsock` は
-**Arch 公式 repo に無く、AUR でも現状 orphaned (maintainer: None)**
-であり、安定供給が保証されていない。本 repo はビルド成果物を Tailscale
-経由で配信する self-host 運用なので、依存先の安定性が AUR より重要。
+AUR は複数の network driver を optional とし、`slirp4netns` を recommended
+としている。本 repo はビルド成果物を Tailscale 経由で配信する self-host
+運用なので、既定経路が必ず解決することを優先する。
 
 そこで、本 repo は:
 - `slirp4netns` を **`depends` のまま維持** (= 既存 ayaka 環境で動作保証)
-- `gvisor-tap-vsock` を **新規 `optdepends` として追加** (= 使いたい
+- `gvisor-tap-vsock` を **`optdepends` として維持** (= 使いたい
   ユーザは AUR / foreign repo で対応)
+- AUR と同じ `lxc` / `passt` alternative も `optdepends` として明示
 
 将来 `gvisor-tap-vsock` が Arch 公式 repo に入った時点で再評価する。
 
@@ -126,7 +131,7 @@ build 完了後の予定:
 
 ## 更新方針
 
-upstream の新 release (docker 29.5.x 等) が出たら:
+upstream の新 release (docker 29.8.x 等) が出たら:
 1. AUR PKGBUILD の pkgver / sha256sums を確認
 2. 本 dir の PKGBUILD + .SRCINFO を差し替え
 3. 4 sources の sha256 を独立再計算 (= curl + sha256sum で照合)
@@ -136,6 +141,18 @@ upstream の新 release (docker 29.5.x 等) が出たら:
    1 行追記 (review 日付 + PKGBUILD repo SHA + upstream tag commit SHA)
 
 ## 更新履歴
+
+- **2026-09-06 / 29.8.0** — approve (Issue #596)。Moby v29.8.0
+  (release 2026-09-03、by `vvoland`) へsync。annotated tag object
+  `dc4db3d292c317ca216dae9301dffc935c8d7680` と target commit
+  `3ce5872b7950c63ba2ffbc5123101019ff3e6682` はともに署名検証済み。
+  `dockerd-rootless.sh` の実効差分は pesto port driver のコメント2行のみ
+  (+2/-1、実行行変更なし)、setuptoolはbyte-identical。raw GitHubとContents
+  API blobを照合し sha256 を独立実測: rootless script `2002036338…`、
+  setuptool `1c9f0dc9…` (不変)。両scriptは `sh -n` 成功、systemd unit抽出結果も
+  従来と同一。dependsの必須変更なし。AUR現行との依存方針差を再確認し、
+  `lxc` / `passt` をoptdependsへ追加、slirp4netns hard dependencyは維持。
+  `.deps.lock` を現行Arch repoへrefresh。Closes #596。
 
 - **2026-08-09 / 29.7.2** — approve (Issue #502)。Docker Engine v29.7.2
   (release 2026-08-06、by `vvoland`) への sync。upstream tag commit:
