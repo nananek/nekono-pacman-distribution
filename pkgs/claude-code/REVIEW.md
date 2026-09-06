@@ -2,7 +2,7 @@
 
 ## 状態
 
-**review 済み、approve** (最新: 2026-09-03 / 2.1.259、復活: 2026-09-03)
+**review 済み、approve** (最新: 2026-09-06 / 2.1.263、復活: 2026-09-03)
 
 AUR の `claude-code` PKGBUILD を fork。改変なし。各 release の review 履歴は
 本ファイル末尾の「更新履歴」 section 参照。
@@ -28,16 +28,16 @@ AUR の `claude-code` PKGBUILD を fork。改変なし。各 release の review 
 
 ## 検証結果
 
-- [x] `source_x86_64` URL = `downloads.claude.ai/claude-code-releases/2.1.259/linux-x64/claude`
+- [x] `source_x86_64` URL = `downloads.claude.ai/claude-code-releases/2.1.263/linux-x64/claude`
   - Anthropic 公式 CDN、典型的な mirror spoof / DNS hijack に脆弱だが TLS で守られる
-- [x] `source_aarch64` URL = `downloads.claude.ai/claude-code-releases/2.1.259/linux-arm64/claude`
+- [x] `source_aarch64` URL = `downloads.claude.ai/claude-code-releases/2.1.263/linux-arm64/claude`
   - 同上
 - [x] `sha256sums_x86_64` が upstream binary と一致
-  - 実測 (2.1.259): `f7dd62ae415378018cd21dd950eb3bac174ab085830304d3b8b098146bfd47b6`
-  - PKGBUILD 値: 一致 (本 review 時の `curl | sha256sum` 独立再計算で確認、2.1.235/2.1.236 も経由で連続検証)
+  - 実測 (2.1.263): `26d020351e8112f4006790f3cfce43b4c9df0c1bb1d0e542364d64151b81d5ba`
+  - PKGBUILD 値: 一致 (公式 CDN 直接取得と GitHub Release archive 展開物で二重確認)
 - [x] `sha256sums_aarch64` が upstream binary と一致
-  - 実測 (2.1.259): `c6ff03c389ccdeae0f19e9dc32488eeba61fbef4796f531dbfba6c00f45040d0`
-  - PKGBUILD 値: 一致 (本 review 時の `curl | sha256sum` 独立再計算で確認、2.1.235/2.1.236 も経由で連続検証)
+  - 実測 (2.1.263): `7d25d7c8ae6c6e009cc7dae4e817f674179fd31fb7761bcd56fee4c2902b4c03`
+  - PKGBUILD 値: 一致 (公式 CDN 直接取得と GitHub Release archive 展開物で二重確認)
 - [x] `source=("cc-legal::...legal-and-compliance.md")` の sha256 を pin
   - 実測: `4a4cc1762fb1d992a66347dcf94c60a27d328391d8074c13e8ae9d5c4182413b`
   - 法文 markdownもsourceとしてhash検証し、取得内容をlicenseとして同梱
@@ -67,9 +67,9 @@ AUR の `claude-code` PKGBUILD を fork。改変なし。各 release の review 
 
 **approve** — そのまま build host で `makepkg -s --sign --key 483D...` 可。
 
-binary は Anthropic 公式 CDN + sha256 pin で守られる。Anthropic の GPG
-signing は CLI binary には付かないため (= npm tarball / CDN download とも
-署名なし)、tarball の sha256 を毎 release 手動更新する運用が必須。
+binary は Anthropic 公式 CDN + sha256 pin で守られる。raw CDN binary 自体に
+直接署名は付かないため、sha256 を毎 release 手動更新し、GitHub Release の
+署名付き checksum manifest / archive 展開物とも cross-check する運用が必須。
 
 ## 更新方針
 
@@ -82,6 +82,26 @@ upstream の新 release (2.1.143 等) が出たら:
    1 行追記
 
 ## 更新履歴
+
+- **2026-09-06 / 2.1.263** — approve。Issue #598 (2.1.260) と #601
+  (2.1.261) を、Issue 作成後に公開された 2.1.263 まで集約 (`v2.1.262` は
+  GitHub Release 無し)。全 release の author は `ashwin-ant` で従来と同一、
+  公式 CDN / `package()` / wrapper / depends / optdepends / `!strip` は変更なし。
+  npm package は `dependencies: {}` のまま、platform optionalDependencies の
+  version 同期のみ。2.1.259 と比較して `install.cjs` / `cli-wrapper.cjs` /
+  launcher / README / LICENSE は byte-identical、`sdk-tools.d.ts` は Artifact
+  tool の型追加だけ (2.1.261 → 2.1.263 はこれらも byte-identical)。2.1.260 は括弧を含む path rule や zsh 特殊変数経由の
+  command substitution に関する permission/sandbox hardening、2.1.261 は
+  positional parameter や quoted `sh -c` 内の危険な `rm -rf` 検知強化、
+  2.1.263 は bug fix / reliability update を含む。
+  breaking package change / 新規 install hook / supply-chain 変更なし。
+  raw CDN binary を独立取得し SHA-256 を実測、GitHub Release archive の asset
+  digest と archive 実測値が一致し、展開した binary も raw CDN と byte 一致:
+  x86_64 `26d020351e8112f4006790f3cfce43b4c9df0c1bb1d0e542364d64151b81d5ba`、
+  aarch64 `7d25d7c8ae6c6e009cc7dae4e817f674179fd31fb7761bcd56fee4c2902b4c03`。
+  legal document の hash は不変。`.gitignore` に復活時の source cache 除外漏れも
+  復元。PKGBUILD 改変は `pkgver` + 2 architecture hash の3値のみ。Closes #598,
+  #601。
 
 - **2026-09-03 / 2.1.259** — approve。PR #591 の retire 後に再提供。GitHub Release の author は `ashwin-ant` で過去 release と同一。公式 CDN、依存、wrapper、`!strip` は従来どおり。upstream の managed MCP、headless permission prompt、session state、Bash deny rule 等の修正は CLI 内部変更で、package の install 構成と supply-chain は変更なし。公式 CDN から x86_64/aarch64 binary を独立取得し SHA-256 を確認。
 
