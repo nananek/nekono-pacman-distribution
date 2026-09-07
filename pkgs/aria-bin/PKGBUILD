@@ -12,7 +12,7 @@
 #     ldd 結果から gst-plugins-base-libs (gstreamer audio backend) を明示。
 
 pkgname=aria-bin
-pkgver=1.5.11
+pkgver=1.5.12
 pkgrel=1
 pkgdesc='A cross-platform Misskey client built with Flutter'
 arch=('x86_64' 'aarch64')
@@ -34,9 +34,9 @@ source_aarch64=("${url}/releases/download/${_tag}/aria-${_tag}-linux-arm64.tar.g
 
 sha256sums=('b774b7ea50393e78016c3a8bfa0b26b480d3a32de8121c9694e97aaccb7e2342'
             '878b0a27b7706036a2ddcb41bab05bf65ba9dd4718cabc25961f45daa5ab8ace'
-            '8aa76435ec418a5b96f47fbf9a600d0c2a64329c9157725af5ba2a6138e86fb5')
-sha256sums_x86_64=('d01ac37d79de24ea24a5d79fa81ca226b93bfd2e15530a67743f1f2d2cbbafc1')
-sha256sums_aarch64=('d2917f899c2c126750704c844cfc7888d06744d07d9aacb3ba8c97adbe015094')
+            '8951fe5e4ec2da56d2e85b3c2c5375d5bfdbd38c3b897ebb5e47855d72d284ed')
+sha256sums_x86_64=('5512e087ab9b77b09dcb43c1b0fae6888a7be16cf4cd123d18e3bfec2151fee1')
+sha256sums_aarch64=('1631487257883be2d021148a28149017f5a2d7512e11ab0ce69bbb5378a72e4a')
 
 package() {
 	install -dm755 "${pkgdir}/opt/${pkgname%-*}"
