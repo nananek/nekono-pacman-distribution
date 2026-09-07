@@ -2,7 +2,7 @@
 
 ## 状態
 
-**review 済み、approve** (最新: 2026-08-20 / 1.5.11)
+**review 済み、approve** (最新: 2026-09-07 / 1.5.12)
 
 AUR に `aria` / `aria-bin` は存在しないため、本 repo オリジナルの PKGBUILD として
 新規作成 (= AUR からの fork ではない)。
@@ -36,16 +36,20 @@ AUR に `aria` / `aria-bin` は存在しないため、本 repo オリジナル�
 - [x] `source_x86_64` / `source_aarch64` URL = `github.com/poppingmoon/aria`
       本家 release、typosquatting 無し
 - [x] `sha256sums` / `sha256sums_x86_64` / `sha256sums_aarch64` が実測値と一致
-  - `aria-v1.5.11-linux-x64.tar.gz`: `d01ac37d79de24ea24a5d79fa81ca226b93bfd2e15530a67743f1f2d2cbbafc1`
-  - `aria-v1.5.11-linux-arm64.tar.gz`: `d2917f899c2c126750704c844cfc7888d06744d07d9aacb3ba8c97adbe015094`
-  - `com.poppingmoon.aria.desktop`: `b774b7ea50393e78016c3a8bfa0b26b480d3a32de8121c9694e97aaccb7e2342` (1.5.8 と同一、無変更)
+  - `aria-v1.5.12-linux-x64.tar.gz`: `5512e087ab9b77b09dcb43c1b0fae6888a7be16cf4cd123d18e3bfec2151fee1`
+  - `aria-v1.5.12-linux-arm64.tar.gz`: `1631487257883be2d021148a28149017f5a2d7512e11ab0ce69bbb5378a72e4a`
+  - `com.poppingmoon.aria.desktop`: `b774b7ea50393e78016c3a8bfa0b26b480d3a32de8121c9694e97aaccb7e2342` (1.5.8 から無変更)
   - `com.poppingmoon.aria.png`: `878b0a27b7706036a2ddcb41bab05bf65ba9dd4718cabc25961f45daa5ab8ace` (同一)
-  - `com.poppingmoon.aria.metainfo.xml`: `8aa76435ec418a5b96f47fbf9a600d0c2a64329c9157725af5ba2a6138e86fb5` (1.5.8 `872b20c9...` から変更あり、独立実測で更新)
-  - `makepkg --verifysource` で全 source の sha256 検証成功済み (1.5.11 で再検証)
-- [x] tag `v1.5.11` の git commit (`0f957e94a953f3d30203c4eceebf4660002d4a3f`) は
-      **GPG verified** (author: poppingmoon 本人、`verification.verified: true`)。release は
-      `github-actions[bot]` による CI 公開 (= verified commit からの自動 build
-      pipeline、tampering の兆候なし、1.5.8→1.5.11 間で author/署名経路不変)
+  - `com.poppingmoon.aria.metainfo.xml`: `8951fe5e4ec2da56d2e85b3c2c5375d5bfdbd38c3b897ebb5e47855d72d284ed`
+    (1.5.11 `8aa76435...` から変更あり、独立実測で更新。diff 確認: フランス語
+    ローカライズ追加 + `<release version="1.5.12">` エントリ追加のみ、無害)
+  - GitHub API の release asset digest とも一致確認済み (独立ダウンロード実測
+    と asset metadata の digest 双方が一致)
+- [x] tag `v1.5.12` の git commit (`8d822114c77df0920e38484b0869b3185dc6997c`) は
+      **GPG verified** (author: poppingmoon 本人、`verification.verified: true`,
+      `verification.reason: valid`)。release は `github-actions[bot]` による
+      CI 公開 (= verified commit からの自動 build pipeline、tampering の
+      兆候なし、1.5.11→1.5.12 間で author/署名経路不変)
 - [x] `package()`: `install -dm755` / `cp -a` / `ln -s` / `install -Dm644` の
       標準コマンドのみ。network fetch / eval / curl / pip 等の動的取得なし
   - `/opt/aria/{aria,data,lib}`: upstream tarball の中身をそのまま配置
@@ -112,6 +116,7 @@ release pipeline (`github-actions` bot による GPG verified commit からの
 | 2026-07-30 | 1.5.8-3 | bot PR #458 | — (pkgrel bump のみ) | `pkgrel` +1 (deps changed): gst-plugins-base-libs 1.28.5-2 → 1.28.5-4 |
 | 2026-08-09 | 1.5.8-4 | bot PR #504 | — (pkgrel bump のみ) | `pkgrel` +1 (deps changed): gst-plugins-base-libs 1.28.5-4 → 1.28.6-1 |
 | 2026-08-20 | 1.5.11-1 | (this commit) | `0f957e94a953f3d30203c4eceebf4660002d4a3f` (GPG verified) | safe-to-bump: 1.5.8 → 1.5.11 (3 releases: 1.5.9/1.5.10/1.5.11, いずれも bugfix + Flutter 3.44.9 / deps / i18n / metainfo 更新。package() 構造不変、ldd deps 変化なし、metainfo のみ sha 更新)。nvchecker 監視漏れ (aria-bin section 欠落) を同時修正。 |
+| 2026-09-07 | 1.5.12-1 | (this commit) | `8d822114c77df0920e38484b0869b3185dc6997c` (GPG verified) | safe-to-bump: 1.5.11 → 1.5.12 (bugfix + refactor のみ、Flutter 3.47.1 へ build upgrade。`flatpak/` diff は metainfo.xml のみ = fr ローカライズ追加 + release entry 追加、無害。package() 構造不変、`ldd` 再検証で未解決 lib 無し、depends 変化なし)。 |
 
 ## 更新方針
 
