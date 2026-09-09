@@ -5,12 +5,14 @@
 
 avahi=1:0.9rc5-1
 curl=8.22.0-1
+gcc-libs=16.2.1+r23+gd564253eb6c8-1
+gtk3=1:3.24.52-1
+hicolor-icon-theme=0.18-1
 libayatana-appindicator=0.6.0-2
 libcap=2.78-1
 libdrm=2.4.134-1
 libevdev=1.13.7-1
 libmfx=23.2.2-6
-libnotify=0.8.8-1
 libpipewire=1:1.6.8-1
 libpulse=17.0+r98+gb096704c0-1
 libva=2.24.1-1
@@ -23,6 +25,8 @@ miniupnpc=2.3.3-3
 numactl=2.0.19-1
 openssl=3.6.4-1
 opus=1.6.1-1
+qt6-base=6.11.2-3
+qt6-svg=6.11.2-1
 # MISSING udev  (systemd が provide、公式 repo に単体 package 無し = 監視対象外)
 vulkan-icd-loader=1.4.357.0-1
 which=2.25-1
