@@ -1,0 +1,117 @@
+# Maintainer: Nekono Nana KAKKO KARI <3267314+nananek@users.noreply.github.com>
+# Based on the AUR sunshine PKGBUILD.
+#
+# Builds the multidisplay fork, which captures and streams several host
+# displays at once. Unlike the AUR recipe this fetches nothing during build():
+# the source tarball ships its submodules, the FFmpeg and Boost archives are
+# pinned in source[], and the npm packages come from a vendored cache.
+
+pkgname=sunshine-nekono
+_srcname=sunshine
+pkgver=2026.906.222525.nekono1
+_reltag=v2026.906.222525-nekono.1
+pkgrel=1
+pkgdesc='Self-hosted game stream host for Moonlight, multidisplay fork'
+arch=('x86_64')
+license=('GPL-3.0-only')
+url='https://github.com/nananek/Sunshine'
+
+# Boost 1.89.0 exactly: cmake/dependencies/Boost_Sunshine.cmake asks
+# find_package(Boost 1.89.0 EXACT), so Arch's boost (1.92) cannot satisfy it.
+_boostver=1.89.0
+# The FFmpeg build the upstream project pins, taken from the build-deps tag that
+# cmake/dependencies/ffmpeg.cmake would otherwise resolve with git describe.
+_ffmpegtag=v2026.910.121303
+# nlohmann/json is vendored rather than taken from Arch's nlohmann-json so the
+# package needs no extra system dependency; cmake falls back to FetchContent
+# when find_package misses, and this points that at the pinned archive.
+_jsonver=3.11.3
+
+depends=(
+    'avahi' 'curl' 'gcc-libs' 'libayatana-appindicator' 'libcap' 'libdrm'
+    'libevdev' 'libpipewire' 'libpulse' 'libva' 'libx11' 'libxcb' 'libxfixes'
+    'libxrandr' 'libxtst' 'miniupnpc' 'numactl' 'openssl' 'opus' 'qt6-base'
+    'qt6-svg' 'udev' 'vulkan-icd-loader'
+)
+makedepends=(
+    'cmake' 'nodejs' 'npm' 'python-jinja' 'shaderc'
+    'desktop-file-utils' 'appstream' 'appstream-glib'
+)
+optdepends=(
+    'cuda: Nvidia GPU encoding support'
+    'libva-mesa-driver: AMD GPU encoding support'
+)
+provides=('sunshine')
+conflicts=('sunshine')
+install=sunshine.install
+
+source=(
+    "$pkgname-$pkgver.tar.gz::https://github.com/nananek/Sunshine/releases/download/$_reltag/$_srcname-$pkgver.tar.gz"
+    "$pkgname-npm-cache-$pkgver.tar.gz::https://github.com/nananek/Sunshine/releases/download/$_reltag/$_srcname-npm-cache-$pkgver.tar.gz"
+    "boost-$_boostver-cmake.tar.xz::https://github.com/boostorg/boost/releases/download/boost-$_boostver/boost-$_boostver-cmake.tar.xz"
+    "Linux-x86_64-ffmpeg-$_ffmpegtag.tar.gz::https://github.com/LizardByte/build-deps/releases/download/$_ffmpegtag/Linux-x86_64-ffmpeg.tar.gz"
+    "json-$_jsonver.tar.xz::https://github.com/nlohmann/json/releases/download/v$_jsonver/json.tar.xz"
+    'sunshine.install'
+)
+sha256sums=(
+    '5f471841cba3c97b1bc0fb08ebbb42ba33a5fb3c9872d532e35c024485d8d221'
+    'dde939d66225baf5711c151986a97f80aa1a47ad09f0a6625d84d6a3ceb82c13'
+    '67acec02d0d118b5de9eb441f5fb707b3a1cdd884be00ca24b9a73c995511f74'
+    '496d2bbb674d01e6033e31b9dfc15cbc9dc1494e882a4505f6ab1e03f75b385c'
+    'd6c65aca6b1ed68e7a182f4757257b107ae403032760ed6ef121c9d55e81757d'
+    'd7410467b90edac8063613519bdb5e7adb5c3476191780261179a4061859c7c7'
+)
+
+prepare() {
+    cd "$srcdir/$_srcname-$pkgver"
+
+    # The web UI is built by vite. npm ci runs entirely from the vendored cache,
+    # and the unreachable registry makes a network fetch fail loudly rather than
+    # silently succeed if --offline ever stops being honoured.
+    npm ci --offline --cache "$srcdir/npm-cache" --registry http://127.0.0.1:9
+}
+
+build() {
+    cd "$srcdir/$_srcname-$pkgver"
+
+    # Sunshine derives its version from git describe; the tarball has no .git.
+    export BRANCH="multidisplay"
+    export BUILD_VERSION="${pkgver%.nekono1}"
+    export COMMIT="c5afdde2"
+
+    export CFLAGS="${CFLAGS/-Werror=format-security/}"
+    export CXXFLAGS="${CXXFLAGS/-Werror=format-security/}"
+
+    # makepkg.conf on this build host sets no MAKEFLAGS, which leaves cmake
+    # --build serial. Sunshine has enough large translation units for that to
+    # dominate the build time.
+    export MAKEFLAGS="${MAKEFLAGS:--j$(nproc)}"
+
+    cmake \
+        -S . \
+        -B build \
+        -Wno-dev \
+        -D CMAKE_BUILD_TYPE=Release \
+        -D CMAKE_INSTALL_PREFIX=/usr \
+        -D BUILD_DOCS=OFF \
+        -D BUILD_TESTS=OFF \
+        -D BUILD_WERROR=ON \
+        -D SUNSHINE_ENABLE_CUDA=OFF \
+        -D CUDA_FAIL_ON_MISSING=OFF \
+        -D SUNSHINE_EXECUTABLE_PATH=/usr/bin/sunshine \
+        -D SUNSHINE_ASSETS_DIR="share/sunshine" \
+        -D SUNSHINE_PUBLISHER_NAME='Nekono' \
+        -D SUNSHINE_PUBLISHER_WEBSITE='https://github.com/nananek/Sunshine' \
+        -D SUNSHINE_PUBLISHER_ISSUE_URL='https://github.com/nananek/Sunshine/issues' \
+        -D FETCHCONTENT_FULLY_DISCONNECTED=OFF \
+        -D FETCHCONTENT_SOURCE_DIR_BOOST="$srcdir/boost-$_boostver" \
+        -D FFMPEG_PREPARED_BINARIES="$srcdir/ffmpeg" \
+        -D FETCHCONTENT_SOURCE_DIR_JSON="$srcdir/json"
+
+    cmake --build build
+}
+
+package() {
+    cd "$srcdir/$_srcname-$pkgver"
+    DESTDIR="$pkgdir" cmake --install build
+}
