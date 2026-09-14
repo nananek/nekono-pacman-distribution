@@ -1,0 +1,40 @@
+# Maintainer: Nekono Nana KAKKO KARI <3267314+nananek@users.noreply.github.com>
+# Based on the AUR moonlight-qt PKGBUILD by Konstantin Liberty and Cedric Girard.
+#
+# This builds the multidisplay fork rather than upstream: it can open one window
+# per host display instead of a single stream. The source tarball is generated
+# from the fork with its submodules already in place, so nothing is fetched
+# during build().
+
+pkgname=moonlight-qt-nekono
+_srcname=moonlight-qt
+pkgver=6.1.0.nekono1
+_reltag=v6.1.0-nekono.1
+pkgrel=1
+pkgdesc='GameStream client for PCs, multidisplay fork'
+arch=('x86_64')
+license=('GPL-3.0-or-later')
+url='https://github.com/nananek/moonlight-qt'
+depends=('qt6-base' 'qt6-declarative' 'qt6-svg' 'ffmpeg' 'sdl2_ttf' 'sdl2-compat' 'libplacebo')
+makedepends=('qt6-tools')
+optdepends=('libva-intel-driver: hardware acceleration for Intel GPUs GMA 4500 (2008) up to Coffee Lake (2017)'
+            'intel-media-driver: hardware acceleration for Intel GPUs starting from Broadwell (2014) and newer (e.g. Intel Arc)')
+provides=('moonlight-qt')
+conflicts=('moonlight-qt')
+source=("$pkgname-$pkgver.tar.gz::https://github.com/nananek/$_srcname/releases/download/$_reltag/$_srcname-$pkgver.tar.gz")
+sha256sums=('524707d10f2a5656bec58413210a8575f70d13c9caa26e028ce30538c936a677')
+
+prepare() {
+  cd "$srcdir/$_srcname-$pkgver"
+  qmake6 PREFIX=/usr moonlight-qt.pro
+}
+
+build() {
+  cd "$srcdir/$_srcname-$pkgver"
+  make release
+}
+
+package() {
+  cd "$srcdir/$_srcname-$pkgver"
+  make INSTALL_ROOT="$pkgdir" install
+}
