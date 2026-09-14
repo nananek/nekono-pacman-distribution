@@ -1,0 +1,13 @@
+# Snapshot of Arch official repo versions for depends + makedepends of moonlight-qt-nekono.
+# Auto-generated and updated by .github/workflows/dep-version-pr.yml.
+# Source: pkgs/moonlight-qt-nekono/.SRCINFO (depends + makedepends entries).
+# Format: 1 line per package: <name>=<full-version>
+
+ffmpeg=2:9.0.1-4
+libplacebo=7.360.1-6
+qt6-base=6.11.2-3
+qt6-declarative=6.11.2-1
+qt6-svg=6.11.2-1
+qt6-tools=6.11.2-1
+sdl2-compat=2.32.72-1
+sdl2_ttf=2.24.0-2
