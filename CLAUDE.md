@@ -151,6 +151,26 @@ PR の supply-chain review はかつて GitHub Actions の `claude-review.yml` �
   voicevox-engine-cuda はこの指定あり
 - 実例: voicevox-engine-cuda (PR #48)
 
+#### 7. 自前生成 tarball の `--mtime` に固定日付を書かない (build が無限ループする)
+
+- fork を package 化する等で submodule 込みの source tarball を自分で作る場合、
+  再現性のため `tar --mtime` を固定したくなるが、**UTC 固定値を書くと JST では
+  最大 9 時間未来**になる。 build host の時計より未来の mtime を持つファイルが
+  混ざると:
+  - qmake (`Makefile: *.pro`) や autotools (`configure: configure.ac`) の
+    **再生成ルールが毎回発火** し、 generator ↔ make が終わらないループに入る
+  - `make` が CPU を食い続けるだけで object が 1 つも生成されない
+    (= hang に見えるが実際はループ)
+- 対処: **pin した commit の author date** を使う。 定義上必ず過去で、
+  同じ commit からは同じ値が得られる (= バイト単位で再現する tarball になる)
+  ```sh
+  _epoch=$(git log -1 --format=%ct <commit>)
+  tar --sort=name --owner=0 --group=0 --numeric-owner --mtime="@${_epoch}" \
+      -czf <name>-<pkgver>.tar.gz <name>-<pkgver>
+  ```
+- 実例: moonlight-qt-nekono (PR #625)。 `--mtime='2026-09-15 00:00:00Z'` が
+  JST 09:00 になり、 qmake の config test で 20 分以上ループした
+
 ### Commit policy
 
 - commit は **必ず `-S` 署名** (Nekono GPG)。verify-commit で trust chain
