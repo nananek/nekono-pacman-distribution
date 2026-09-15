@@ -117,6 +117,7 @@ release pipeline (`github-actions` bot による GPG verified commit からの
 | 2026-08-09 | 1.5.8-4 | bot PR #504 | — (pkgrel bump のみ) | `pkgrel` +1 (deps changed): gst-plugins-base-libs 1.28.5-4 → 1.28.6-1 |
 | 2026-08-20 | 1.5.11-1 | (this commit) | `0f957e94a953f3d30203c4eceebf4660002d4a3f` (GPG verified) | safe-to-bump: 1.5.8 → 1.5.11 (3 releases: 1.5.9/1.5.10/1.5.11, いずれも bugfix + Flutter 3.44.9 / deps / i18n / metainfo 更新。package() 構造不変、ldd deps 変化なし、metainfo のみ sha 更新)。nvchecker 監視漏れ (aria-bin section 欠落) を同時修正。 |
 | 2026-09-07 | 1.5.12-1 | (this commit) | `8d822114c77df0920e38484b0869b3185dc6997c` (GPG verified) | safe-to-bump: 1.5.11 → 1.5.12 (bugfix + refactor のみ、Flutter 3.47.1 へ build upgrade。`flatpak/` diff は metainfo.xml のみ = fr ローカライズ追加 + release entry 追加、無害。package() 構造不変、`ldd` 再検証で未解決 lib 無し、depends 変化なし)。 |
+| 2026-09-15 | 1.5.13-1 | (this commit) | `4c1bf8c148c5b96a18a289b69d5ac63bb6b02361` (GPG verified) | safe-to-bump: 1.5.12 → 1.5.13 (upstream release notes は Twemoji font の eye layer 順序修正 1 件 + release commit のみ)。`flatpak/` diff は metainfo.xml の `<release version="1.5.13">` entry 追加のみ (desktop / png は sha256 変化なし)。tarball の top-level 構造 (`aria` / `data` / `lib`) 不変、`objdump -p` の NEEDED 再検証で gtk3 / gdk / pango / harfbuzz / atk / cairo / gdk-pixbuf / glib / stdc++ のみ = depends 変化なし (fvp / mdk / ffmpeg は従来どおり bundle 同梱)。 |
 
 ## 更新方針
 
