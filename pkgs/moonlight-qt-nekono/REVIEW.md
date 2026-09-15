@@ -2,7 +2,7 @@
 
 ## 状態
 
-**review 済み、approve** (2026-09-15 / fork tag v6.1.0-nekono.2)
+**review 済み、approve** (2026-09-15 / fork tag v6.1.0-nekono.3)
 
 **本 repo で初めて「自分の fork を自分でビルドする」package。** 他の package が
 upstream の release artifact を pin して再梱包するのに対し、これは信頼の起点が
@@ -29,18 +29,18 @@ Nekono 自身の commit になる。下記「信頼モデルの差」を読ん�
 
 | 対象 | commit |
 |---|---|
-| moonlight-qt (superproject) | `c70c5e922ea534e2f660c49ebed275bda168b719` |
+| moonlight-qt (superproject) | `b87099a54d5b905db5f7afee55344fde2b8a7b4b` |
 | moonlight-common-c | `6cb7e7aa1cb29dd70629685056cf8b57399292fa` (これも Nekono fork) |
 | qmdnsengine | `920c097ffa742e2968290f15d4dde6693aec02e5` |
 | app/SDL_GameControllerDB | `8d9fefd7b810f2541f78cc7a8ccbd185bc84c7a5` |
 
 ## 検証結果
 
-- [x] `source` URL = `github.com/nananek/moonlight-qt/releases/download/v6.1.0-nekono.2/moonlight-qt-6.1.0.nekono2.tar.gz`
+- [x] `source` URL = `github.com/nananek/moonlight-qt/releases/download/v6.1.0-nekono.3/moonlight-qt-6.1.0.nekono3.tar.gz`
   - 自分の org/repo。typosquat の余地なし
 - [x] `sha256sums` を **独立再計算で検証**
   - 公開済み asset を再 download して `sha256sum` =
-    `52fbdd26bf77a18d31b081c68a73d08da325bd980314586e541a0a10f87c0469`
+    `3ba2f6cc33057b5a0ba74959c6aa358fcebfdfb5342e683003b0584b98129c3b`
   - PKGBUILD 値と一致。SKIP 不使用
   - 同じ作業ツリーから tar を作り直しても同一 hash (決定的生成を確認)
 - [x] `prepare()` は `qmake6 PREFIX=/usr moonlight-qt.pro` のみ。patch 無し
@@ -101,3 +101,9 @@ Nekono 自身の commit になる。下記「信頼モデルの差」を読ん�
   掛けないため、Session 側の数が 0 のまま残っていたのが原因。superproject の
   この 1 commit (`session.cpp` のみ) 以外に source の差分なし、submodule も不変。
   PKGBUILD の差分は `pkgver` / `_reltag` / `sha256sums` のみ
+- 6.1.0.nekono3 (2026-09-15): fork commit `b87099a5`。2 枚目以降のストリーム
+  ウィンドウが `SDL_WINDOW_ALLOW_HIGHDPI` 無しで作られており、出力スケーリングの
+  掛かったデスクトップ (ayaka: 4K @ 1.75x) では論理サイズで描画されてコンポジタに
+  引き伸ばされ、文字が読めないほどぼやけていた。1 枚目と同じフラグで作るよう修正。
+  superproject のこの 1 commit (`session.cpp` のみ) 以外に source の差分なし、
+  submodule も不変。PKGBUILD の差分は `pkgver` / `_reltag` / `sha256sums` のみ
