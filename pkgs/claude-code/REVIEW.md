@@ -28,15 +28,15 @@ AUR の `claude-code` PKGBUILD を fork。改変なし。各 release の review 
 
 ## 検証結果
 
-- [x] `source_x86_64` URL = `downloads.claude.ai/claude-code-releases/2.1.263/linux-x64/claude`
+- [x] `source_x86_64` URL = `downloads.claude.ai/claude-code-releases/2.1.272/linux-x64/claude`
   - Anthropic 公式 CDN、典型的な mirror spoof / DNS hijack に脆弱だが TLS で守られる
-- [x] `source_aarch64` URL = `downloads.claude.ai/claude-code-releases/2.1.263/linux-arm64/claude`
+- [x] `source_aarch64` URL = `downloads.claude.ai/claude-code-releases/2.1.272/linux-arm64/claude`
   - 同上
 - [x] `sha256sums_x86_64` が upstream binary と一致
-  - 実測 (2.1.263): `26d020351e8112f4006790f3cfce43b4c9df0c1bb1d0e542364d64151b81d5ba`
+  - 実測 (2.1.272): `d81396a668eb76fbddb49a2a5841f1b5d7af96b4c1f6500ced92f2c988f5bcd4`
   - PKGBUILD 値: 一致 (公式 CDN 直接取得と GitHub Release archive 展開物で二重確認)
 - [x] `sha256sums_aarch64` が upstream binary と一致
-  - 実測 (2.1.263): `7d25d7c8ae6c6e009cc7dae4e817f674179fd31fb7761bcd56fee4c2902b4c03`
+  - 実測 (2.1.272): `214a90efdd16ee0ea81132ffecced588dba394d178cc494f285ba04b5288c8de`
   - PKGBUILD 値: 一致 (公式 CDN 直接取得と GitHub Release archive 展開物で二重確認)
 - [x] `source=("cc-legal::...legal-and-compliance.md")` の sha256 を pin
   - 実測: `4a4cc1762fb1d992a66347dcf94c60a27d328391d8074c13e8ae9d5c4182413b`
@@ -82,6 +82,18 @@ upstream の新 release (2.1.143 等) が出たら:
    1 行追記
 
 ## 更新履歴
+
+- **2026-09-15 / 2.1.272** — approve。Issue #617 (2.1.266) / #619 (2.1.267)
+  / #621 (2.1.268) / #622 (2.1.269) / #624 (2.1.270) を、Issue 作成後に公開
+  された最新 2.1.272 (= npm `latest` dist-tag) まで集約。全 release の author
+  は `ashwin-ant` で従来と同一、公式 CDN path / `package()` / wrapper /
+  depends / optdepends / `!strip` は変更なし。npm tarball を 2.1.263 と
+  file 単位で比較したところ差分は `package.json` (version + platform
+  optionalDependencies の version 同期のみ、`dependencies` は空のまま) と
+  `sdk-tools.d.ts` (Artifact asset / project memory 系 SDK 型の追加) の 2 本
+  のみで、`install.cjs` / `cli-wrapper.cjs` / launcher / README / LICENSE は
+  byte-identical。`cc-legal` (legal-and-compliance.md) も sha256 変化なし
+  (`4a4cc176...`)。sha256 は公式 CDN から独立に再実測。
 
 - **2026-09-06 / 2.1.263** — approve。Issue #598 (2.1.260) と #601
   (2.1.261) を、Issue 作成後に公開された 2.1.263 まで集約 (`v2.1.262` は
