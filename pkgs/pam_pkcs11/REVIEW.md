@@ -55,15 +55,15 @@ Arch 公式 (core/extra) には無く、AUR の `pam_pkcs11` のみ。AUR を直
 
 ## 検証結果
 
-- [x] `source` URL = `github.com/OpenSC/pam_pkcs11/archive/pam_pkcs11-0.6.13.tar.gz`
+- [x] `source` URL = `github.com/OpenSC/pam_pkcs11/archive/pam_pkcs11-0.6.14.tar.gz`
   - OpenSC 公式 organization、PAM PKCS#11 認証スタックの正規 upstream
 - [x] `sha256sums` (= 我々が AUR の md5 → sha256 に切替) が upstream tarball と一致
-  - 実測: `8a853f4e6e136ceecdcffad798570e3d6af2fde08e975656b2dc931989c35aff`
-  - PKGBUILD 値: `8a853f4e6e136ceecdcffad798570e3d6af2fde08e975656b2dc931989c35aff`
-  - 一致
-  - 参考: AUR PKGBUILD の md5sums `329426f89f13a5374828c35199c54d73` も
-    同 tarball で一致確認済み (= 改ざんなし)
-- [⚠] Tag `pam_pkcs11-0.6.13` の git commit (`b8dbe6370d36a6a11a466d5f0ee285804103e030`)
+  - 実測 (0.6.14): `5d9acdb177ea2dfd7b698f6cdcc485107888cc1c9dcd15227436831c098a4075`
+  - PKGBUILD 値: 一致
+  - 参考: 0.6.13 時点の実測値は
+    `8a853f4e6e136ceecdcffad798570e3d6af2fde08e975656b2dc931989c35aff`
+    (AUR の md5sums `329426f89f13a5374828c35199c54d73` とも一致確認済み)
+- [⚠] Tag `pam_pkcs11-0.6.14` の git commit (`70fbcd57f0adfd73d321920c30bcef4a6085cfb3`)
       は **GPG verified: false** — OpenSC project は commit signing を運用
       していない。tarball md5 pin で integrity 確保 (= GitHub release CI に
       依存)、author/committer = Paul Wolneykien (= 主開発者) と GitHub
@@ -121,3 +121,4 @@ upstream の新 release (0.6.14 等) が出たら:
 | 2026-08-30 | 0.6.13-13 | (this PR) | — (pkgrel bump のみ) | `pkgrel` +1 (deps changed): openssl 3.6.3-1 → 3.6.4-1 |
 | 2026-08-30 (backfill) | 0.6.13-14 | `f27b6d3` | — (pkgrel bump のみ) | `pkgrel` +1 (deps changed): pkgconf 3.0.5-1 → 3.0.6-1 (REVIEW.md 追記漏れの backfill) |
 | 2026-09-06 | 0.6.13-15 | (this PR) | — (pkgrel bump のみ) | `pkgrel` +1 (deps changed): pkgconf 3.0.6-1 → 3.0.7-1 |
+| 2026-09-15 | 0.6.14-1 | (this commit) | `70fbcd57f0adfd73d321920c30bcef4a6085cfb3` (tag `pam_pkcs11-0.6.14`、GPG unverified = OpenSC の従来運用どおり) | safe-to-bump: 0.6.13 → 0.6.14 (upstream は minor bugfix release: `pam_get_pwd()` の SIGSEGV 修正、OpenSSL 4.0 対応 (`ASN1_STRING_get0_data`)、Autoconf 2.73 対応、distcheck 修正、ka 翻訳追加)。`configure.ac` の diff は version 文字列 / `AC_CONFIG_MACRO_DIR([aclocal])` 追加 / `ALL_LINGUAS` への `ka` 追加のみ、`bootstrap` と top-level `Makefile.am` は無変更。depends / makedepends / configure 引数の変更不要、tarball root 名も `pam_pkcs11-pam_pkcs11-<ver>` のまま。`pkgrel` は 15 → 1 にリセット。 |
