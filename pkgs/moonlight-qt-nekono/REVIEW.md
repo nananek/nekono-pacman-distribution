@@ -107,3 +107,6 @@ Nekono 自身の commit になる。下記「信頼モデルの差」を読ん�
   引き伸ばされ、文字が読めないほどぼやけていた。1 枚目と同じフラグで作るよう修正。
   superproject のこの 1 commit (`session.cpp` のみ) 以外に source の差分なし、
   submodule も不変。PKGBUILD の差分は `pkgver` / `_reltag` / `sha256sums` のみ
+- 6.1.0.nekono3 pkgrel 2 (2026-09-16, pkgrel bump のみ): `dep-version-pr.yml`
+  検出の依存 version 変化 (`qt6-declarative` 6.11.2-1 → 6.11.2-2) に伴う
+  rebuild。source / sha256sums に変更なし
