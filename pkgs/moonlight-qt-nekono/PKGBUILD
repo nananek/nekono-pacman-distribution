@@ -8,8 +8,8 @@
 
 pkgname=moonlight-qt-nekono
 _srcname=moonlight-qt
-pkgver=6.1.0.nekono1
-_reltag=v6.1.0-nekono.1
+pkgver=6.1.0.nekono2
+_reltag=v6.1.0-nekono.2
 pkgrel=1
 pkgdesc='GameStream client for PCs, multidisplay fork'
 arch=('x86_64')
@@ -22,7 +22,7 @@ optdepends=('libva-intel-driver: hardware acceleration for Intel GPUs GMA 4500 (
 provides=('moonlight-qt')
 conflicts=('moonlight-qt')
 source=("$pkgname-$pkgver.tar.gz::https://github.com/nananek/$_srcname/releases/download/$_reltag/$_srcname-$pkgver.tar.gz")
-sha256sums=('524707d10f2a5656bec58413210a8575f70d13c9caa26e028ce30538c936a677')
+sha256sums=('52fbdd26bf77a18d31b081c68a73d08da325bd980314586e541a0a10f87c0469')
 
 prepare() {
   cd "$srcdir/$_srcname-$pkgver"

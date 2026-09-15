@@ -2,7 +2,7 @@
 
 ## 状態
 
-**review 済み、approve** (2026-09-15 / fork tag v6.1.0-nekono.1)
+**review 済み、approve** (2026-09-15 / fork tag v6.1.0-nekono.2)
 
 **本 repo で初めて「自分の fork を自分でビルドする」package。** 他の package が
 upstream の release artifact を pin して再梱包するのに対し、これは信頼の起点が
@@ -29,19 +29,20 @@ Nekono 自身の commit になる。下記「信頼モデルの差」を読ん�
 
 | 対象 | commit |
 |---|---|
-| moonlight-qt (superproject) | `517dd3be73da590a1b0fcde2afbf32610a155d4a` |
+| moonlight-qt (superproject) | `c70c5e922ea534e2f660c49ebed275bda168b719` |
 | moonlight-common-c | `6cb7e7aa1cb29dd70629685056cf8b57399292fa` (これも Nekono fork) |
 | qmdnsengine | `920c097ffa742e2968290f15d4dde6693aec02e5` |
 | app/SDL_GameControllerDB | `8d9fefd7b810f2541f78cc7a8ccbd185bc84c7a5` |
 
 ## 検証結果
 
-- [x] `source` URL = `github.com/nananek/moonlight-qt/releases/download/v6.1.0-nekono.1/moonlight-qt-6.1.0.nekono1.tar.gz`
+- [x] `source` URL = `github.com/nananek/moonlight-qt/releases/download/v6.1.0-nekono.2/moonlight-qt-6.1.0.nekono2.tar.gz`
   - 自分の org/repo。typosquat の余地なし
 - [x] `sha256sums` を **独立再計算で検証**
   - 公開済み asset を再 download して `sha256sum` =
-    `524707d10f2a5656bec58413210a8575f70d13c9caa26e028ce30538c936a677`
+    `52fbdd26bf77a18d31b081c68a73d08da325bd980314586e541a0a10f87c0469`
   - PKGBUILD 値と一致。SKIP 不使用
+  - 同じ作業ツリーから tar を作り直しても同一 hash (決定的生成を確認)
 - [x] `prepare()` は `qmake6 PREFIX=/usr moonlight-qt.pro` のみ。patch 無し
 - [x] `build()` は `make release` のみ。**ネットワーク取得なし**
   - submodule は tarball に同梱済みで `git submodule update` を呼ばない
@@ -89,3 +90,14 @@ Nekono 自身の commit になる。下記「信頼モデルの差」を読ん�
 - ホスト側は複数ディスプレイ配信に対応した `sunshine` fork が必要。本 repo の
   `sunshine-bin` (upstream 公式) では 1 ディスプレイのみ
 - 追加ウィンドウでのキーボード/ゲームパッド入力、ペン/タッチのディスプレイ指定は未実装
+
+## 更新履歴
+
+- 6.1.0.nekono1 (2026-09-15): 初回追加。fork commit `517dd3be`
+- 6.1.0.nekono2 (2026-09-15): fork commit `c70c5e92`。nekono1 は
+  `MOONLIGHT_VIDEO_STREAMS` 無しの通常 (単一ディスプレイ) 接続で、stream 開始直後に
+  `Session::computeStreamWindowLayout()` が null を参照して SIGSEGV していた。
+  moonlight-common-c が video stream 数の正規化を自分の config コピーにしか
+  掛けないため、Session 側の数が 0 のまま残っていたのが原因。superproject の
+  この 1 commit (`session.cpp` のみ) 以外に source の差分なし、submodule も不変。
+  PKGBUILD の差分は `pkgver` / `_reltag` / `sha256sums` のみ
