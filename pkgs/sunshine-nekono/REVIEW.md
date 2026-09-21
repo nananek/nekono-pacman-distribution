@@ -102,3 +102,10 @@ AMF SDK (1.2G) / FFmpeg source (114M) / SVT-AV1 (38M) / Vulkan-Headers (41M)。
 - upstream の security fix は自動で入らない。`multidisplay` branch を定期的に
   upstream に追従させる運用が必要
 - ペン / タッチのディスプレイ指定、追加ウィンドウでのキーボード・ゲームパッド入力は未実装
+
+## 更新履歴
+
+| 日付 | release | review した PKGBUILD repo SHA | upstream tag commit | findings |
+|---|---|---|---|---|
+| 2026-09-17 | 2026.906.222525.nekono1-2 | (this PR) | — (pkgrel bump のみ) | `pkgrel` +1 (deps changed): nodejs 26.8.2-1 → 26.9.0-1 |
+| 2026-09-15 | 2026.906.222525.nekono1-1 | (this PR) | `c5afdde2` | 初回 review、approve (詳細は本ファイル上記 section) |
