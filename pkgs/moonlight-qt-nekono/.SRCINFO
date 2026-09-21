@@ -1,7 +1,7 @@
 pkgbase = moonlight-qt-nekono
 	pkgdesc = GameStream client for PCs, multidisplay fork
-	pkgver = 6.1.0.nekono3
-	pkgrel = 2
+	pkgver = 6.1.0.nekono4
+	pkgrel = 1
 	url = https://github.com/nananek/moonlight-qt
 	arch = x86_64
 	license = GPL-3.0-or-later
@@ -17,7 +17,7 @@ pkgbase = moonlight-qt-nekono
 	optdepends = intel-media-driver: hardware acceleration for Intel GPUs starting from Broadwell (2014) and newer (e.g. Intel Arc)
 	provides = moonlight-qt
 	conflicts = moonlight-qt
-	source = moonlight-qt-nekono-6.1.0.nekono3.tar.gz::https://github.com/nananek/moonlight-qt/releases/download/v6.1.0-nekono.3/moonlight-qt-6.1.0.nekono3.tar.gz
-	sha256sums = 3ba2f6cc33057b5a0ba74959c6aa358fcebfdfb5342e683003b0584b98129c3b
+	source = moonlight-qt-nekono-6.1.0.nekono4.tar.gz::https://github.com/nananek/moonlight-qt/releases/download/v6.1.0-nekono.4/moonlight-qt-6.1.0.nekono4.tar.gz
+	sha256sums = abadf292a1bc01c061135718c411d09a63549224053db8e4ef1678595e64cc51
 
 pkgname = moonlight-qt-nekono

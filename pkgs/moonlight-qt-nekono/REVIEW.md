@@ -2,7 +2,7 @@
 
 ## 状態
 
-**review 済み、approve** (2026-09-15 / fork tag v6.1.0-nekono.3)
+**review 済み、approve** (2026-09-21 / fork tag v6.1.0-nekono.4)
 
 **本 repo で初めて「自分の fork を自分でビルドする」package。** 他の package が
 upstream の release artifact を pin して再梱包するのに対し、これは信頼の起点が
@@ -29,20 +29,25 @@ Nekono 自身の commit になる。下記「信頼モデルの差」を読ん�
 
 | 対象 | commit |
 |---|---|
-| moonlight-qt (superproject) | `b87099a54d5b905db5f7afee55344fde2b8a7b4b` |
+| moonlight-qt (superproject) | `38130592b99a759b8b243bebdc49c26eb1f00b83` |
 | moonlight-common-c | `6cb7e7aa1cb29dd70629685056cf8b57399292fa` (これも Nekono fork) |
 | qmdnsengine | `920c097ffa742e2968290f15d4dde6693aec02e5` |
 | app/SDL_GameControllerDB | `8d9fefd7b810f2541f78cc7a8ccbd185bc84c7a5` |
 
 ## 検証結果
 
-- [x] `source` URL = `github.com/nananek/moonlight-qt/releases/download/v6.1.0-nekono.3/moonlight-qt-6.1.0.nekono3.tar.gz`
+- [x] `source` URL = `github.com/nananek/moonlight-qt/releases/download/v6.1.0-nekono.4/moonlight-qt-6.1.0.nekono4.tar.gz`
   - 自分の org/repo。typosquat の余地なし
 - [x] `sha256sums` を **独立再計算で検証**
   - 公開済み asset を再 download して `sha256sum` =
-    `3ba2f6cc33057b5a0ba74959c6aa358fcebfdfb5342e683003b0584b98129c3b`
+    `abadf292a1bc01c061135718c411d09a63549224053db8e4ef1678595e64cc51`
   - PKGBUILD 値と一致。SKIP 不使用
   - 同じ作業ツリーから tar を作り直しても同一 hash (決定的生成を確認)
+- [x] nekono3 → nekono4 の diff (superproject 1 commit `38130592`) を目視確認:
+  `input.cpp/h` にキーコンボ追加、`session.cpp/h` に video pause 状態管理、
+  `ffmpeg.cpp/h` の decoder thread に pause 中フレーム破棄ロジック追加。
+  submodule 3 本 (moonlight-common-c / qmdnsengine / SDL_GameControllerDB) は
+  pointer 不変。新規 depends / network 取得 / 怪しい shell step 無し
 - [x] `prepare()` は `qmake6 PREFIX=/usr moonlight-qt.pro` のみ。patch 無し
 - [x] `build()` は `make release` のみ。**ネットワーク取得なし**
   - submodule は tarball に同梱済みで `git submodule update` を呼ばない
@@ -110,3 +115,15 @@ Nekono 自身の commit になる。下記「信頼モデルの差」を読ん�
 - 6.1.0.nekono3 pkgrel 2 (2026-09-16, pkgrel bump のみ): `dep-version-pr.yml`
   検出の依存 version 変化 (`qt6-declarative` 6.11.2-1 → 6.11.2-2) に伴う
   rebuild。source / sha256sums に変更なし
+- 6.1.0.nekono4 (2026-09-21): fork commit `38130592`。ストリーム動画の
+  再生を任意のタイミングで止める機能を追加 (音声は継続再生):
+  - キーコンボ (Ctrl+Alt+Shift+A) で手動 toggle。`Session::toggleVideoPaused()`
+  - 各 stream window が minimize された時も自動で該当 decoder を pause
+    (`Session::exec()` の `SDL_WINDOWEVENT` ハンドラから `updateVideoDecodePaused()`)
+  - decoder thread (`FFmpegVideoDecoder::decoderThreadProc()`) は pause 中も
+    host からのフレームを pull だけして破棄 (IDR 要求の overflow を防ぐため)。
+    resume 時は次の IDR から再開
+  - window title に `(audio only)` 表示を追加
+  superproject のこの 1 commit 以外に source の差分なし、submodule 3 本
+  (moonlight-common-c / qmdnsengine / SDL_GameControllerDB) も pointer 不変。
+  PKGBUILD の差分は `pkgver` / `_reltag` / `pkgrel` (2→1) / `sha256sums` のみ
