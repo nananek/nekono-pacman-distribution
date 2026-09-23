@@ -1,7 +1,7 @@
 pkgbase = sunshine-nekono
 	pkgdesc = Self-hosted game stream host for Moonlight, multidisplay fork
 	pkgver = 2026.906.222525.nekono1
-	pkgrel = 2
+	pkgrel = 3
 	url = https://github.com/nananek/Sunshine
 	install = sunshine.install
 	arch = x86_64
