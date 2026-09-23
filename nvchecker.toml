@@ -29,6 +29,26 @@
 oldver = "oldver.json"
 newver = "newver.json"
 
+[antigravity-cli]
+# Google Antigravity の CLI (`agy`)。 AUR `antigravity-cli` を fork。
+# upstream は GitHub Releases を持たず、 auto-updater 用 release server
+# (Cloud Run) が manifest JSON で最新版を返す:
+#   {"version": "1.2.9", "url": ".../antigravity-cli/1.2.9-<build id>/linux-x64/cli_linux_x64.tar.gz", ...}
+# PKGBUILD の pkgver は "<version>_<build id>" (= URL path の "-" を "_" に
+# したもの) なので、 URL から "<version>-<build id>" を regex で抜き、
+# from_pattern/to_pattern で "-" → "_" に揃える (= detect_upstream_updates.py
+# が pkgver 文字列と直接比較するため完全一致が必要)。
+#
+# AUR 版 .nvchecker.toml は source = "jq" だが、 nvchecker の jq source は
+# Python module `jq` (Arch: python-jq) を import する。 upstream-version-issue.yml
+# はこれを install しておらず `No module named 'jq'` で失敗するため、 追加依存の
+# 要らない regex source を使う。
+source = "regex"
+url = "https://antigravity-cli-auto-updater-974169037036.us-central1.run.app/manifests/linux_amd64.json"
+regex = "antigravity-cli/([0-9]+\\.[0-9]+\\.[0-9]+-[0-9]+)/linux-x64/"
+from_pattern = "-"
+to_pattern = "_"
+
 [claude-code]
 # Anthropic Claude Code CLI。公式 npm registry の latest version を監視する。
 source = "npm"
