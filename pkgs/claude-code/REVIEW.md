@@ -2,7 +2,7 @@
 
 ## 状態
 
-**review 済み、approve** (最新: 2026-09-24 / 2.1.280、復活: 2026-09-03)
+**review 済み、approve** (最新: 2026-09-27 / 2.1.283、復活: 2026-09-03)
 
 AUR の `claude-code` PKGBUILD を fork。`cc-legal` の checksum pin 以外は改変なし
 (AUR は 2026-05-01 の commit `20209cc` "remove checksum for license" 以降
@@ -31,15 +31,15 @@ AUR の `claude-code` PKGBUILD を fork。`cc-legal` の checksum pin 以外は�
 
 ## 検証結果
 
-- [x] `source_x86_64` URL = `downloads.claude.ai/claude-code-releases/2.1.280/linux-x64/claude`
+- [x] `source_x86_64` URL = `downloads.claude.ai/claude-code-releases/2.1.283/linux-x64/claude`
   - Anthropic 公式 CDN、典型的な mirror spoof / DNS hijack に脆弱だが TLS で守られる
-- [x] `source_aarch64` URL = `downloads.claude.ai/claude-code-releases/2.1.280/linux-arm64/claude`
+- [x] `source_aarch64` URL = `downloads.claude.ai/claude-code-releases/2.1.283/linux-arm64/claude`
   - 同上
 - [x] `sha256sums_x86_64` が upstream binary と一致
-  - 実測 (2.1.280): `1e08503dbdf3c2cb0d706d32f3408277388d1c76ef108673e8fe42c1b322925b`
+  - 実測 (2.1.283): `1859583ce32920595c61ef868bee52e1b1594f7486db209935e01f1e5e804ae2`
   - PKGBUILD 値: 一致 (公式 CDN 直接取得・公式 `manifest.json` の `linux-x64` checksum・AUR 記載値・npm `@anthropic-ai/claude-code-linux-x64` package 同梱 binary の 4 経路で一致)
 - [x] `sha256sums_aarch64` が upstream binary と一致
-  - 実測 (2.1.280): `92f2b4fd05d0bdcf7b9a0d4e0ecef4a1e4b368b290cd8fd07cff9a50013f45a2`
+  - 実測 (2.1.283): `346d294f0103d6fc0de11ac953579b5c62dfa90698a4cfc486b6f927c615e697`
   - PKGBUILD 値: 一致 (公式 CDN から実測、公式 `manifest.json` の `linux-arm64` checksum とも一致)
 - [x] `source=("cc-legal::...legal-and-compliance.md")` の sha256 を pin
   - 実測: `4a4cc1762fb1d992a66347dcf94c60a27d328391d8074c13e8ae9d5c4182413b`
@@ -85,6 +85,27 @@ upstream の新 release (2.1.143 等) が出たら:
    1 行追記
 
 ## 更新履歴
+
+- **2026-09-27 / 2.1.283** — approve。Issue #653 (2.1.281) / #655 (2.1.282) / #659
+  (2.1.283) を、調査時点の最新 2.1.283 (= npm `latest` / `next` dist-tag、公式
+  `latest` pointer も 2.1.283。 `stable` tag は 2.1.274 だが従来どおり `latest` に追従)
+  へ集約。 `npm` tarball を 2.1.280 と file 単位で比較したところ差分は 2 本のみ:
+  `package.json` (version + platform optionalDependencies の version 同期、
+  `dependencies` は空のまま、 scripts は `prepare` guard / `postinstall: node
+  install.cjs` で不変) と `sdk-tools.d.ts` (skill slug の型コメント 6 箇所に文言追記
+  のみ、 24 diff 行)。 `install.cjs` / `cli-wrapper.cjs` / `bin/claude.exe` / README /
+  LICENSE は byte-identical。 sha256 は公式 CDN から x64 / arm64 とも独立に実測し、
+  公式 `manifest.json`・AUR 記載値と一致、さらに x64 は npm
+  `@anthropic-ai/claude-code-linux-x64@2.1.283` 同梱 binary とも一致。
+  `cc-legal` (legal-and-compliance.md) は live で再計算しても sha256 変化なし
+  (`4a4cc176...`)。 **AUR は同 file を `SKIP` にしているが本 repo は pin を維持**
+  (冒頭「状態」参照)。 AUR の PKGBUILD (HEAD `c5a5dee` = 2.1.283) は pkgver / sums
+  以外が本 repo と同一。 GitHub release v2.1.281 / v2.1.282 / v2.1.283 (author
+  `ashwin-ant`、従来と同一、 npm publisher `wolffiex` も 2.1.280 と同一) の release
+  notes は gateway 設定 / MCP / resume・cache まわりの bug fix / managed settings
+  が中心で、 packaging・install 経路の変更なし。 `package()` / wrapper / depends /
+  optdepends / `!strip` 不変。 breaking package change / 新規 install hook /
+  supply-chain 変更なし。
 
 - **2026-09-24 / 2.1.280** — approve。Issue #649 (2.1.280)。 2.1.279 は GitHub
   release 無し (npm には存在) のためまとめて 2.1.280 (= npm `latest` / `next`
