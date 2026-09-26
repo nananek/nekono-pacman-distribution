@@ -10,9 +10,13 @@ checklist のみ。**verdict も supply-chain 監査も付いていない**。�
 gh issue list --state open --json number,title --jq '.[] | "\(.number)\t\(.title)"'
 ```
 
-- 同じ pkg の Issue が複数ある (例: claude-code 2.1.281 / .282 / .283) ときは、**調査時点の最新版に集約して 1 PR**、
-  本文に `Closes #a, #b, #c` (前例: PR #645)。最新版が実在・安定していること (取り下げ/yank/pre-release でない)
-  を確認してから。Issue title の version より新しい版を使ってよい (PR に明記)。
+- 同じ pkg の Issue が複数ある (例: claude-code 2.1.281 / .282 / .283) ときは、**調査時点の最新版に集約して 1 PR**。
+  最新版が実在・安定していること (取り下げ/yank/pre-release でない) を確認してから。Issue title の version より
+  新しい版を使ってよい (PR に明記)。
+- **PR 本文の close 構文は Issue ごとに keyword を付ける**: `Closes #a, closes #b, closes #c`。`Closes #a, #b, #c`
+  だと GitHub は **最初の 1 件しか自動 close しない** (2026-09-27 に実測。`#b`/`#c` は open のまま残った)。
+  取りこぼしたら `gh issue close <N> --comment "PR #<PR> で解消 (最新版に集約)"` で閉じる。merge 後に
+  `gh issue view <N> --json state` で全件 CLOSED を確認する。
 - 冪等性 key は title。close 済みの同 title は再検知されない。
 
 ## Step 1: その pkg の過去のやり方を読む
@@ -36,7 +40,14 @@ docker-rootless-extras は moby の tag、AUR 由来の -bin は upstream 公開
 3. **旧新の差分**: `build()` / `package()` / `prepare()` / install script に効くファイル (Makefile、Cargo.toml、
    pyproject.toml、package.json の scripts、`*.install` 等) を旧新 tarball で diff。依存の追加・変更。
 4. **release notes**: breaking change、security fix、packaging / install 経路の変更。
-5. **depends の妥当性**: 新版で要る依存が変わっていないか (prebuilt binary なら `readelf -d` の DT_NEEDED 等)。
+5. **depends の妥当性**: 新版で要る依存が変わっていないか。prebuilt binary は**実行せず** `readelf` で見る
+   (`LC_ALL=C readelf -d <bin> | awk '/NEEDED/{print $NF}'`、`LC_ALL=C readelf -V <bin>` の最大 `GLIBC_*`)。
+   **`LC_ALL=C` を付ける** (この host は日本語 locale で、付けないと出力が翻訳され awk の抽出が空になる)。
+   複数の `.so` を含む bundle は NEEDED の和集合を旧新で `diff`。`strings` の宿主名比較は Go/Flutter の symbol 名が
+   ノイズになるので、scheme 付き URL (`https?://...`) の集合で比べる。native lib の内容が変わっていても、
+   upstream の toolchain / 依存更新 (`gh api repos/<o>/<r>/compare/<old>...<new>` で `.fvmrc` / lockfile / manifest
+   を確認) で説明がつくかを見る。lockfile の diff では、新規 package/crate の追加、git 依存の owner・URL の変更、
+   registry 外 source の増減に注目する。
 6. **AUR の最新 PKGBUILD との diff**: `git clone https://aur.archlinux.org/<pkg>.git` を scratch dir に取り、
    AUR 側で何が変わったか確認。取り込むべき変更か、本 repo の意図的 diff かを切り分ける。
 7. CLAUDE.md「PKGBUILD でよく踏む落とし穴」#1–7 に触れる変更でないか
@@ -66,12 +77,22 @@ git checkout -b pkg/<pkg>-<new_pkgver> origin/master
 - `.deps.lock`: depends / makedepends を変えた時だけ更新 (`# MISSING ...` 行は維持)。
 - `REVIEW.md` (pre-push gate は `source=` / `*sums` / `pkgver` を変えて REVIEW.md を触らないと block):
   - 冒頭「状態」の最新日付・版
-  - 「検証結果」の実測値 (sha256 等) を新版に更新
+  - 「検証結果」の実測値 (sha256 等) を新版に更新 (前回の bump で更新漏れして古い版の値が残っていることがある
+    ── aria-bin は 1.5.13 の値が 1.5.12 のままだった。見つけたら現行値に揃えて、その旨を履歴に書く)
   - 「更新履歴」に 1 行 (日付 / release / `(this PR)` / upstream tag commit / findings)。build fix なら `X.Y.Z (build fix)`
   - AUR との意図的 diff があれば「なぜ違うか」を書く (書かないと bump のたびに同じ指摘が再発)
 - `( cd pkgs/<pkg> && makepkg --verifysource )` で sha256 検証。source が `pkgs/<pkg>/` に download されるので
   `git status --short` で stray file が add 対象に混ざらないこと (`.gitignore` が拾わない形式の cache は
   `.gitignore` の「makepkg の source= ダウンロードキャッシュ」block に pattern を足す)。
+  - 判定は「成功」/「失敗」の表示か rc で行う (`| tail` を付けると rc は `tail` のものになる)。
+  - **古い download cache の罠**: source のファイル名に version が入っていない (`name::https://.../${tag}/file` の
+    `name` が固定。例: aria-bin の `com.poppingmoon.aria.metainfo.xml`) と、`pkgs/<pkg>/` に残った**前の版の cache を
+    makepkg が再利用**し、新しい pin と合わず `整合性チェックをパスしませんでした` で失敗する。`bin/build-all` も同じ
+    ところで落ちる。失敗した source について「cache の sha256 = 旧 pin」「今 upstream から取り直した値 = 新 pin」
+    を確認して、**cache 側が stale だと分かったら**その 1 ファイルだけ (gitignore 済みの再取得可能な cache)
+    削除して再実行する。PKGBUILD の pin を cache の値に合わせてはいけない。
+  - `gh pr diff` はパス絞り込みを受け付けない。PKGBUILD 部分だけ見るなら
+    `gh pr diff <N> | awk '/^diff --git/{show = ($0 ~ /PKGBUILD/)} show'`。
 
 ## Step 5: commit / PR / merge
 
@@ -96,7 +117,7 @@ gh pr create --base master --title "<pkg>: bump to <new_pkgver>" --body "$(cat <
 ## 概要
 <pkg> を <old> → <new> に bump。<safe-to-bump / needs-attention の別と一言>。
 
-Closes #<N>[, #<M> ...]
+Closes #<N>[, closes #<M> ...]      # 各 Issue の前に keyword が要る (`Closes #N, #M` は N しか閉じない)
 
 ## 調査結果 (詳細は `pkgs/<pkg>/REVIEW.md`)
 - <sha256 の独立実測と照合結果>

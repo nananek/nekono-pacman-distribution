@@ -38,6 +38,9 @@ tail -n 15 "$LOG"       # `[OK] publish complete` と `publish exit=0`
 新しい db の上に残って client の `pacman -Sy` が署名不正で落ちる (2026-07-04 / 2026-08-22 に実発生)。
 そのため pass 1 = `sync` (pkg の追加・撤廃の削除)、pass 2 = `copy --ignore-times` (db と sig の強制更新)。
 
+pass 1 の log で `Copied (new)` (今回 build した pkg と `.sig`) と `Deleted` (prune された旧版) が想定どおりか見る:
+`grep -E 'Copied \(new\)|Deleted' "$LOG"`。旧版の `Deleted` が出ていれば配信側の掃除も済んでいる。
+
 ## 配信検証 — pacman client が実際に取得する物がローカルと一致するか
 
 exit 0 だけでは足りない。**client と同じ匿名 GET 経路** (Caddy `:80`) で取得した物の hash をローカルと比べる。
