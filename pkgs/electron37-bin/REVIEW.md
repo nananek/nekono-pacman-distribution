@@ -82,3 +82,4 @@ AUR には Arch 公式から落ちた electron37 を追う 2 系統が存在:
 | 2026-08-16 | 37.10.3-3 | (this PR) | — (pkgrel bump のみ) | `pkgrel` +1 (deps changed): nss 3.126-1 → 3.127-1 |
 | 2026-08-30 | 37.10.3-4 | (this PR) | — (pkgrel bump のみ) | `pkgrel` +1 (deps changed): nss 3.127-1 → 3.128-1 |
 | 2026-09-15 | 37.10.3-5 | (this PR) | — (pkgrel bump のみ) | `pkgrel` +1 (deps changed): nss 3.128-1 → 3.129-1 |
+| 2026-09-27 | 37.10.3-6 | (this PR) | — (pkgrel bump のみ) | `pkgrel` +1 (deps changed): nss 3.129-1 → 3.130-1 |
