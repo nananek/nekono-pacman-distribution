@@ -291,6 +291,11 @@ bump PR をうっかり merge → 旧 pkgver のまま rebuild されて配布�
 なしで自律実行** する。途中で判断に迷う場合 (block verdict、PKGBUILD 大改修
 が必要な場合等) のみ報告して止まる。
 
+> **実行手順の詳細は skill にある** (repo 初見・記憶なしの agent はまずこれを読む):
+> `.claude/skills/daily-ops/` (Issue/PR 消化 → build → publish → 配信検証) /
+> `.claude/skills/package-lifecycle/` (package の追加・撤廃・復活。こちらは user 承認が要る)。
+> 以下は方針・判断表で、コマンド単位の手順・落とし穴は skill 側が正。
+
 ### bot PR (dep-version-pr) の全自動フロー
 
 ```
@@ -349,10 +354,13 @@ checklist に沿った調査を Claude 自身がこのセッション内で行�
 | supply-chain 上の懸念あり、または breaking change で依存 pkg (= [nekono] 内の他 pkg) との互換性が壊れる (block 相当) | ユーザに調査結果を要約して報告し、判断を仰ぐ。自動では何もしない (Issue は open のまま、コメントで保留理由を記録) |
 | 誤検知疑い (nvchecker の誤検知等) | 内容を示しユーザに確認してから close |
 
-### build host 作業 (Claude には実行できない)
+### build host 作業
 
-`bin/build-all` / `bin/update-repo` は build host (nekono-pacman0) 上での実行が必要。
-Claude は merge 後に実行コマンドを提示するのみ:
+`bin/build-all` / `bin/update-repo` / `bin/publish` は build host 上での実行が必要 (署名用 YubiKey・
+`~/.config/nekono-pacman/publish.env`・rootless docker)。build host は 2026-07-14 に nekono-pacman0 から
+**Claude Code が動いているこのマシン**へ移った。build host 上なら Claude が merge 後に
+`bin/build-all --pending` → `bin/publish` → 配信検証まで直接実行する (手順・判定・失敗時の復旧は
+`.claude/skills/daily-ops/`)。build host でない環境では、従来どおり merge 後に実行コマンドを提示するのみ:
 
 ```sh
 cd ~/nekono-pacman-distribution
