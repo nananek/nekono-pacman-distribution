@@ -42,17 +42,20 @@ gh pr checkout <N>
 ### (a) `pkgs/<pkg>/REVIEW.md` の「更新履歴」に 1 行追記
 
 ```sh
-grep -n '更新履歴' -A6 pkgs/<pkg>/REVIEW.md      # 既存の形式を確認 (新しい行が上)
+grep -n '更新履歴' -A8 pkgs/<pkg>/REVIEW.md      # 既存の形式と並び順を確認してから書く
 ```
 
-表形式なら 5 列。前例 (sunshine-nekono):
+表形式なら 5 列。前例 (electron37-bin):
 
 ```
-| 2026-09-24 | 2026.906.222525.nekono1-3 | (this PR) | — (pkgrel bump のみ) | `pkgrel` +1 (deps changed): libpipewire 1:1.6.8-1 → 1:1.6.9-1, nodejs 26.9.0-1 → 26.10.0-1 |
+| 2026-09-27 | 37.10.3-6 | (this PR) | — (pkgrel bump のみ) | `pkgrel` +1 (deps changed): nss 3.129-1 → 3.130-1 |
 ```
 
 日付は `date +%F`、release 列は `<pkgver>-<新 pkgrel>`、findings は PR 本文の「Dep changes」を転記。
-表でなく bullet 形式の REVIEW.md なら、その pkg の既存形式に合わせる。
+
+**並び順は既存の表に合わせる**。表は **新しい行が下** が大多数 (2026-09 時点で 15 pkg 中 13。sunshine-nekono /
+nekono-btkeycast だけ新しい行が上)。bullet 形式の REVIEW.md (claude-code) は新しい方が上。先頭に足すか
+末尾に足すかを決め打ちせず、既存の日付の並びを見て同じ向きに足す。
 
 ### (b) `.SRCINFO` の `pkgrel` を PKGBUILD に揃える
 
