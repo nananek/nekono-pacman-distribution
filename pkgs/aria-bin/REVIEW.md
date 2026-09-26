@@ -2,7 +2,7 @@
 
 ## 状態
 
-**review 済み、approve** (最新: 2026-09-07 / 1.5.12)
+**review 済み、approve** (最新: 2026-09-27 / 1.5.14)
 
 AUR に `aria` / `aria-bin` は存在しないため、本 repo オリジナルの PKGBUILD として
 新規作成 (= AUR からの fork ではない)。
@@ -36,20 +36,23 @@ AUR に `aria` / `aria-bin` は存在しないため、本 repo オリジナル�
 - [x] `source_x86_64` / `source_aarch64` URL = `github.com/poppingmoon/aria`
       本家 release、typosquatting 無し
 - [x] `sha256sums` / `sha256sums_x86_64` / `sha256sums_aarch64` が実測値と一致
-  - `aria-v1.5.12-linux-x64.tar.gz`: `5512e087ab9b77b09dcb43c1b0fae6888a7be16cf4cd123d18e3bfec2151fee1`
-  - `aria-v1.5.12-linux-arm64.tar.gz`: `1631487257883be2d021148a28149017f5a2d7512e11ab0ce69bbb5378a72e4a`
+  - `aria-v1.5.14-linux-x64.tar.gz`: `f7511e04fad74d295089c571d6da32798161cdfd99b04c7368a0de2f8a99b685`
+  - `aria-v1.5.14-linux-arm64.tar.gz`: `43d924aef9253b95fe1ac29302fcd4841ea1e2027bd10b245fad70f70e30ca3b`
   - `com.poppingmoon.aria.desktop`: `b774b7ea50393e78016c3a8bfa0b26b480d3a32de8121c9694e97aaccb7e2342` (1.5.8 から無変更)
   - `com.poppingmoon.aria.png`: `878b0a27b7706036a2ddcb41bab05bf65ba9dd4718cabc25961f45daa5ab8ace` (同一)
-  - `com.poppingmoon.aria.metainfo.xml`: `8951fe5e4ec2da56d2e85b3c2c5375d5bfdbd38c3b897ebb5e47855d72d284ed`
-    (1.5.11 `8aa76435...` から変更あり、独立実測で更新。diff 確認: フランス語
-    ローカライズ追加 + `<release version="1.5.12">` エントリ追加のみ、無害)
+  - `com.poppingmoon.aria.metainfo.xml`: `1a1b02ae92a38bf7e683c51471bedc400337779378fa78bbda6cefd1ddad41f4`
+    (1.5.13 から変更あり、独立実測で更新。diff 確認: `<release version="1.5.14">`
+    エントリ追加 3 行のみ、無害)
   - GitHub API の release asset digest とも一致確認済み (独立ダウンロード実測
     と asset metadata の digest 双方が一致)
-- [x] tag `v1.5.12` の git commit (`8d822114c77df0920e38484b0869b3185dc6997c`) は
-      **GPG verified** (author: poppingmoon 本人、`verification.verified: true`,
+  - (注) 本 section は 1.5.13 bump 時に更新されず 1.5.12 の値のまま残っていた。
+    1.5.14 bump で現行値に揃えた (履歴表には 1.5.13 の検証が記録済み)
+- [x] tag `v1.5.14` の git commit (`eb5eb10ac639811d0072f4fa7710d7c1b444daba`、
+      `release: 1.5.14 (#1013)`) は **GPG verified** (author: poppingmoon 本人、
+      committer: `web-flow` = GitHub 上の PR merge、`verification.verified: true`,
       `verification.reason: valid`)。release は `github-actions[bot]` による
       CI 公開 (= verified commit からの自動 build pipeline、tampering の
-      兆候なし、1.5.11→1.5.12 間で author/署名経路不変)
+      兆候なし、1.5.12 / 1.5.13 / 1.5.14 で author / committer / 署名経路不変)
 - [x] `package()`: `install -dm755` / `cp -a` / `ln -s` / `install -Dm644` の
       標準コマンドのみ。network fetch / eval / curl / pip 等の動的取得なし
   - `/opt/aria/{aria,data,lib}`: upstream tarball の中身をそのまま配置
@@ -118,6 +121,7 @@ release pipeline (`github-actions` bot による GPG verified commit からの
 | 2026-08-20 | 1.5.11-1 | (this commit) | `0f957e94a953f3d30203c4eceebf4660002d4a3f` (GPG verified) | safe-to-bump: 1.5.8 → 1.5.11 (3 releases: 1.5.9/1.5.10/1.5.11, いずれも bugfix + Flutter 3.44.9 / deps / i18n / metainfo 更新。package() 構造不変、ldd deps 変化なし、metainfo のみ sha 更新)。nvchecker 監視漏れ (aria-bin section 欠落) を同時修正。 |
 | 2026-09-07 | 1.5.12-1 | (this commit) | `8d822114c77df0920e38484b0869b3185dc6997c` (GPG verified) | safe-to-bump: 1.5.11 → 1.5.12 (bugfix + refactor のみ、Flutter 3.47.1 へ build upgrade。`flatpak/` diff は metainfo.xml のみ = fr ローカライズ追加 + release entry 追加、無害。package() 構造不変、`ldd` 再検証で未解決 lib 無し、depends 変化なし)。 |
 | 2026-09-15 | 1.5.13-1 | (this commit) | `4c1bf8c148c5b96a18a289b69d5ac63bb6b02361` (GPG verified) | safe-to-bump: 1.5.12 → 1.5.13 (upstream release notes は Twemoji font の eye layer 順序修正 1 件 + release commit のみ)。`flatpak/` diff は metainfo.xml の `<release version="1.5.13">` entry 追加のみ (desktop / png は sha256 変化なし)。tarball の top-level 構造 (`aria` / `data` / `lib`) 不変、`objdump -p` の NEEDED 再検証で gtk3 / gdk / pango / harfbuzz / atk / cairo / gdk-pixbuf / glib / stdc++ のみ = depends 変化なし (fvp / mdk / ffmpeg は従来どおり bundle 同梱)。 |
+| 2026-09-27 | 1.5.14-1 | (this PR) | `eb5eb10ac639811d0072f4fa7710d7c1b444daba` (GPG verified) | safe-to-bump: 1.5.13 → 1.5.14 (Issue #657。release notes は simple mfm の emoji 高さ修正 / AsUiWidget の Column 内 label layout 修正の bugfix 2 件 + release commit のみ)。 tarball は x64 / arm64 とも独立に実測し GitHub の release asset digest と一致。 `flatpak/` は metainfo.xml の `<release version="1.5.14">` entry 追加 3 行のみ (desktop / png は sha256 変化なし)。 tarball の top-level 構造 (`aria` / `data` / `lib`) とファイル一覧は 1.5.13 と同一、 `readelf -d` の NEEDED 集合 (aria + lib/*.so、51 件) も同一で depends 変更不要。 `libapp.so` / `libflutter_linux_gtk.so` / `libisar.so` / `librust_lib_aria.so` / `libwebcrypto.so` 等の内容が変わっているのは upstream の変更による: Flutter 3.47.2 → 3.47.5 (`.fvmrc`)、 pubspec / Cargo の依存 version 更新 (新規 package / crate の追加・削除なし)、 自家 fork (すべて github.com/poppingmoon 配下) の ref 更新。 第三者 git の `native_toolchain_rust` override が外れ pub.dev の正式版 (^1.0.7) に戻った (第三者 source が減る方向)。 tag commit は 1.5.12 / 1.5.13 と同じ形 (author poppingmoon、 committer web-flow、 GPG verified)。 本 REVIEW.md の「状態」「検証結果」が 1.5.13 bump 時に更新されず 1.5.12 の値のまま残っていたため、 1.5.14 の値に揃えた。 バイナリは未実行 (静的解析のみ、 GUI 起動の目視確認は client 機で推奨)。 |
 
 ## 更新方針
 
