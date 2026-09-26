@@ -91,6 +91,7 @@ upstream で新 release (= v0.2.0 等) が出たら:
 |---|---|---|---|---|
 | 2026-08-15 | 0.2.1-7 | (this PR) | — (pkgrel bump のみ) | `pkgrel` +1 (deps changed): python 3.14.6-1 → 3.14.7-1, python-wheel 0.47.0-1 → 0.48.0-1 |
 | 2026-08-24 | 0.2.1-8 | (this PR) | — (pkgrel bump のみ) | `pkgrel` +1 (deps changed): python-evdev 1.9.3-1 → 2.0.0-1 |
+| 2026-08-31 | 0.2.1-9 | bot PR (`abd3bb2`) | — (pkgrel bump のみ) | `pkgrel` +1 (deps changed): python-build 1.4.3-1 → 1.6.0-1, python-installer 1.0.0-1 → 1.0.1-1。 この bot PR は REVIEW.md / `.SRCINFO` の 3 点修正なしで merge されたため、 2026-09-27 に後追いで本行と `.SRCINFO` の pkgrel (8 → 9) を補完した。 |
 | 2026-06-12 | 0.1.0 | (this PR) | `54beee2171a0e4f683286a295b0cdd70b1ccc1cd` | 初回 add、 自家 source v0.1.0 (Issue #210) |
 | 2026-06-12 | 0.2.0 | (this PR) | `2742671feec268a5b06b58f2390acf58b469625f` | 0.2.0 bump (flock 単一インスタンス / evdev キーボード個別転送 / 接続先 pin)。 depends += python-evdev (= `import evdev` を source 実査)。 sha256 独立再計算、 tag GPG 署名 verified (GitHub API) |
 | 2026-06-12 | 0.2.1 | (this PR) | `849c7476106f8565c595312fca1123ea356e3b70` | 0.2.1 bump (multi-output: 負け側 instance が primary のバー行をミラー表示 + 昇格)。 depends 変化なし。 sha256 独立再計算、 tag GPG 署名 verified (GitHub API) |
