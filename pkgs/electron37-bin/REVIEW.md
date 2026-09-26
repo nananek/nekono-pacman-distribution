@@ -67,6 +67,14 @@ AUR には Arch 公式から落ちた electron37 を追う 2 系統が存在:
 - `arch=('x86_64')` のみに削減 (AUR 本家は aarch64/armv7h も persist)。
   [nekono] は `repo/x86_64/` のみ配信するため aarch64/armv7h の
   source/sha256sums block は不要、削除。
+- `pkgver` を **literal** (`pkgver=37.10.3`) にした。AUR 本家は
+  `_subver='10.3'` → `_pkgver="${_major}.${_subver}"` → `pkgver="${_pkgver}"` と
+  変数から組み立てるが、`.github/scripts/detect_upstream_updates.py` は
+  `pkgver=` の値に `$` を含むと解決できず空文字を返して比較を skip する
+  (= `nvchecker.toml` の `[electron37-bin]` が新版を検知しても Issue が立たない、
+  監視が黙って無効になる)。`_pkgver` は URL 組み立て用に `"${pkgver}"` から作る形で残した。
+  bump 時は **`pkgver` の 1 箇所だけ**を書き換える (`_subver` は廃止)。AUR の PKGBUILD を
+  そのままコピーして再び変数化しないこと。
 
 ## 結論
 
@@ -83,3 +91,4 @@ AUR には Arch 公式から落ちた electron37 を追う 2 系統が存在:
 | 2026-08-30 | 37.10.3-4 | (this PR) | — (pkgrel bump のみ) | `pkgrel` +1 (deps changed): nss 3.127-1 → 3.128-1 |
 | 2026-09-15 | 37.10.3-5 | (this PR) | — (pkgrel bump のみ) | `pkgrel` +1 (deps changed): nss 3.128-1 → 3.129-1 |
 | 2026-09-27 | 37.10.3-6 | (this PR) | — (pkgrel bump のみ) | `pkgrel` +1 (deps changed): nss 3.129-1 → 3.130-1 |
+| 2026-09-27 | 37.10.3-6 | (this PR) | — (PKGBUILD 構造の修正のみ、pkgver / pkgrel 不変) | `pkgver` を変数参照から literal に変更 (監視ギャップの修正、上記「依存方針」)。 `makepkg --printsrcinfo` の出力は変更前と byte 一致 (name / version / provides / source / sums 不変) で、成果物は変わらず rebuild 不要 (`bin/build-all --pending --dry-run` も `nothing to build`)。 `detect_upstream_updates.py` で、upstream に 37.10.4 が出た想定の `newver.json` を与えると、旧 PKGBUILD は `[]` (未検知)、新 PKGBUILD は検知することを確認。 upstream の v37 系列の最新 tag は 37.10.3 (= 現行と同じ) で、取りこぼしていた新版はまだ無い。 |

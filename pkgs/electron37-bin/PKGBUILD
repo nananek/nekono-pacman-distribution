@@ -7,9 +7,11 @@ _projectname=electron
 _major=37
 _pkgname="${_projectname}${_major}"
 pkgname="${_pkgname}"-bin
-_subver='10.3'
-_pkgver="${_major}.${_subver}"
-pkgver="${_pkgver}"
+# pkgver は literal で書く (AUR 本家は _subver から組み立てるが、本 repo では意図的に変更)。
+# .github/scripts/detect_upstream_updates.py は変数参照 (値に $ を含む) を解決できず、
+# 変数経由だと nvchecker が新版を検知しても黙って無視され Issue が立たないため。
+pkgver=37.10.3
+_pkgver="${pkgver}"
 pkgrel=6
 pkgdesc="Build cross platform desktop apps with web technologies — prebuilt"
 arch=('x86_64')
