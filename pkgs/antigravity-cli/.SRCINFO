@@ -1,7 +1,7 @@
 pkgbase = antigravity-cli
 	pkgdesc = Google's agentic development platform (CLI companion)
 	pkgver = 1.2.12_5784551402897408
-	pkgrel = 1
+	pkgrel = 2
 	url = https://antigravity.google/product/antigravity-cli
 	install = antigravity-cli.install
 	arch = x86_64
