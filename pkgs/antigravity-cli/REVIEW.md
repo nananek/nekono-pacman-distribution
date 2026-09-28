@@ -2,7 +2,7 @@
 
 ## 状態
 
-**review 済み、approve (注意事項あり)** (最新: 2026-09-27 / 1.2.11、初回: 2026-09-24)
+**review 済み、approve (注意事項あり)** (最新: 2026-09-28 / 1.2.12、初回: 2026-09-24)
 
 AUR の `antigravity-cli` PKGBUILD (pkgver=1.2.9_5905287731871744, pkgrel=1,
 AUR commit `a154fb7` = 2026-09-23) を fork。
@@ -20,44 +20,47 @@ AUR と byte 一致。
 - Upstream: https://antigravity.google/product/antigravity-cli (Google)
   - distribution: `storage.googleapis.com/antigravity-public/antigravity-cli/`
     (Google Cloud Storage、 GitHub 等の公開 git repo / tag は無い closed-source)
-  - release 識別子: `1.2.11-6016716732497920` (= `<version>-<build id>`)
+  - release 識別子: `1.2.12-5784551402897408` (= `<version>-<build id>`)
 
 ## 検証結果
 
-- [x] `source_x86_64` URL = `https://storage.googleapis.com/antigravity-public/antigravity-cli/1.2.11-6016716732497920/linux-x64/cli_linux_x64.tar.gz`
+- [x] `source_x86_64` URL = `https://storage.googleapis.com/antigravity-public/antigravity-cli/1.2.12-5784551402897408/linux-x64/cli_linux_x64.tar.gz`
   - upstream の auto-updater release server
     (`antigravity-cli-auto-updater-974169037036.us-central1.run.app/manifests/linux_amd64.json`)
     が返す `url` と **完全一致**。同 bucket / path 構造は AUR 履歴 (2026-05 初回
     submit 〜 現在) を通じて不変で、domain の付け替え / typosquat は無い
   - バイナリ内に埋め込まれた release server URL も同じ Cloud Run endpoint
 - [x] `sha256sums_x86_64` を独立実測 (`curl | sha256sum`)
-  - 実測 / PKGBUILD 値 (1.2.11): `c91c62c5e6fa954f5a7e1d7b9ad417d749db4aa60a4ba0b3d604dec1b645d190`
+  - 実測 / PKGBUILD 値 (1.2.12): `26c7c4c661d6c9beda734fcf305031056a6ea46e697c4533e8151179724e2950`
   - **upstream が manifest で公開している sha512 と一致** (= AUR maintainer の
-    値に頼らない独立照合。AUR は 1.2.10 止まりで 1.2.11 は未反映のため、
-    1.2.11 については AUR 値との照合は不可):
-    `ca12c262343f29a2b87423d1ff1e4244989e936e37fe1f8e56056b0f91cd02f93f133321229ce35c86c2d84b977e919937a3fd9430cfd769a16d6b03ede25081`
-  - (参考) 集約対象の 1.2.10 tarball も実測し、AUR 記載値
-    `77cb6925...` と一致 (= 版の系列が upstream 公式 bucket 由来であることの確認)
+    値に頼らない独立照合):
+    `d5f0fe7433cb7c43ea878c07627a4fdb82d218f3bef5e6436266f5d9fdd2df145523453b9be0c4250391a64a007f5f42f7faff797bc2b2d502e7efb4874e383a`
+  - AUR も 1.2.12 に追随済み (commit `4ea913b`、2026-09-27) で、AUR 記載の
+    sha256 とも一致 (独立実測が本体で、これは追加の cross-check)
   - (初回 1.2.9 時の記録) aarch64 tarball も sha256 / sha512 とも manifest と
     一致を確認済み (本 repo では使わない)
-- [x] tarball の中身は `antigravity` 1 ファイル (219,545,808 byte、root/root、
-  0755) のみ (1.2.9 は 217,424,080 byte、構成同一)。 ELF 64-bit x86-64 PIE、
+- [x] tarball の中身は `antigravity` 1 ファイル (219,959,504 byte、root/root、
+  0755) のみ (1.2.11 は 219,545,808 byte、構成同一)。 ELF 64-bit x86-64 PIE、
   stripped、Go 製。 tarball 内バイナリの sha256:
-  `ec7cf797ecb0e1d91ddf3b6d9d6c1d616bb89f78a5b0e43536b72a7fce695f56`
+  `ce6fdd9e7621ee9ac6eedaa337731ca1f235e412ff57cf9eabcd2aa23b3576ca`
 - [x] `package()`: `install -Dm755 antigravity → /usr/bin/agy` と
   `install -Dm644 LICENSE → /usr/share/licenses/antigravity-cli/LICENSE` のみ。
   curl / wget / eval / pipe-to-shell 無し。`prepare()` / `build()` 無し
 - [x] `depends=('glibc')` は妥当: バイナリの `DT_NEEDED` は
   `libc / libm / libdl / libpthread / librt / libresolv / ld-linux` の glibc 系のみ、
   要求 symbol version は最大 `GLIBC_2.26` (Arch の glibc 2.44 で充足)。
-  1.2.11 でも `DT_NEEDED` 集合・最大 symbol version とも 1.2.9 と同一
+  1.2.12 でも `DT_NEEDED` 集合・最大 symbol version とも 1.2.11 と同一
 - [x] バイナリ内に埋め込まれた宿主名は Google 管理ドメイン
   (`antigravity.google`, `googleapis.com`, `cloud.google.com`,
   `antigravity-unleash.goog` 等) と github.com / 仕様書 URL のみ。
-  不審な第三者ドメイン無し (`strings` による静的確認)。 1.2.11 でも scheme 付き URL の
-  集合 (277 件) は 1.2.9 と同一で、新規の接続先は無い (bare な宿主名で新規に見えるものは
-  Go の symbol 名 `codeassistclient.apply...` / `render.commandSummaryItem` や
-  Google 内部の build 元 path の断片で、ネットワーク接続先ではない)
+  不審な第三者ドメイン無し (`strings` による静的確認)。 1.2.12 では 1.2.11 比で
+  scheme 付き URL の host が 6 件増えるが、全て Google 管理ドメイン
+  (`*.cloud.google.com`, `*.cloudshell.dev`, `*.cloudshell.googleusercontent.com`,
+  `*.cloudworkstations.dev`, `*.cloudworkstations.googleusercontent.com`,
+  `one.google.com`。 wildcard は Cloud Shell / Cloud Workstations 判定用の
+  host match pattern とみられる) と Google の docs URL
+  (`ai.google.dev/gemini-api/docs/billing`) のみで、第三者ドメインの
+  新規接続先は無い (1.2.11 では scheme 付き URL 集合が 1.2.9 と同一だった)
 - [x] `provides=('agy')` / `conflicts=('agy')`: Arch 公式 repo に `agy` /
   `antigravity*` は無く衝突なし。`optdepends=('antigravity')` は AUR 側の
   desktop app を指すヒントで [nekono] 外の pkg (無くても install 可)
@@ -122,6 +125,7 @@ AUR と byte 一致。
 |---|---|---|---|---|
 | 2026-09-24 | 1.2.9_5905287731871744-1 | (this commit) | release `1.2.9-5905287731871744` (Google GCS、公開 git tag 無し。upstream manifest の url と一致) | 初回 add。AUR `antigravity-cli` (commit `a154fb7`) を fork、`arch=('x86_64')` に絞る。 sha256 を独立実測し AUR 値・upstream 公開 sha512 と一致確認。 ELF `DT_NEEDED` が glibc のみで depends 妥当を確認。 nvchecker は jq source が workflow で動かないため regex source に変更。 auto-updater 内蔵 (`AGY_CLI_DISABLE_AUTO_UPDATE` で無効化可) を注意事項に記録。 |
 | 2026-09-27 | 1.2.11_6016716732497920-1 | (this PR) | release `1.2.11-6016716732497920` (Google GCS、公開 git tag 無し。upstream manifest の url と一致) | Issue #654 (1.2.10) / #656 (1.2.11) を最新 1.2.11 に集約、approve。 sha256 を独立実測 (`c91c62c5...`) し、upstream manifest 公開の sha512 と一致 (AUR は 1.2.10 止まりで 1.2.11 未反映のため AUR 値とは照合不可。集約対象の 1.2.10 tarball は実測して AUR 値 `77cb6925...` と一致し、版の系列が公式 bucket 由来であることを確認)。 tarball は `antigravity` 1 ファイルのまま (219,545,808 byte)、`DT_NEEDED` 集合・最大 symbol version `GLIBC_2.26` は 1.2.9 と同一で depends 変更不要。 埋め込み URL 集合 (277 件) 同一で新規接続先なし。 AUR の PKGBUILD は `arch` 行 (aarch64) 以外が本 repo と同一、 `LICENSE` / `antigravity-cli.install` は byte 一致。 バイナリは未実行 (静的解析のみ)。 |
+| 2026-09-28 | 1.2.12_5784551402897408-1 | (this PR) | release `1.2.12-5784551402897408` (Google GCS、公開 git tag 無し。upstream manifest の url と一致) | Issue #667。 sha256 を独立実測 (`26c7c4c6...`) し、upstream manifest 公開 sha512 と一致 (AUR も 1.2.12 に追随済みで、AUR 記載 sha256 とも一致)。 tarball は `antigravity` 1 ファイルのまま (219,959,504 byte)、`DT_NEEDED` 集合・最大 symbol version `GLIBC_2.26` は 1.2.11 と同一で depends 変更不要。 埋め込み URL の新規追加は Google 管理ドメインのみで、第三者ドメインの新規接続先なし。 AUR の PKGBUILD は `arch` 行 (aarch64) 以外が本 repo と同一、 `LICENSE` / `antigravity-cli.install` は byte 一致。 バイナリは未実行 (静的解析のみ)。 |
 
 ## 更新方針
 
