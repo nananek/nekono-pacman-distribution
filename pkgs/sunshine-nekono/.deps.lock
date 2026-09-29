@@ -3,7 +3,7 @@
 # Source: pkgs/sunshine-nekono/.SRCINFO (depends + makedepends entries).
 # Format: 1 line per package: <name>=<full-version>
 
-appstream=1.2.0-1
+appstream=1.2.1-1
 appstream-glib=0.8.4-1
 avahi=1:0.9rc5-1
 cmake=4.4.3-2
