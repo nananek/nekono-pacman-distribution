@@ -357,7 +357,7 @@ checklist に沿った調査を Claude 自身がこのセッション内で行�
 ### build host 作業
 
 `bin/build-all` / `bin/update-repo` / `bin/publish` は build host 上での実行が必要 (署名用 YubiKey・
-`~/.config/nekono-pacman/publish.env`・rootless docker)。build host は 2026-07-14 に nekono-pacman0 から
+`~/.config/nekono-pacman/publish.env`・rclone)。build host は 2026-07-14 に nekono-pacman0 から
 **Claude Code が動いているこのマシン**へ移った。build host 上なら Claude が merge 後に
 `bin/build-all --pending` → `bin/publish` → 配信検証まで直接実行する (手順・判定・失敗時の復旧は
 `.claude/skills/daily-ops/`)。build host でない環境では、従来どおり merge 後に実行コマンドを提示するのみ:

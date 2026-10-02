@@ -41,7 +41,7 @@
 │   ├── update-repo           — repo-add wrapper
 │   ├── prune                 — db 未登録の古い .pkg.tar.zst を削除
 │   ├── serve                 — build host 上で nginx が repo/ を Tailscale 配信
-│   └── publish               — repo/ を別配信ホストの WebDAV へ container rclone で push
+│   └── publish               — repo/ を別配信ホストの WebDAV へ host rclone で push
 ├── deploy/
 │   └── dist/                 — 配信を別ホストへ分離する docker-compose (Caddy + WebDAV)
 └── repo/                     — gitignore (built + signed artifacts)
@@ -158,10 +158,10 @@ compose 一式を `deploy/dist/` に用意している (nekono-dist0 でデプ�
   - **匿名 GET** (pacman) = **Caddy** `:80`、volume は read-only mount
   - **認証 PUT** (publish) = **dufs** WebDAV `:8080`、volume は read-write mount
   - read 側の `:ro` mount が「配信は書けない土管」の security 境界。
-- build host は `bin/build-all` 後に **`bin/publish`** を叩く。ホストに
-  rclone を入れず、rclone コンテナで署名済み `repo/x86_64/` を dufs (`:8080`)
-  の WebDAV へ sync する (`--copy-links` で `nekono.db` symlink を実体化、
-  `--delay-updates` で pkg→db の順序を保証)。
+- build host は `bin/build-all` 後に **`bin/publish`** を叩く。build host の
+  `rclone` で署名済み `repo/x86_64/` を dufs (`:8080`) の WebDAV へ sync する
+  (docker 不要。`--copy-links` で `nekono.db` symlink を実体化、db と `*.sig`
+  は 2 pass 目で強制更新)。
 - **信頼モデルは不変**: `SigLevel=Required` で client が Nekono GPG を検証する
   ため、配信ホストは署名鍵を持たない土管でよい。
 - client は `Server` を配信ホスト (Caddy `:80`) に向け替えるだけ。

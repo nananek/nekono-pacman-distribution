@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 # publish: push the signed repo/x86_64/ to the distribution host's WebDAV
-# endpoint (dufs on :8080, see deploy/dist/). Runs rclone in a container so the
-# build host needs no host-level rclone/ssh/rsync. Credentials come from env
-# vars and are never committed. Independent of build-all; run it after a build.
+# endpoint (dufs on :8080, see deploy/dist/). Uses the host rclone binary;
+# docker is not required. Credentials come from env vars and are never
+# committed. Independent of build-all; run it after a build.
 #
 # Required env (source from a local, gitignored file on the build host):
 #   NEKONO_DAV_URL   e.g. http://nekono-dist0.<tailnet>.ts.net:8080  (dufs port)
@@ -32,7 +32,6 @@ set -euo pipefail
 
 REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 REPO_DIR="$REPO_ROOT/repo/x86_64"
-RCLONE_IMAGE="${RCLONE_IMAGE:-rclone/rclone:latest}"
 
 : "${NEKONO_DAV_URL:?set NEKONO_DAV_URL (e.g. http://nekono-dist0.<tailnet>.ts.net)}"
 : "${NEKONO_DAV_USER:?set NEKONO_DAV_USER}"
@@ -43,37 +42,35 @@ if [[ ! -f "$REPO_DIR/nekono.db.tar.gz" ]]; then
     exit 1
 fi
 
-if ! command -v docker >/dev/null; then
-    echo "[ERROR] docker not found (publish runs rclone in a container)." >&2
+if ! command -v rclone >/dev/null; then
+    echo "[ERROR] rclone not found. Install rclone on the build host." >&2
     exit 1
 fi
 
-# rclone stores WebDAV passwords obscured; obscure it via the same image.
+# rclone stores WebDAV passwords obscured; obscure it with the host rclone.
 echo "[*] Obscuring WebDAV password"
-obsc="$(docker run --rm "$RCLONE_IMAGE" obscure "$NEKONO_DAV_PASS")"
+obsc="$(rclone obscure "$NEKONO_DAV_PASS")"
 
-# Shared rclone container invocation. --copy-links uploads nekono.db (a symlink
-# -> nekono.db.tar.gz) as a real object (WebDAV cannot store symlinks).
+# Shared rclone invocation. The remote config is supplied through
+# RCLONE_CONFIG_DIST_* env vars, so no rclone config file is written to disk.
 rclone_run() {
-    docker run --rm \
-        -v "$REPO_DIR":/data/x86_64:ro \
-        -e RCLONE_CONFIG_DIST_TYPE=webdav \
-        -e RCLONE_CONFIG_DIST_URL="$NEKONO_DAV_URL" \
-        -e RCLONE_CONFIG_DIST_VENDOR=other \
-        -e RCLONE_CONFIG_DIST_USER="$NEKONO_DAV_USER" \
-        -e RCLONE_CONFIG_DIST_PASS="$obsc" \
-        "$RCLONE_IMAGE" "$@"
+    RCLONE_CONFIG_DIST_TYPE=webdav \
+        RCLONE_CONFIG_DIST_URL="$NEKONO_DAV_URL" \
+        RCLONE_CONFIG_DIST_VENDOR=other \
+        RCLONE_CONFIG_DIST_USER="$NEKONO_DAV_USER" \
+        RCLONE_CONFIG_DIST_PASS="$obsc" \
+        rclone "$@"
 }
 
 # Pass 1: bulk sync (uploads new packages, deletes retired ones). Size-only
 # comparison is fine here because package filenames are immutable-by-version.
 echo "[*] Publishing (pass 1/2: sync packages) $REPO_DIR -> $NEKONO_DAV_URL/x86_64"
 rclone_run sync --copy-links --checkers 4 --transfers 4 -v \
-    /data/x86_64 dist:x86_64
+    "$REPO_DIR" dist:x86_64
 
 # Pass 2: force-refresh the in-place-mutating db metadata + signatures. Without
-# --ignore-times the same-size *.sig files are skipped and the published sig no
-# longer matches the published db (see header). `copy` never deletes.
+# --ignore-times the same-size *.sig files are skipped and the published sig
+# no longer matches the published db (see header). `copy` never deletes.
 # This applies to BOTH the repo db (nekono.db*) and every detached package
 # signature (*.sig, always 119 bytes) — a rebuilt package with the same
 # filename keeps the same 119-byte size, so `sync` (size-only on WebDAV)
@@ -81,6 +78,6 @@ rclone_run sync --copy-links --checkers 4 --transfers 4 -v \
 # "signature is invalid" (regression: 14 stale *.sig on 2026-08-22).
 echo "[*] Publishing (pass 2/2: force db metadata + sigs)"
 rclone_run copy --copy-links --ignore-times --include "nekono.*" --include "*.sig" -v \
-    /data/x86_64 dist:x86_64
+    "$REPO_DIR" dist:x86_64
 
 echo "[OK] publish complete"

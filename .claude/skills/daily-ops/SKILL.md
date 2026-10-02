@@ -83,7 +83,7 @@ build host 判定 (Phase 3/4 をここで実行できるか):
 - **`git add -A` / `git add .` 禁止**。`pkgs/<pkg>/` に makepkg の download cache が落ちる。path を明示して add。
 - 1 PKGBUILD update = 1 commit。複数 package を 1 commit に混ぜない。
 - **`gpgconf --kill` 系を絶対に実行しない**。転送された YubiKey socket を奪う rogue agent を生む (→ `signing.md`)。
-- docker は **rootless**。`systemctl --user ...` で扱う。`sudo systemctl start docker` は使わない。
+- `bin/publish` は host の `rclone` を直接使う (docker 不使用)。
 - `~/.config/nekono-pacman/publish.env` の**値を出力しない** (`cat` / `echo` / `set -x` 禁止)。
 - background 実行の通知 "exit 0" を信じない。rc を捕捉し、log 末尾と artifact で確認してから成功と言う (→ `build.md`)。
 - コマンド出力・log・commit message の script 由来部分は英語 (ASCII)。コメント・REVIEW.md・PR 本文は日本語 OK。
