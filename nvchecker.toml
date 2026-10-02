@@ -49,11 +49,6 @@ regex = "antigravity-cli/([0-9]+\\.[0-9]+\\.[0-9]+-[0-9]+)/linux-x64/"
 from_pattern = "-"
 to_pattern = "_"
 
-[claude-code]
-# Anthropic Claude Code CLI。公式 npm registry の latest version を監視する。
-source = "npm"
-npm = "@anthropic-ai/claude-code"
-
 [docker-rootless-extras]
 # Docker Engine と version sync (rootless extras は moby/moby tree の subset)。
 # release tag は "docker-vX.Y.Z" 形式なので prefix を strip。use_latest_release

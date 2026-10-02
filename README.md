@@ -67,7 +67,6 @@
 
 | package | source 方針 | 役割 |
 |---|---|---|
-| `claude-code` | Anthropic 公式 prebuilt binary | ターミナルで動作する agentic coding tool |
 | `antigravity-cli` | Google 公式 prebuilt binary | Google Antigravity の CLI (`agy`) |
 
 ### システム・インフラ
