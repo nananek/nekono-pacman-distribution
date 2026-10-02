@@ -63,13 +63,6 @@
 | `localsend-bin`  | -bin (Flutter prebuilt)       | AirDrop 代替 (LAN ファイル転送) |
 | `pwvucontrol`    | from-source (Rust/GTK4)       | PipeWire 音量コントロール |
 
-### 開発ツール
-
-| package | source 方針 | 役割 |
-|---|---|---|
-| `claude-code` | Anthropic 公式 prebuilt binary | ターミナルで動作する agentic coding tool |
-| `antigravity-cli` | Google 公式 prebuilt binary | Google Antigravity の CLI (`agy`) |
-
 ### システム・インフラ
 
 | package | source 方針 | 役割 |
