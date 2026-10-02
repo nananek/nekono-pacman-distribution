@@ -1,15 +1,13 @@
 # Phase 4: publish (`bin/publish`) と配信検証
 
-`bin/publish` は署名済みの `repo/x86_64/` を**配信ホスト (dufs WebDAV, `:8080`)** へ rclone コンテナで push する。
+`bin/publish` は署名済みの `repo/x86_64/` を**配信ホスト (dufs WebDAV, `:8080`)** へ host rclone で push する (docker 不要)。
 配信ホストは署名鍵を持たない土管で、client は `SigLevel=Required` で Nekono GPG を検証する
 (信頼モデルは不変)。build 成功を `build.md` の手順で検証できた後は、**確認なしで続けて実行してよい**
 (user が「アップロードまで自動で」と決めた運用)。
 
 ## 前提チェック
 
-1. **docker (rootless)**: `systemctl --user is-active docker.service`。`inactive` なら
-   `systemctl --user start docker.service`。`sudo systemctl start docker` / system unit の `is-active docker` は使わない
-   (この環境の docker は user-level の rootless。system unit が inactive なのは正常)。
+1. **rclone**: `command -v rclone` で存在確認 (build host は host rclone 直呼び。docker は使わない)。
 2. **認証情報**: `~/.config/nekono-pacman/publish.env` (repo 外、chmod 600)。3 変数が非空かを**値を出さずに**確認:
 
    ```sh
@@ -19,7 +17,7 @@
    done
    ```
 
-   ファイルが無い / 空 / 変数欠落 / docker が起動できない → 黙って skip せず、何が足りないかを user に伝えて停止。
+   ファイルが無い / 空 / 変数欠落 / rclone が無い → 黙って skip せず、何が足りないかを user に伝えて停止。
    値は絶対に表示・log しない。
 
 ## 実行

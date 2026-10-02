@@ -46,8 +46,8 @@ curl -sI -u "$DUFS_USER:$DUFS_PASS" http://nekono-dist0.<tailnet>.ts.net:8080/  
 
 ## publish (build host 側)
 
-build host で `bin/build-all` 後に `bin/publish`。ホストに rclone を入れず、
-rclone コンテナで dufs (`:8080`) の WebDAV へ sync する (docker が要る):
+build host で `bin/build-all` 後に `bin/publish`。build host の rclone で
+dufs (`:8080`) の WebDAV へ sync する (docker 不要):
 
 ```sh
 export NEKONO_DAV_URL=http://nekono-dist0.<tailnet>.ts.net:8080   # dufs の port
@@ -56,12 +56,16 @@ export NEKONO_DAV_PASS='...'                 # = DUFS_PASS (平文)
 bin/publish
 ```
 
-`bin/publish` は `rclone sync --copy-links --delay-updates` で:
+`bin/publish` は 2 pass で同期する:
 
+- pass 1: `rclone sync --copy-links` … 新 pkg を上げ、撤廃済み pkg を削除する
+- pass 2: `rclone copy --ignore-times --include 'nekono.*' --include '*.sig'` …
+  db と署名を強制更新する。dufs は mtime を保存できないため size-only 比較になり、
+  119 byte 固定の `*.sig` が skip されると「新 db + 旧署名」になって client の
+  検証が落ちる (2026-07-04 / 2026-08-22 に実発生)。pass 2 は pass 1 の後に走るので
+  「db が参照する pkg がまだ無い」状態も client には見えない
 - `--copy-links` … `nekono.db` (symlink → `nekono.db.tar.gz`) を実体として上げる
   (WebDAV は symlink を持てないため)
-- `--delay-updates` … 全 pkg を上げてから db を最後に rename。同期途中に
-  「db が参照する pkg がまだ無い」状態を client に見せない (dufs は MOVE 対応)
 
 初回だけ、ビルドホストの `repo/x86_64/` をそのまま volume に seed しておくと速い
 (このリポジトリの publish 経路が固まる前の bootstrap 用)。
