@@ -17,7 +17,9 @@ pkgs/*/*.png
 pkgs/*/*.txt
 
 # makepkg の source= ダウンロードキャッシュ (sha256 pin 済み、SRCDEST 未設定で
-# pkgs/<name>/ 直下に落ちる。拡張子なし / git clone source は個別 pattern)
+# pkgs/<name>/ 直下に落ちる。拡張子なし / *.patch / git clone source は個別 pattern)
+# (generic な `pkgs/*/*.patch` は tracked patch を隠すため使わない)
+pkgs/sane-nekono/sane-*.patch
 # python bytecode cache
 __pycache__/
 *.pyc
