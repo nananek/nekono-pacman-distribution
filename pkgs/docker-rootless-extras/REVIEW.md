@@ -30,19 +30,20 @@ maintainer の意図的設計)。Debian apt の同名 package とは flow が異
   - maintainer: Ľubomír 'the-k' Kučera
   - contributors: Hugo Osvaldo Barrera / PastLeo / koba1t
 - Upstream: https://github.com/moby/moby (= Docker / Moby project)
-  - 2 つの shell script を `docker-v29.8.1` annotated tag から取得
-  - tag commit: `464cd50c3d9e92877d56940ea160de6fca7bea23`
+  - 2 つの shell script を `docker-v29.8.2` annotated tag から取得
+  - tag object: `a8816ccac86853a18a9903da4dfaaebf01cb1774` (annotated + GPG 署名済み)
+  - tag commit: `8af9fe3a36bab3e039862a2ab1cef1880c9b4d03`
   - release author: `vvoland` (既知 moby maintainer)、prerelease: false
 
 ## 検証結果
 
-- [x] `source` URL = `raw.githubusercontent.com/moby/moby/docker-v29.8.1/...`
+- [x] `source` URL = `raw.githubusercontent.com/moby/moby/docker-v29.8.2/...`
   - Docker 公式 upstream repo、typosquat / なりすましリスクなし
-- [x] `sha256sums` 4 件すべてを 2026-09-21 に独立検証
-  - upstream 2 scripts は raw URL の直接取得値を照合。29.8.0 タグの内容と
+- [x] `sha256sums` 4 件すべてを 2026-10-02 に独立検証
+  - upstream 2 scripts は raw URL の直接取得値を照合。29.8.1 タグの内容と
     **byte 単位で完全同一**のため sha256 は不変
-  - `dockerd-rootless.sh` (29.8.1): `200203633806081a401e60aefdf68a8fa73fc7dc80aa854c52a69d47710a3488` (不変)
-  - `dockerd-rootless-setuptool.sh` (29.8.1): `1c9f0dc93ebb3d75255254ec760d26a912affba7f329ab8abffe8e25eb0b3f94` (不変)
+  - `dockerd-rootless.sh` (29.8.2): `200203633806081a401e60aefdf68a8fa73fc7dc80aa854c52a69d47710a3488` (不変)
+  - `dockerd-rootless-setuptool.sh` (29.8.2): `1c9f0dc93ebb3d75255254ec760d26a912affba7f329ab8abffe8e25eb0b3f94` (不変)
   - `docker.socket` (ローカル AUR snapshot、変更なし): `d8695293e5d4a814763f13e1d36ed37273040666b4b91363d6c33171df8934c7`
   - `99-docker-rootless.conf` (ローカル AUR snapshot、変更なし): `d0d790d4c3d887b10b2b155b83a58a44980b9fa638f8c0f1faec0739dc0ef473`
 - [x] `package()`:
@@ -141,6 +142,8 @@ upstream の新 release (docker 29.8.x 等) が出たら:
    1 行追記 (review 日付 + PKGBUILD repo SHA + upstream tag commit SHA)
 
 ## 更新履歴
+
+- **2026-10-02 / 29.8.2** — approve (Issue #678)。Moby v29.8.2 (release 2026-09-30、by `vvoland`) へ sync。annotated tag object `a8816ccac86853a18a9903da4dfaaebf01cb1774` の target commit `8af9fe3a36bab3e039862a2ab1cef1880c9b4d03`、tagger `vvoland` (Paweł Gronowski, Docker 社員)。release は security release (Docker Engine / BuildKit の CVE 複数) だが、本 pkg が ship する 2 script は 29.8.1 と **byte-identical** で sha256 4 値すべて不変、PKGBUILD 改変は `pkgver` 1 行のみ。setuptool.sh の `awk` 抽出入力も同一のため docker.service 出力に変化なし。
 
 - **2026-09-21 / 29.8.1** — approve (Issue #639)。Moby v29.8.1
   (release 2026-09-15、by `vvoland`) へ sync。annotated tag object
