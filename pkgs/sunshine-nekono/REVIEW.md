@@ -107,6 +107,7 @@ AMF SDK (1.2G) / FFmpeg source (114M) / SVT-AV1 (38M) / Vulkan-Headers (41M)。
 
 | 日付 | release | review した PKGBUILD repo SHA | upstream tag commit | findings |
 |---|---|---|---|---|
+| 2026-10-03 | 2026.906.222525.nekono1-5 | (this PR) | — (pkgrel bump のみ) | `pkgrel` +1 (deps changed): nodejs 26.10.0-1 → 26.10.0-2, npm 12.1.0-1 → 12.2.0-1, openssl 3.6.4-1 → 3.6.5-1 |
 | 2026-10-02 | 2026.906.222525.nekono1-4 | (this PR) | — (pkgrel bump のみ) | `pkgrel` +1 (deps changed): appstream 1.2.0-1 → 1.2.1-1 |
 | 2026-09-24 | 2026.906.222525.nekono1-3 | (this PR) | — (pkgrel bump のみ) | `pkgrel` +1 (deps changed): libpipewire 1:1.6.8-1 → 1:1.6.9-1, nodejs 26.9.0-1 → 26.10.0-1, npm 12.0.2-1 → 12.1.0-1 |
 | 2026-09-17 | 2026.906.222525.nekono1-2 | (this PR) | — (pkgrel bump のみ) | `pkgrel` +1 (deps changed): nodejs 26.8.2-1 → 26.9.0-1 |
