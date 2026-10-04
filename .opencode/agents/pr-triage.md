@@ -25,12 +25,28 @@ permissions:
   - action: shell
     resource: "bin/publish*"
     effect: deny
+  # raw な不可逆操作は entrypoint script だけ (global policy と二重)
+  - action: shell
+    resource: "git commit*"
+    effect: deny
+  - action: shell
+    resource: "git push*"
+    effect: deny
+  - action: shell
+    resource: "gh pr create*"
+    effect: deny
+  - action: shell
+    resource: "gh pr merge*"
+    effect: deny
   # 不可逆操作は entrypoint script だけ。raw な add/commit/push/merge は allow しない。
   - action: shell
     resource: "gh pr checkout *"
     effect: allow
   - action: shell
     resource: "gh pr close *"
+    effect: allow
+  - action: shell
+    resource: "git merge-base *"
     effect: allow
   - action: shell
     resource: "bin/step-bot-pr *"

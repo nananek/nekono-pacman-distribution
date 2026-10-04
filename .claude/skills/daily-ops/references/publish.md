@@ -8,24 +8,16 @@
 ## 前提チェック
 
 1. **rclone**: `command -v rclone` で存在確認 (build host は host rclone 直呼び。docker は使わない)。
-2. **認証情報**: `~/.config/nekono-pacman/publish.env` (repo 外、chmod 600)。3 変数が非空かを**値を出さずに**確認:
-
-   ```sh
-   f=~/.config/nekono-pacman/publish.env
-   for v in NEKONO_DAV_URL NEKONO_DAV_USER NEKONO_DAV_PASS; do
-     grep -Eq "^(export )?$v=.+" "$f" && echo "$v: set" || echo "$v: MISSING"
-   done
-   ```
-
-   ファイルが無い / 空 / 変数欠落 / rclone が無い → 黙って skip せず、何が足りないかを user に伝えて停止。
-   値は絶対に表示・log しない。
+2. **認証情報**: `~/.config/nekono-pacman/publish.env` (repo 外、chmod 600) は
+   **`bin/publish` 自身が読み込む** (agent が `source` しない。`shell:*publish.env*` は
+   policy で deny 済み)。3 変数が無い / ファイルが無い / rclone が無い場合は `bin/publish` が
+   非 0 で落ちるので、黙って skip せず何が足りないかを user に伝えて停止。値は絶対に表示・log しない。
 
 ## 実行
 
 ```sh
 LOG=$(mktemp -t nekono-publish-XXXXXX.log)
-( set -a; source ~/.config/nekono-pacman/publish.env; set +a
-  bin/publish > "$LOG" 2>&1; rc=$?; echo "publish exit=$rc" >> "$LOG"; exit $rc )
+( bin/publish > "$LOG" 2>&1; rc=$?; echo "publish exit=$rc" >> "$LOG"; exit $rc )
 tail -n 15 "$LOG"       # `[OK] publish complete` と `publish exit=0`
 ```
 
@@ -62,9 +54,9 @@ done
   curl -s -o /dev/null -w '%{http_code}\n' "$srv/<retired-file>"      # 404 が期待値
   ```
 
-`/etc/pacman.conf` に `[nekono]` が無いマシンでは、代わりに publish.env の認証付き経路 (dufs `:8080`) で同じ照合をする:
-`curl -fsS -K <(printf 'user = "%s:%s"\n' "$NEKONO_DAV_USER" "$NEKONO_DAV_PASS") "$NEKONO_DAV_URL/x86_64/$f"`
-(password を argv に載せないため `-K` + process substitution。`source` は subshell 内で行う)。
+`/etc/pacman.conf` に `[nekono]` が無いマシンでは、publish.env の認証付き経路 (dufs `:8080`) で
+同じ照合をする必要があるが、**agent の shell から publish.env の値を読めない** (policy deny)。
+その場合は照合を中断し、user に依頼する (値の表示・log は不可)。
 
 ## 「build 済みだが未 publish」かもしれない時 (build が `nothing to build` だった等)
 

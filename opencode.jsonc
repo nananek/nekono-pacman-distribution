@@ -29,13 +29,26 @@
 
   // hard deny。allow/ask を deny にしか変えない (権限を増やせない)。
   // project config なので、より強い user global や GitHub branch protection が最終防衛。
+  //
+  // ここには「全 agent に共通で成り立つ不変条件」だけを置く。raw な git/gh の
+  // 不可逆操作 (commit / push / PR 作成 / merge) は daily-ops phase agent 側の
+  // shell deny (.opencode/agents/*.md) で塞ぐ。build agent (= 通常コーディング /
+  // harness 変更) は commit / push できてよいため global には置かない。
+  //
+  // 注意: scanner は agent が shell tool に渡した「トップレベルのコマンド文字列」だけを
+  // 評価する。entrypoint script (bin/step-*) の内部 subprocess は対象外。
+  // pattern はいずれも best-effort (先頭一致等の穴はある)。
   "experimental": {
     "policies": [
       { "action": "permission", "resource": "shell:*--no-verify*", "effect": "deny" },
       { "action": "permission", "resource": "shell:gpgconf --kill*", "effect": "deny" },
       { "action": "permission", "resource": "shell:sudo *", "effect": "deny" },
       { "action": "permission", "resource": "shell:rm -rf /*", "effect": "deny" },
+
+      // secret 保護: read tool と shell の両方から publish.env を遮断する
+      // (publish.env の読み込みは bin/publish 内で完結する)。
       { "action": "permission", "resource": "read:*publish.env*", "effect": "deny" },
+      { "action": "permission", "resource": "shell:*publish.env*", "effect": "deny" },
       { "action": "permission", "resource": "read:*/.ssh/*", "effect": "deny" }
     ]
   }

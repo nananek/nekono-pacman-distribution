@@ -24,6 +24,19 @@ permissions:
   - action: shell
     resource: "bin/publish*"
     effect: deny
+  # raw な不可逆操作は entrypoint script だけ (global policy と二重)
+  - action: shell
+    resource: "git commit*"
+    effect: deny
+  - action: shell
+    resource: "git push*"
+    effect: deny
+  - action: shell
+    resource: "gh pr create*"
+    effect: deny
+  - action: shell
+    resource: "gh pr merge*"
+    effect: deny
   # upstream 調査のための webfetch / read-only tool
   - action: webfetch
     resource: "*"
@@ -35,8 +48,33 @@ permissions:
     resource: "makepkg --verifysource"
     effect: allow
   - action: shell
+    resource: "makepkg --printsrcinfo*"
+    effect: allow
+  - action: shell
+    resource: "diff *"
+    effect: allow
+  - action: shell
+    resource: "git merge-base *"
+    effect: allow
+  - action: shell
     resource: "gh api *"
     effect: allow
+  # gh api は GET 調査用。書き込み系の method / body 指定を弾く (last match wins)。
+  - action: shell
+    resource: "*gh api*-X*"
+    effect: deny
+  - action: shell
+    resource: "*gh api*--method*"
+    effect: deny
+  - action: shell
+    resource: "*gh api*-f *"
+    effect: deny
+  - action: shell
+    resource: "*gh api*--field*"
+    effect: deny
+  - action: shell
+    resource: "*gh api*--input*"
+    effect: deny
   - action: shell
     resource: "git ls-remote *"
     effect: allow

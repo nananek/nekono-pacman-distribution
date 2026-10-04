@@ -9,19 +9,13 @@
 #
 # Output is English (ASCII) per repo convention.
 #
-# Usage: bin/step-merge <PR_NUMBER> [--force]
+# Usage: bin/step-merge <PR_NUMBER>
 
 set -euo pipefail
 
 pr="${1:-}"; shift || true
-force=0
-while [ "$#" -gt 0 ]; do
-    case "$1" in
-        --force) force=1; shift ;;
-        *) echo "unknown argument: $1" >&2; exit 2 ;;
-    esac
-done
-[[ "${pr}" =~ ^[0-9]+$ ]] || { echo "usage: bin/step-merge <PR_NUMBER> [--force]" >&2; exit 2; }
+[ "$#" -eq 0 ] || { echo "unknown argument: $1" >&2; exit 2; }
+[[ "${pr}" =~ ^[0-9]+$ ]] || { echo "usage: bin/step-merge <PR_NUMBER>" >&2; exit 2; }
 
 note() { printf '[step-merge] %s\n' "$1"; }
 
@@ -36,8 +30,8 @@ IFS=$'\t' read -r state base head author <<<"$(gh pr view "$pr" --json state,bas
 
 case "$head" in
     deps/*-pkgrel-*) : ;;
-    pkg/*)           : ;;
-    *) note "BLOCK: head branch '$head' is not an approved path (deps/*-pkgrel-* or pkg/*)"; exit 1 ;;
+    pkg/*-*)         : ;;
+    *) note "BLOCK: head branch '$head' is not an approved path (deps/*-pkgrel-* or pkg/<pkg>-<ver>)"; exit 1 ;;
 esac
 
 case "$head" in
@@ -49,10 +43,6 @@ case "$head" in
         ;;
 esac
 note "PR #$pr head=$head author=$author"
-
-if [ "$force" -ne 1 ]; then
-    note "merging (use --force only if you already did the judgment review)"
-fi
 
 gh pr merge "$pr" --merge --delete-branch
 

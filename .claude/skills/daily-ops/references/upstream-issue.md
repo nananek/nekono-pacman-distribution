@@ -67,13 +67,14 @@ block 相当の具体例と「自律の境界」は `SKILL.md` を参照。needs
 
 ## Step 4: PKGBUILD 等の更新
 
-```sh
-git checkout -b pkg/<pkg>-<new_pkgver> origin/master
-```
+master のまま編集する（branch 作成・commit・push・PR 作成は Step 5 の
+`bin/step-upstream-pr` が行う。raw な `git checkout -b` / `git commit -S` は
+permission で deny）。
 
 - `pkgver` = 新版、**`pkgrel` は 1 にリセット**。sha256sums 更新。URL に version が埋まっていなければ URL も。
-- `.SRCINFO`: `( cd pkgs/<pkg> && makepkg --printsrcinfo > .SRCINFO )` → `git diff pkgs/<pkg>/.SRCINFO` が
-  pkgver / source / sha256 (+ 意図した変更) だけであること。
+- `.SRCINFO`: `( cd pkgs/<pkg> && makepkg --printsrcinfo )` の出力で差分を確認し、
+  **edit/write tool で反映**する（shell redirect は scanner の resource になるので使わない）。
+  `git diff pkgs/<pkg>/.SRCINFO` が pkgver / source / sha256 (+ 意図した変更) だけであること。
 - `.deps.lock`: depends / makedepends を変えた時だけ更新 (`# MISSING ...` 行は維持)。
 - `REVIEW.md` (pre-push gate は `source=` / `*sums` / `pkgver` を変えて REVIEW.md を触らないと block):
   - 冒頭「状態」の最新日付・版

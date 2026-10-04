@@ -4,13 +4,16 @@
 # docker is not required. Credentials come from env vars and are never
 # committed. Independent of build-all; run it after a build.
 #
-# Required env (source from a local, gitignored file on the build host):
+# Required env (exported, or loaded from a local gitignored file on the build
+# host: ~/.config/nekono-pacman/publish.env):
 #   NEKONO_DAV_URL   e.g. http://nekono-dist0.<tailnet>.ts.net:8080  (dufs port)
 #   NEKONO_DAV_USER  must match DUFS_USER in the dist host's .env
 #   NEKONO_DAV_PASS  must match DUFS_PASS (plaintext) in the dist host's .env
 #
+# Loading the credentials here (instead of the agent sourcing them) keeps the
+# values out of agent shell commands: `shell:*publish.env*` is policy-denied.
+#
 # Usage:
-#   export NEKONO_DAV_URL=... NEKONO_DAV_USER=... NEKONO_DAV_PASS=...
 #   bin/publish
 #
 # WHY TWO PASSES (important, do not "simplify" back to one sync):
@@ -32,6 +35,17 @@ set -euo pipefail
 
 REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 REPO_DIR="$REPO_ROOT/repo/x86_64"
+
+# Load credentials from the local, gitignored file when not already exported.
+# Values are never echoed (the file path is the only thing printed on error).
+_env="${HOME}/.config/nekono-pacman/publish.env"
+if { [[ -z "${NEKONO_DAV_URL:-}" ]] || [[ -z "${NEKONO_DAV_USER:-}" ]] || [[ -z "${NEKONO_DAV_PASS:-}" ]]; } \
+   && [[ -f "$_env" ]]; then
+    set -a
+    # shellcheck disable=SC1090
+    source "$_env"
+    set +a
+fi
 
 : "${NEKONO_DAV_URL:?set NEKONO_DAV_URL (e.g. http://nekono-dist0.<tailnet>.ts.net)}"
 : "${NEKONO_DAV_USER:?set NEKONO_DAV_USER}"

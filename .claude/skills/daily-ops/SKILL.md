@@ -36,25 +36,19 @@ description: nekono-pacman-distribution の日次運用を最初から最後ま�
 
 ## Phase 0: preflight
 
-```sh
-cd "$(git rev-parse --show-toplevel)"
-git status --short                    # 空であること
-git config core.hooksPath             # `.githooks`。空なら: git config core.hooksPath .githooks
-git checkout master && git pull --ff-only && git fetch origin   # pre-push gate は origin/master を base にする。古いと誤 block
-gh auth status                        # 未 login なら user に `! gh auth login` を依頼
-gh pr list --state open
-gh issue list --state open
-```
-
-build host 判定 (Phase 3/4 をここで実行できるか):
+`bin/preflight` を実行する（read-only。branch/file は変更しない）。working tree /
+`core.hooksPath` / `gh auth` / open bot PR / open upstream Issue / build host /
+forward socket の状態が 1 回で出る:
 
 ```sh
-[ -f ~/.config/nekono-pacman/publish.env ] && [ -S /run/user/$(id -u)/gnupg/S.gpg-agent ] \
-  && [ -f repo/x86_64/nekono.db.tar.gz ] && echo BUILD_HOST || echo NOT_BUILD_HOST
+bin/preflight
 ```
 
-`NOT_BUILD_HOST` なら Phase 2 の merge までで止め、user に
-`git pull --ff-only && bin/build-all --pending` と `bin/publish` を build host で実行するよう提示する。
+- `core.hooksPath` が `.githooks` でなければ pre-push gate が無効。orchestrator は shell を
+  持たないので、user に `git config core.hooksPath .githooks` を依頼する。
+- build host: NO なら Phase 2 の merge までで止め、user に
+  `git pull --ff-only && bin/build-all --pending` と `bin/publish` を build host で実行するよう
+  提示する。
 
 ## 自律の境界 (最重要)
 
@@ -87,7 +81,8 @@ build host 判定 (Phase 3/4 をここで実行できるか):
 - `~/.config/nekono-pacman/publish.env` の**値を出力しない** (`cat` / `echo` / `set -x` 禁止)。
 - background 実行の通知 "exit 0" を信じない。rc を捕捉し、log 末尾と artifact で確認してから成功と言う (→ `build.md`)。
 - コマンド出力・log・commit message の script 由来部分は英語 (ASCII)。コメント・REVIEW.md・PR 本文は日本語 OK。
-- commit message / PR 本文末尾には harness 指定の attribution 行を付ける (前例: 578e54a, PR #652)。
+- commit message / PR 本文末尾には harness 指定の attribution 行
+  `Assisted-by: OpenCode (DeepSeek V4.1 Flash)` を付ける（モデルが違えばその名前で）。
 
 ## Phase 5: 最終報告
 
