@@ -19,6 +19,8 @@
 #                      (without --no-index) newly added to a PKGBUILD
 #   4. REVIEW.md sync: a PKGBUILD's source= / *sums / pkgver changed but the
 #                      package's REVIEW.md was not updated in the same range
+#   5. pkgrel sync   : a PKGBUILD's pkgrel changed but the package's
+#                      .SRCINFO and/or REVIEW.md were not updated in the range
 #
 # Exit 1 (push aborted) if any BLOCK finding. Override: git push --no-verify.
 # Output is English (ASCII) per repo convention.
@@ -90,6 +92,18 @@ while IFS= read -r f; do
         if [ -n "$srcs" ]; then
             note "$pkg: human-review these added source URLs:"
             printf '%s\n' "$srcs" | sed 's/^/    /' >&2
+        fi
+    fi
+
+    # 5. pkgrel bump hygiene: .SRCINFO must mirror pkgrel and REVIEW.md must
+    #    record the bump (the bot PR "3-point" fix). A pkgrel-only change does
+    #    not trip check 4, so check it explicitly.
+    if printf '%s\n' "$padd" | grep -qE '^\+[[:space:]]*pkgrel[[:space:]]*='; then
+        if ! printf '%s\n' "$changed_files" | grep -qx "$pkgdir/.SRCINFO"; then
+            block "$pkg: pkgrel changed but $pkgdir/.SRCINFO not updated"
+        fi
+        if ! printf '%s\n' "$changed_files" | grep -qx "$pkgdir/REVIEW.md"; then
+            block "$pkg: pkgrel changed but $pkgdir/REVIEW.md not updated"
         fi
     fi
 done <<EOF
