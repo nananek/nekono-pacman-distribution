@@ -50,6 +50,15 @@ note() { printf '[step-upstream-pr] %s\n' "$1"; }
 cur="$(git rev-parse --abbrev-ref HEAD)"
 [ "$cur" = "master" ] || { note "BLOCK: on '$cur', expected master (edit on master, the script makes the branch)"; exit 1; }
 
+# The branch must be cut from an up-to-date master, otherwise the PR is based
+# on a stale tree. The agent cannot `git pull` (not allowed), so enforce
+# HEAD == origin/master here.
+git fetch origin --quiet
+if [ "$(git rev-parse HEAD)" != "$(git rev-parse origin/master)" ]; then
+    note "BLOCK: HEAD != origin/master (local master is behind or ahead); run: git pull --ff-only"
+    exit 1
+fi
+
 branch="pkg/$pkg-$ver"
 if git show-ref --verify --quiet "refs/heads/$branch"; then
     note "BLOCK: local branch '$branch' already exists"
@@ -93,10 +102,26 @@ if git diff --cached --quiet; then
     exit 1
 fi
 
-git checkout -b "$branch"
-
+# Clean up temp files always, and remove a half-created branch if a later step
+# (commit / push / gh pr create) fails, so a retry is not blocked by the
+# leftover local branch.
+created=0
 cleanup=()
-trap 'if [ "${#cleanup[@]}" -gt 0 ]; then rm -f "${cleanup[@]}"; fi' EXIT
+on_exit() {
+    rc=$?
+    if [ "${#cleanup[@]}" -gt 0 ]; then rm -f "${cleanup[@]}"; fi
+    if [ "$rc" -ne 0 ] && [ "$created" -eq 1 ]; then
+        note "cleanup: removing failed branch '$branch'"
+        git checkout master >/dev/null 2>&1 || true
+        git branch -D "$branch" >/dev/null 2>&1 || true
+    fi
+    return "$rc"
+}
+trap on_exit EXIT
+
+git checkout -b "$branch"
+created=1
+
 if [ -z "$msgfile" ]; then
     msgfile="$(mktemp)"; cleanup+=("$msgfile")
     printf '%s: bump to %s\n' "$pkg" "$ver" > "$msgfile"
