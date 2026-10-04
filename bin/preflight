@@ -1,0 +1,89 @@
+#!/usr/bin/env bash
+# preflight: read-only status for the daily-ops runbook (Phase 0).
+#
+# Prints repo state, hook config, gh auth, open bot PRs / upstream Issues,
+# build-host and signing readiness. It does NOT change branches or files
+# (it only runs `git fetch origin`, which updates remote-tracking refs).
+#
+# Output is English (ASCII) per repo convention.
+#
+# Usage: bin/preflight
+
+set -uo pipefail
+
+root="$(git rev-parse --show-toplevel 2>/dev/null)" || { echo "[preflight][FATAL] not a git repository"; exit 1; }
+cd "$root" || exit 1
+
+note()  { printf '[preflight] %s\n' "$1"; }
+warn()  { printf '[preflight][WARN] %s\n' "$1"; }
+
+note "repo: $root"
+
+branch="$(git rev-parse --abbrev-ref HEAD)"
+note "branch: $branch"
+
+dirty="$(git status --porcelain)"
+if [ -n "$dirty" ]; then
+    warn "working tree not clean:"
+    printf '%s\n' "$dirty" | sed 's/^/    /'
+else
+    note "working tree clean"
+fi
+
+hooks="$(git config --get core.hooksPath || true)"
+if [ "$hooks" = ".githooks" ]; then
+    note "core.hooksPath=.githooks OK"
+else
+    warn "core.hooksPath=${hooks:-<unset>} (expected .githooks; run: git config core.hooksPath .githooks)"
+fi
+
+if git fetch origin >/dev/null 2>&1; then
+    note "git fetch origin OK"
+else
+    warn "git fetch origin failed"
+fi
+
+gh_ok=0
+if command -v gh >/dev/null 2>&1; then
+    if gh auth status >/dev/null 2>&1; then
+        gh_ok=1
+        note "gh auth OK"
+    else
+        warn "gh not authenticated (run: gh auth login)"
+    fi
+else
+    warn "gh not found"
+fi
+
+if [ "$gh_ok" -eq 1 ]; then
+    note "open bot PRs (deps/*):"
+    gh pr list --state open --json number,headRefName,title \
+        --jq '.[] | select(.headRefName|startswith("deps/")) | "    #\(.number)\t\(.headRefName)\t\(.title)"' 2>/dev/null || true
+    note "open upstream Issues:"
+    gh issue list --state open --json number,title \
+        --jq '.[] | select(.title|startswith("[") and contains("upstream version:")) | "    #\(.number)\t\(.title)"' 2>/dev/null || true
+fi
+
+# build host detection (mirrors the daily-ops skill)
+if [ -f "$HOME/.config/nekono-pacman/publish.env" ] \
+   && [ -S "/run/user/$(id -u)/gnupg/S.gpg-agent" ] \
+   && [ -f "$root/repo/x86_64/nekono.db.tar.gz" ]; then
+    note "build host: YES (build/publish can run here)"
+else
+    note "build host: NO (build/publish must run on the build host)"
+fi
+
+# signing readiness (no gpg calls; see references/signing.md)
+sock="/run/user/$(id -u)/gnupg/S.gpg-agent"
+if [ -S "$sock" ]; then
+    note "forward socket: present"
+else
+    warn "forward socket: MISSING (signing will fail)"
+fi
+if ps -eo args 2>/dev/null | grep -E "[g]pg-agent(.*--homedir )?${HOME}/.gnupg" >/dev/null 2>&1; then
+    warn "local gpg-agent for \$HOME/.gnupg found (rogue? do NOT run gpg; see signing.md)"
+else
+    note "no local gpg-agent for \$HOME/.gnupg"
+fi
+
+exit 0

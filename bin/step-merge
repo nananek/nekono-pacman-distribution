@@ -1,0 +1,65 @@
+#!/usr/bin/env bash
+# step-merge: merge an approved PR through one guarded entrypoint.
+#
+# Accepts only the two pre-approved autonomous paths:
+#   - head branch deps/<pkg>-pkgrel-<N>   (bot pkgrel bump)
+#   - head branch pkg/<pkg>-<pkgver>      (upstream-issue bump)
+# Anything else is refused. Judgment review must already have happened; this
+# script only performs the merge and returns the checkout to master.
+#
+# Output is English (ASCII) per repo convention.
+#
+# Usage: bin/step-merge <PR_NUMBER> [--force]
+
+set -euo pipefail
+
+pr="${1:-}"; shift || true
+force=0
+while [ "$#" -gt 0 ]; do
+    case "$1" in
+        --force) force=1; shift ;;
+        *) echo "unknown argument: $1" >&2; exit 2 ;;
+    esac
+done
+[[ "${pr}" =~ ^[0-9]+$ ]] || { echo "usage: bin/step-merge <PR_NUMBER> [--force]" >&2; exit 2; }
+
+note() { printf '[step-merge] %s\n' "$1"; }
+
+if [ -n "$(git status --porcelain)" ]; then
+    note "BLOCK: working tree is not clean; commit/stash first"
+    exit 1
+fi
+
+IFS=$'\t' read -r state base head author <<<"$(gh pr view "$pr" --json state,baseRefName,headRefName,author --jq '[.state,.baseRefName,.headRefName,.author.login]|@tsv')"
+[ "$state" = "OPEN" ] || { note "BLOCK: PR #$pr is $state, not OPEN"; exit 1; }
+[ "$base" = "master" ] || { note "BLOCK: PR #$pr targets '$base', expected master"; exit 1; }
+
+case "$head" in
+    deps/*-pkgrel-*) : ;;
+    pkg/*)           : ;;
+    *) note "BLOCK: head branch '$head' is not an approved path (deps/*-pkgrel-* or pkg/*)"; exit 1 ;;
+esac
+
+case "$head" in
+    deps/*)
+        case "$author" in
+            *"[bot]") : ;;
+            *) note "WARN: deps PR author '$author' is not a bot; confirm intent" ;;
+        esac
+        ;;
+esac
+note "PR #$pr head=$head author=$author"
+
+if [ "$force" -ne 1 ]; then
+    note "merging (use --force only if you already did the judgment review)"
+fi
+
+gh pr merge "$pr" --merge --delete-branch
+
+cur="$(git rev-parse --abbrev-ref HEAD)"
+if [ "$cur" = "$head" ] || [ "$cur" = "HEAD" ]; then
+    git checkout master
+    git pull --ff-only
+fi
+
+note "merged PR #$pr ($head)"

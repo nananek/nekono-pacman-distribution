@@ -1,0 +1,42 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+
+  // 日次運用の harness。既定 agent は orchestrator (= 編集/shell を持たず phase ごとの
+  // subagent に委譲する進行役)。通常のコーディングは `opencode --agent build` か /agent で切替。
+  "default_agent": "orchestrator",
+
+  // tool 層: 既定 ask。読み取り・調査だけ allow。last match wins (広いルールを先、例外を後)。
+  "permissions": [
+    { "action": "*", "resource": "*", "effect": "ask" },
+
+    { "action": "read", "resource": "*", "effect": "allow" },
+    { "action": "glob", "resource": "*", "effect": "allow" },
+    { "action": "grep", "resource": "*", "effect": "allow" },
+    { "action": "question", "resource": "*", "effect": "allow" },
+    { "action": "skill", "resource": "*", "effect": "allow" },
+
+    { "action": "shell", "resource": "git status *", "effect": "allow" },
+    { "action": "shell", "resource": "git diff *", "effect": "allow" },
+    { "action": "shell", "resource": "git log *", "effect": "allow" },
+    { "action": "shell", "resource": "git show *", "effect": "allow" },
+    { "action": "shell", "resource": "git fetch *", "effect": "allow" },
+    { "action": "shell", "resource": "gh pr list *", "effect": "allow" },
+    { "action": "shell", "resource": "gh pr view *", "effect": "allow" },
+    { "action": "shell", "resource": "gh pr diff *", "effect": "allow" },
+    { "action": "shell", "resource": "gh issue list *", "effect": "allow" },
+    { "action": "shell", "resource": "gh issue view *", "effect": "allow" }
+  ],
+
+  // hard deny。allow/ask を deny にしか変えない (権限を増やせない)。
+  // project config なので、より強い user global や GitHub branch protection が最終防衛。
+  "experimental": {
+    "policies": [
+      { "action": "permission", "resource": "shell:*--no-verify*", "effect": "deny" },
+      { "action": "permission", "resource": "shell:gpgconf --kill*", "effect": "deny" },
+      { "action": "permission", "resource": "shell:sudo *", "effect": "deny" },
+      { "action": "permission", "resource": "shell:rm -rf /*", "effect": "deny" },
+      { "action": "permission", "resource": "read:*publish.env*", "effect": "deny" },
+      { "action": "permission", "resource": "read:*/.ssh/*", "effect": "deny" }
+    ]
+  }
+}

@@ -94,55 +94,48 @@ git checkout -b pkg/<pkg>-<new_pkgver> origin/master
   - `gh pr diff` はパス絞り込みを受け付けない。PKGBUILD 部分だけ見るなら
     `gh pr diff <N> | awk '/^diff --git/{show = ($0 ~ /PKGBUILD/)} show'`。
 
-## Step 5: commit / PR / merge
+## Step 5: commit / PR / merge (bin/step-* 経由)
 
-```sh
-git add pkgs/<pkg>/PKGBUILD pkgs/<pkg>/.SRCINFO pkgs/<pkg>/REVIEW.md    # + .deps.lock (変えた時)
-git commit -S -F - <<'EOF'
-<pkg>: bump to <new_pkgver>
+raw な `git commit -S` / `git push` / `gh pr create` / `gh pr merge` は agent の
+permission で deny されている。コミットメッセージと PR 本文を file に書いて
+entrypoint script に渡す:
 
-Issue #<N>。<何を独立に確認したか: sha256 実測・公式 manifest との一致、tarball diff の範囲、
-release notes に packaging 変更なし、等>。
-<AUR との diff があれば 1 行>
+1. メッセージと本文を用意する (本文の `Closes` は Issue ごとに keyword を付ける:
+   `Closes #a, closes #b, closes #c`。`Closes #a, #b, #c` は最初の 1 件しか自動 close しない)。
 
-<harness 指定の attribution 行>
-EOF
-git push -u origin HEAD          # pre-push gate。BLOCK は直す。--no-verify は使わない
-```
+   ```sh
+   # /tmp/nekono-msg.txt:
+   #   <pkg>: bump to <new_pkgver>
+   #
+   #   Issue #<N>。<何を独立に確認したか: sha256 実測・公式 manifest との一致、
+   #   tarball diff の範囲、release notes に packaging 変更なし、等>。
+   #   <AUR との diff があれば 1 行>
+   #
+   #   <harness 指定の attribution 行>
+   #
+   # /tmp/nekono-body.txt: PR 本文。Closes 行と「調査結果」「AUR との diff」
+   #   「Test plan」を含める。
+   ```
 
-security fix なら title に ` (security fix)` (前例: b60f69a)。
+2. branch 作成 + 署名 commit + push + PR 作成:
 
-```sh
-gh pr create --base master --title "<pkg>: bump to <new_pkgver>" --body "$(cat <<'EOF'
-## 概要
-<pkg> を <old> → <new> に bump。<safe-to-bump / needs-attention の別と一言>。
+   ```sh
+   bin/step-upstream-pr <pkg> <new_pkgver> --title "<pkg>: bump to <new_pkgver>" \
+     --message-file /tmp/nekono-msg.txt --body-file /tmp/nekono-body.txt
+   ```
 
-Closes #<N>[, closes #<M> ...]      # 各 Issue の前に keyword が要る (`Closes #N, #M` は N しか閉じない)
+   `--body-file` を省くと「<pkg> to <ver>」+ `--closes N` + Test plan の雛形を生成する。
+   script は `pkgs/<pkg>/{PKGBUILD,REVIEW.md,.SRCINFO,.deps.lock}` だけを stage し、
+   `pkgs/<pkg>` 配下の未追跡 file (download cache) があれば拒否する。
+   security fix なら `--title` に ` (security fix)` を付ける (前例: b60f69a)。
 
-## 調査結果 (詳細は `pkgs/<pkg>/REVIEW.md`)
-- <sha256 の独立実測と照合結果>
-- <旧新 diff の範囲>
-- <release notes の要点。packaging / install 経路の変更有無>
+3. merge の前に **judgment review**: `gh pr diff <PR>` を自分で読み、source URL が upstream
+   official か、build 関数に怪しい step が無いか、depends が整合するかを確認する
+   (pre-push gate の通過は承認ではない)。問題なければ:
 
-## AUR との diff
-<あれば。無ければ「なし」>
-
-## Test plan
-- [x] `makepkg --verifysource`
-- [ ] build host で `bin/build-all --pending` (merge 後)
-
-<harness 指定の attribution 行>
-EOF
-)"
-```
-
-merge の前に **judgment review**: `gh pr diff <PR>` を自分で読み、source URL が upstream official か、build 関数に
-怪しい step が無いか、depends が整合するかを確認 (pre-push gate の通過は承認ではない)。問題なければ:
-
-```sh
-gh pr merge <PR> --merge --delete-branch
-git checkout master && git pull --ff-only
-```
+   ```sh
+   bin/step-merge <PR>     # deps/*-pkgrel-* か pkg/* の PR だけ merge 可 → master に戻る
+   ```
 
 `Closes #N` で対応 Issue が自動 close される。集約した古い Issue も本文の `Closes` で閉じる。
-merge 後は Phase 3 (build) へ。
+merge 後に `gh issue view <N> --json state` で全件 CLOSED を確認してから Phase 3 (build) へ。
