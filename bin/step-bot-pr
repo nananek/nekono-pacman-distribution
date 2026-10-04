@@ -1,0 +1,84 @@
+#!/usr/bin/env bash
+# step-bot-pr: sign and force-push a bot pkgrel PR branch through one entrypoint.
+#
+# Preconditions (the agent prepares these):
+#   - `gh pr checkout <PR>` has already checked out the deps/<pkg>-pkgrel-<N>
+#     branch (see the daily-ops Phase 1 reference for the 3-point fixes).
+#
+# This script:
+#   - stages ONLY pkgs/<pkg>/{PKGBUILD,REVIEW.md,.SRCINFO,.deps.lock}
+#   - refuses untracked files under pkgs/<pkg> (likely makepkg download cache)
+#   - amends the bot commit with a Nekono GPG signature (`-S`)
+#   - force-pushes with lease (the pre-push gate runs here)
+#
+# It does NOT merge. Use: bin/step-merge <PR>
+#
+# Output is English (ASCII) per repo convention.
+#
+# Usage: bin/step-bot-pr <PR_NUMBER>
+
+set -euo pipefail
+
+pr="${1:-}"
+[[ "${pr}" =~ ^[0-9]+$ ]] || { echo "usage: bin/step-bot-pr <PR_NUMBER>" >&2; exit 2; }
+
+note() { printf '[step-bot-pr] %s\n' "$1"; }
+
+IFS=$'\t' read -r state base head <<<"$(gh pr view "$pr" --json state,baseRefName,headRefName --jq '[.state,.baseRefName,.headRefName]|@tsv')"
+[ "$state" = "OPEN" ] || { note "BLOCK: PR #$pr is $state"; exit 1; }
+[ "$base" = "master" ] || { note "BLOCK: PR #$pr targets '$base', expected master"; exit 1; }
+if [[ "$head" =~ ^deps/([^/]+)-pkgrel-[0-9]+$ ]]; then
+    pkg="${BASH_REMATCH[1]}"
+else
+    note "BLOCK: '$head' is not deps/<pkg>-pkgrel-<N>"
+    exit 1
+fi
+
+cur="$(git rev-parse --abbrev-ref HEAD)"
+[ "$cur" = "$head" ] || { note "BLOCK: on '$cur', expected '$head' (run: gh pr checkout $pr)"; exit 1; }
+[ -d "pkgs/$pkg" ] || { note "BLOCK: pkgs/$pkg not found"; exit 1; }
+
+# Only changes under pkgs/<pkg> are allowed.
+other="$(git status --porcelain | awk '{print $2}' | grep -v "^pkgs/$pkg/" || true)"
+if [ -n "$other" ]; then
+    note "BLOCK: unrelated changes present; commit/stash them first:"
+    printf '%s\n' "$other" | sed 's/^/    /'
+    exit 1
+fi
+
+allow=("PKGBUILD" "REVIEW.md" ".SRCINFO" ".deps.lock")
+
+# Refuse untracked files under pkgs/<pkg> that are not allowlisted (cache trap).
+while IFS= read -r line; do
+    [ -n "$line" ] || continue
+    st="${line%% *}"
+    path="${line#* }"
+    case "$st" in
+        '??')
+            f="$(basename "$path")"
+            if ! printf '%s\n' "${allow[@]}" | grep -qx "$f"; then
+                note "BLOCK: untracked file under pkgs/$pkg: $path (cache? remove it)"
+                exit 1
+            fi
+            ;;
+    esac
+done < <(git status --porcelain -- "pkgs/$pkg")
+
+for f in "${allow[@]}"; do
+    [ -e "pkgs/$pkg/$f" ] || continue
+    git add -- "pkgs/$pkg/$f"
+done
+
+if git diff --cached --quiet; then
+    note "no staged changes; re-signing the bot commit as-is"
+fi
+
+git commit --amend -S --no-edit
+
+sig="$(git log -1 --format='%G?')"
+[ "$sig" != "N" ] || { note "FATAL: commit is unsigned (gpg status N)"; exit 1; }
+note "signature status: $sig"
+
+git push --force-with-lease origin "HEAD:refs/heads/$head"
+note "pushed $head"
+note "next: bin/step-merge $pr"

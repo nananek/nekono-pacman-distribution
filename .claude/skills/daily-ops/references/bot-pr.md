@@ -83,19 +83,21 @@ rm -f /tmp/changed.$$
 git diff $base -- pkgs/$pkg/.deps.lock      # 変わった version 行だけで、MISSING 行が残っていること
 ```
 
-## Step 3: 署名して push、merge
+## Step 3: 署名して push、merge (bin/step-* 経由)
+
+raw な `git add` / `git commit --amend -S` / `git push` / `gh pr merge` は agent の
+permission で deny されている。不可逆操作は entrypoint script だけが行う:
 
 ```sh
-git add pkgs/<pkg>/REVIEW.md pkgs/<pkg>/.SRCINFO pkgs/<pkg>/.deps.lock
-git commit --amend -S --no-edit
-git push --force-with-lease            # pre-push gate (bin/prepush-review) が走る。pkgrel bump は素通りが正常
-git log -1 --format='%G? %an | %s'     # %G? が N (未署名) でないこと。U/G は署名済み (U = trust 未設定表示で正常)
-gh pr merge <N> --merge --delete-branch
-git checkout master && git pull --ff-only
+bin/step-bot-pr <N>     # 3点修正を stage → -S で amend → --force-with-lease push (pre-push gate 実行)
+git log -1 --format='%G? %an | %s'   # %G? が N (未署名) でないこと。U/G は署名済み (U = trust 未設定表示で正常)
+bin/step-merge <N>      # 承認済み PR を merge → master に戻る
 ```
 
-待つべき CI は無い。`--no-edit` (message は bot のまま。author が bot のまま署名だけ付く) は既存の運用。
-gate が BLOCK したら内容を読んで直す (pkgrel bump では通常起きない)。`--no-verify` は使わない。
+`bin/step-bot-pr` は `pkgs/<pkg>/{PKGBUILD,REVIEW.md,.SRCINFO,.deps.lock}` 以外を stage せず、
+`pkgs/<pkg>` 配下に未追跡 file (download cache) があれば拒否する。待つべき CI は無い。
+gate が BLOCK したら内容を読んで直し、`bin/step-bot-pr` を再実行する (pkgrel bump では通常起きない)。
+`--no-verify` は使わない。
 
 ## 全 PR 処理後の sanity check (任意だが推奨)
 

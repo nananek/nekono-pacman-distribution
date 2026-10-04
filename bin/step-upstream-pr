@@ -1,0 +1,128 @@
+#!/usr/bin/env bash
+# step-upstream-pr: create a signed bump branch + PR for an upstream-issue bump.
+#
+# Preconditions (the agent prepares these):
+#   - current branch is master (up to date)
+#   - the working tree already contains the PKGBUILD / .SRCINFO / REVIEW.md
+#     edits under pkgs/<pkg>/ (investigation and the decision to bump are the
+#     agent's judgment; this script only does the mechanical, irreversible part)
+#
+# This script:
+#   - creates pkg/<pkg>-<pkgver> from the current HEAD (carrying the changes)
+#   - stages ONLY pkgs/<pkg>/{PKGBUILD,REVIEW.md,.SRCINFO,.deps.lock}
+#   - refuses untracked files under pkgs/<pkg> (likely makepkg download cache)
+#   - commits with a Nekono GPG signature (`-S`)
+#   - pushes (the pre-push gate runs here) and opens the PR
+#
+# It does NOT merge. After judgment review, use: bin/step-merge <PR>
+#
+# Output is English (ASCII) per repo convention.
+#
+# Usage:
+#   bin/step-upstream-pr <pkg> <pkgver> [--title TITLE] \
+#       [--message-file FILE] [--body-file FILE] [--closes N]...
+
+set -euo pipefail
+
+usage() { sed -n 's/^# Usage:/Usage:/p' "$0"; }
+
+pkg="${1:-}"; ver="${2:-}"
+if [ -z "$pkg" ] || [ -z "$ver" ]; then usage >&2; exit 2; fi
+shift 2
+
+title=""; msgfile=""; bodyfile=""; closes=()
+while [ "$#" -gt 0 ]; do
+    case "$1" in
+        --title)        title="${2:-}"; shift 2 ;;
+        --message-file) msgfile="${2:-}"; shift 2 ;;
+        --body-file)    bodyfile="${2:-}"; shift 2 ;;
+        --closes)       closes+=("${2:-}"); shift 2 ;;
+        *) echo "unknown argument: $1" >&2; exit 2 ;;
+    esac
+done
+
+note() { printf '[step-upstream-pr] %s\n' "$1"; }
+
+[[ "$pkg" =~ ^[A-Za-z0-9@._+-]+$ ]] || { note "BLOCK: invalid pkg name '$pkg'"; exit 1; }
+[[ "$ver" =~ ^[A-Za-z0-9@._+:-]+$ ]] || { note "BLOCK: invalid pkgver '$ver'"; exit 1; }
+[ -d "pkgs/$pkg" ] || { note "BLOCK: pkgs/$pkg not found"; exit 1; }
+
+cur="$(git rev-parse --abbrev-ref HEAD)"
+[ "$cur" = "master" ] || { note "BLOCK: on '$cur', expected master (edit on master, the script makes the branch)"; exit 1; }
+
+branch="pkg/$pkg-$ver"
+if git show-ref --verify --quiet "refs/heads/$branch"; then
+    note "BLOCK: local branch '$branch' already exists"
+    exit 1
+fi
+
+other="$(git status --porcelain | awk '{print $2}' | grep -v "^pkgs/$pkg/" || true)"
+if [ -n "$other" ]; then
+    note "BLOCK: unrelated changes present; commit/stash them first:"
+    printf '%s\n' "$other" | sed 's/^/    /'
+    exit 1
+fi
+
+allow=("PKGBUILD" "REVIEW.md" ".SRCINFO" ".deps.lock")
+
+# Refuse untracked files under pkgs/<pkg> that are not allowlisted (cache trap).
+while IFS= read -r line; do
+    [ -n "$line" ] || continue
+    st="${line%% *}"
+    path="${line#* }"
+    case "$st" in
+        '??')
+            f="$(basename "$path")"
+            if ! printf '%s\n' "${allow[@]}" | grep -qx "$f"; then
+                note "BLOCK: untracked file under pkgs/$pkg: $path (cache? remove it)"
+                exit 1
+            fi
+            ;;
+    esac
+done < <(git status --porcelain -- "pkgs/$pkg")
+
+# Stage on the current (master) index first, then create the branch. Staging
+# before checkout avoids leaving an empty branch behind if nothing changed.
+for f in "${allow[@]}"; do
+    [ -e "pkgs/$pkg/$f" ] || continue
+    git add -- "pkgs/$pkg/$f"
+done
+
+if git diff --cached --quiet; then
+    note "BLOCK: nothing staged under pkgs/$pkg (no diff vs HEAD)"
+    exit 1
+fi
+
+git checkout -b "$branch"
+
+cleanup=()
+trap 'if [ "${#cleanup[@]}" -gt 0 ]; then rm -f "${cleanup[@]}"; fi' EXIT
+if [ -z "$msgfile" ]; then
+    msgfile="$(mktemp)"; cleanup+=("$msgfile")
+    printf '%s: bump to %s\n' "$pkg" "$ver" > "$msgfile"
+fi
+
+git commit -S -F "$msgfile"
+sig="$(git log -1 --format='%G?')"
+[ "$sig" != "N" ] || { note "FATAL: commit is unsigned (gpg status N)"; exit 1; }
+note "signature status: $sig"
+
+git push -u origin HEAD
+
+if [ -z "$bodyfile" ]; then
+    bodyfile="$(mktemp)"; cleanup+=("$bodyfile")
+    {
+        printf '## Summary\n\n%s to %s.\n\n' "$pkg" "$ver"
+        if [ "${#closes[@]}" -gt 0 ]; then
+            for c in "${closes[@]}"; do printf 'Closes #%s\n' "$c"; done
+            printf '\n'
+        fi
+        printf '## Test plan\n- [x] makepkg --verifysource\n- [ ] bin/build-all --pending (after merge)\n'
+    } > "$bodyfile"
+fi
+
+[ -n "$title" ] || title="$pkg: bump to $ver"
+gh pr create --base master --title "$title" --body-file "$bodyfile" --head "$branch"
+
+note "opened PR for $branch"
+note "after judgment review: bin/step-merge <PR>"

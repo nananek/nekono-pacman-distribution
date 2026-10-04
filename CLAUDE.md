@@ -291,6 +291,12 @@ bump PR をうっかり merge → 旧 pkgver のまま rebuild されて配布�
 なしで自律実行** する。途中で判断に迷う場合 (block verdict、PKGBUILD 大改修
 が必要な場合等) のみ報告して止まる。
 
+> **機械操作は `bin/step-*` 経由**: 署名 commit / push / PR 作成 / merge は
+> `bin/step-bot-pr` / `bin/step-upstream-pr` / `bin/step-merge` の entrypoint で行う。
+> OpenCode の agent permission で raw な `git commit` / `git push` / `gh pr create` /
+> `gh pr merge` は deny されている (`.opencode/agents/*.md`)。read-only の状態表示は
+> `bin/preflight`。手順の正は下記 skill 側。
+
 > **実行手順の詳細は skill にある** (repo 初見・記憶なしの agent はまずこれを読む):
 > `.claude/skills/daily-ops/` (Issue/PR 消化 → build → publish → 配信検証) /
 > `.claude/skills/package-lifecycle/` (package の追加・撤廃・復活。こちらは user 承認が要る)。
