@@ -29,8 +29,10 @@ subagent 起動だけ）。実際の作業は phase ごとの subagent だけが
 1. **tool 層** — `opencode.jsonc` の `permissions`（既定 `ask` + 明示 `allow`）と
    `experimental.policies`（hard deny）。agent 固有の制約は `.opencode/agents/*.md`。
 2. **command 層** — 不可逆な操作は `bin/step-*` の単一 entrypoint だけが実行する。
-   agent に raw な `git commit` / `git push` / `gh pr create` / `gh pr merge` は allow
-   しない（deny）。script が対象 file と branch を検証する。
+   raw な `git commit` / `git push` / `gh pr create` / `gh pr merge` は daily-ops の
+   phase agent（pr-triage / upstream-bump / builder / publisher）の shell deny で塞ぐ
+   （pattern は best-effort。build agent は通常コーディングのため対象外。最終防衛は
+   GitHub branch protection）。script が対象 file と branch を検証する。
    - `bin/preflight` — Phase 0 の状態表示（read-only）
    - `bin/step-bot-pr <PR>` — 3点修正を stage → `-S` amend → `--force-with-lease` push
    - `bin/step-upstream-pr <pkg> <ver>` — 署名 branch/commit 作成 → push → PR 作成
@@ -71,9 +73,12 @@ subagent 起動だけ）。実際の作業は phase ごとの subagent だけが
 - **`git add -A` / `git add .` 禁止**。path を明示（`pkgs/<pkg>/` に download cache が落ちる）。
 - **1 PKGBUILD update = 1 commit**。複数 package を 1 commit に混ぜない。
 - **`gpgconf --kill` 系を実行しない**（転送された YubiKey socket を奪う）。
-- `~/.config/nekono-pacman/publish.env` の**値を出力しない**（`cat` / `echo` / `set -x` 禁止。
-  存在チェックの `grep -Eq` は可）。
+- `~/.config/nekono-pacman/publish.env` の**値を出力しない**。`bin/publish` が内部で
+  読み込むので agent は `source` / `cat` / `grep` しない（`shell:*publish.env*` は
+  policy で deny 済み）。
 - `sudo pacman -Sy` を自分で実行しない（client 検証は user に依頼）。
+- commit message / PR 本文末尾に attribution 行
+  `Assisted-by: OpenCode (DeepSeek V4.1 Flash)`（モデル名は実際のもの）を付ける。
 - script / log / commit message の script 由来部分は英語 (ASCII)。コメント・REVIEW.md・
   PR 本文は日本語でよい。
 

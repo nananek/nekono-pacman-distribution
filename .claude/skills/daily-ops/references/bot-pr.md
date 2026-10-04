@@ -35,9 +35,9 @@ bot PR は close (理由をコメント) するのが素直。迷ったら user 
 
 ## Step 2: 3 点修正 (repo 規約。bot は下の 3 つを満たさない)
 
-```sh
-gh pr checkout <N>
-```
+以下は**手順の説明**。agent は `pkgs/<pkg>` の管理 4 file を **edit tool で**編集する
+（`sed -i` 等の shell 書き込みは permission で allow されない）。`gh pr checkout <N>`
+で branch を取る。
 
 ### (a) `pkgs/<pkg>/REVIEW.md` の「更新履歴」に 1 行追記
 
