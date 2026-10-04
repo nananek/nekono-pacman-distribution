@@ -18,9 +18,13 @@ permissions:
   - action: shell
     resource: "gh pr close*"
     effect: deny
+  # raw な不可逆操作は entrypoint/規約の外。push/commit は allow しない。
   - action: shell
-    resource: "gh pr checkout*"
-    effect: allow
+    resource: "git commit*"
+    effect: deny
+  - action: shell
+    resource: "git push*"
+    effect: deny
   # build 本体と検証
   - action: shell
     resource: "bin/build-all *"
