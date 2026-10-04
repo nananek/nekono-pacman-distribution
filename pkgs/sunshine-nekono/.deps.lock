@@ -6,7 +6,7 @@
 appstream=1.2.1-1
 appstream-glib=0.8.4-1
 avahi=1:0.9rc5-1
-cmake=4.4.3-2
+cmake=4.4.4-1
 curl=8.22.0-1
 desktop-file-utils=0.28-1
 gcc-libs=16.2.1+r23+gd564253eb6c8-1
