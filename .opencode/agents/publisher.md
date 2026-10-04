@@ -79,8 +79,9 @@ permissions:
 (`references/publish.md`)。
 
 - **前提**: `bin/build-all` で build 成功を artifact で確認済みであること。build はしない。
-- `~/.config/nekono-pacman/publish.env` の**値を絶対に出力しない**。存在チェックは
-  `grep -Eq` のみ。`rclone` が無い / 変数欠落なら黙って skip せず user に伝えて止まる。
+- `~/.config/nekono-pacman/publish.env` は **`bin/publish` が内部で読む**。agent は
+  `source` / `cat` / `grep` をしない (`shell:*publish.env*` は policy で deny)。`rclone` が無い /
+  変数欠落なら `bin/publish` が非 0 で落ちるので、黙って skip せず user に伝えて止まる。
 - `bin/publish` は host の `rclone` 直呼び (docker 不使用)。**1 pass に簡素化しない**
   (pass1 = sync / pass2 = `copy --ignore-times`。`.sig` が同 size で skip されると
   古い sig が残り client の `pacman -Sy` が署名不正で落ちる)。
