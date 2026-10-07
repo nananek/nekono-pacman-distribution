@@ -91,4 +91,5 @@ AUR には Arch 公式から落ちた electron37 を追う 2 系統が存在:
 | 2026-08-30 | 37.10.3-4 | (this PR) | — (pkgrel bump のみ) | `pkgrel` +1 (deps changed): nss 3.127-1 → 3.128-1 |
 | 2026-09-15 | 37.10.3-5 | (this PR) | — (pkgrel bump のみ) | `pkgrel` +1 (deps changed): nss 3.128-1 → 3.129-1 |
 | 2026-09-27 | 37.10.3-6 | (this PR) | — (pkgrel bump のみ) | `pkgrel` +1 (deps changed): nss 3.129-1 → 3.130-1 |
+| 2026-10-07 | 37.10.3-7 | (this PR) | — (pkgrel bump のみ) | `pkgrel` +1 (deps changed): gtk3 1:3.24.52-1 → 1:3.24.52-2, nss 3.130-1 → 3.131-1 |
 | 2026-09-27 | 37.10.3-6 | (this PR) | — (PKGBUILD 構造の修正のみ、pkgver / pkgrel 不変) | `pkgver` を変数参照から literal に変更 (監視ギャップの修正、上記「依存方針」)。 `makepkg --printsrcinfo` の出力は変更前と byte 一致 (name / version / provides / source / sums 不変) で、成果物は変わらず rebuild 不要 (`bin/build-all --pending --dry-run` も `nothing to build`)。 `detect_upstream_updates.py` で、upstream に 37.10.4 が出た想定の `newver.json` を与えると、旧 PKGBUILD は `[]` (未検知)、新 PKGBUILD は検知することを確認。 upstream の v37 系列の最新 tag は 37.10.3 (= 現行と同じ) で、取りこぼしていた新版はまだ無い。 |
