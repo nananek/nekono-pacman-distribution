@@ -74,3 +74,4 @@ ayaka 側にも [nekono] 経由で `pacman -S voicevox-bin` で入れて editor 
 | 2026-06-27 | 0.25.2-4 | (this PR) | — (pkgrel bump のみ) | `pkgrel` +1 (deps changed): 7zip 26.01-1 → 26.02-1 |
 | 2026-09-06 | 0.25.2-5 | (this PR) | — (pkgrel bump のみ) | `pkgrel` +1 (deps changed): 7zip 26.02-1 → 26.03-1 |
 | 2026-09-22 | 0.25.2-6 | (this PR) | — (pkgrel bump のみ) | `pkgrel` +1 (deps changed): bash 5.3.15-1 → 5.3.20-1 |
+| 2026-10-07 | 0.25.2-7 | (this PR) | — (pkgrel bump のみ) | `pkgrel` +1 (deps changed): 7zip 26.03-1 → 26.04-1 |
