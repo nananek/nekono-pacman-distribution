@@ -12,7 +12,7 @@ pkgname="${_pkgname}"-bin
 # 変数経由だと nvchecker が新版を検知しても黙って無視され Issue が立たないため。
 pkgver=37.10.3
 _pkgver="${pkgver}"
-pkgrel=6
+pkgrel=7
 pkgdesc="Build cross platform desktop apps with web technologies — prebuilt"
 arch=('x86_64')
 url='https://electronjs.org'
