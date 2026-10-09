@@ -2,7 +2,7 @@
 
 ## 状態
 
-**review 済み、approve (注意事項あり)** (最新: 2026-10-07 / 1.3.1 復活、初回: 2026-09-24)
+**review 済み、approve (注意事項あり)** (最新: 2026-10-10 / 1.3.2、初回: 2026-09-24)
 
 2026-10-02 に `0ae3052` で retire されたものを 2026-10-07 に復活 (user 依頼)。復元元は retire 直前版。
 
@@ -130,6 +130,7 @@ AUR と byte 一致。
 | 2026-09-28 | 1.2.12_5784551402897408-1 | (this PR) | release `1.2.12-5784551402897408` (Google GCS、公開 git tag 無し。upstream manifest の url と一致) | Issue #667。 sha256 を独立実測 (`26c7c4c6...`) し、upstream manifest 公開 sha512 と一致 (AUR も 1.2.12 に追随済みで、AUR 記載 sha256 とも一致)。 tarball は `antigravity` 1 ファイルのまま (219,959,504 byte)、`DT_NEEDED` 集合・最大 symbol version `GLIBC_2.26` は 1.2.11 と同一で depends 変更不要。 埋め込み URL の新規追加は Google 管理ドメインのみで、第三者ドメインの新規接続先なし。 AUR の PKGBUILD は `arch` 行 (aarch64) 以外が本 repo と同一、 `LICENSE` / `antigravity-cli.install` は byte 一致。 バイナリは未実行 (静的解析のみ)。 |
 | 2026-09-29 | 1.2.12_5784551402897408-2 | (this PR) | — (pkgrel bump のみ) | `pkgrel` +1 (deps changed): glibc 2.44+r24+g16be1518495f-1 → 2.44+r50+g1848099f063e-1 |
 | 2026-10-07 | 1.3.1_4582356770750464-1 | (this PR) | release `1.3.1-4582356770750464` (Google GCS、upstream manifest の url と一致) | 2026-10-02 retire (`0ae3052`) からの復活、最新 1.3.1 へ bump。sha256 を独立実測 (`0e313b30...`) し manifest 公開 sha512 (`3b8349d7...`) と一致。tarball は `antigravity` 1 ファイル (211,026,152 byte)、`DT_NEEDED` は glibc 系のみ・最大 `GLIBC_2.26` で depends 変更不要。Arch 公式に `agy` なし、`.deps.lock` の glibc は現行と同一。AUR は 1.3.0 止まりで cross-check 不可 (upstream 先行は前例あり)。バイナリ未実行 (静的解析のみ)。 |
+| 2026-10-10 | 1.3.2_5813501495738368-1 | (this PR) | release `1.3.2-5813501495738368` (Google GCS、upstream manifest の url と一致) | Issue #700。sha256 を独立実測 (`bf8504c7...`) し manifest 公開 sha512 (`8dc2bb84...`) と一致。tarball は `antigravity` 1 ファイルのまま (211,841,256 byte、1.3.1 比 +815KB)、`DT_NEEDED` 集合・最大 symbol version `GLIBC_2.26` は 1.3.1 と同一で depends 変更不要。埋め込み URL 集合は 137 host で同一、差分は Google 公式 styleguide の docs URL (`google.github.io`、prompt 文中の参照) のみで第三者ドメインの新規接続先なし。AUR は 1.3.1 止まりで cross-check 不可 (upstream 先行は 1.3.1 時の前例あり、AUR 側の x86_64 sha256 `0e313b30...` は本 repo の 1.3.1 pin と一致)。`package()` / `.install` / `LICENSE` 無変更。バイナリは未実行 (静的解析のみ)。 |
 
 ## 更新方針
 
