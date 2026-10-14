@@ -2,7 +2,7 @@
 
 ## 状態
 
-**review 済み、approve (注意事項あり)** (最新: 2026-10-13 / 1.3.4、初回: 2026-09-24)
+**review 済み、approve (注意事項あり)** (最新: 2026-10-14 / 1.3.5、初回: 2026-09-24)
 
 2026-10-02 に `0ae3052` で retire されたものを 2026-10-07 に復活 (user 依頼)。復元元は retire 直前版。
 
@@ -26,44 +26,45 @@ AUR と byte 一致。
 
 ## 検証結果
 
-- [x] `source_x86_64` URL = `https://storage.googleapis.com/antigravity-public/antigravity-cli/1.3.4-5524158944247808/linux-x64/cli_linux_x64.tar.gz`
+- [x] `source_x86_64` URL = `https://storage.googleapis.com/antigravity-public/antigravity-cli/1.3.5-6164039479459840/linux-x64/cli_linux_x64.tar.gz`
   - upstream の auto-updater release server
     (`antigravity-cli-auto-updater-974169037036.us-central1.run.app/manifests/linux_amd64.json`)
-    が返す `url` と **完全一致** (manifest の `version` は `1.3.4`)。同 bucket /
+    が返す `url` と **完全一致** (manifest の `version` は `1.3.5`)。同 bucket /
     path 構造は AUR 履歴 (2026-05 初回 submit 〜 現在) を通じて不変で、
     domain の付け替え / typosquat は無い
   - バイナリ内に埋め込まれた release server URL も同じ Cloud Run endpoint
-  - GitHub `google-antigravity/antigravity-cli` の tag `1.3.4` / commit `9eebbed`、
+  - GitHub `google-antigravity/antigravity-cli` の tag `1.3.5` / commit `89081f72e10a98c3689f34b1af7261f43136ab5d`、
     publisher `haofan` は従来と同一 (release は draft / prerelease でない)
 - [x] `sha256sums_x86_64` を独立実測 (`curl | sha256sum`)
-  - 実測 / PKGBUILD 値 (1.3.4): `db5e81e8dee72d282cb1fb5fcd98dc5a43680730d71e3d637a67c874ec077ad3`
+  - 実測 / PKGBUILD 値 (1.3.5): `007a5a44dbaf1caea464c3d9848c63b2f69945b01a8bf8852c56c477a64374cf`
   - **upstream が manifest で公開している sha512 と一致** (= AUR maintainer の
     値に頼らない独立照合):
-    `dbdacfc5a1d9874fbbea3a21026d3990b4728e2e3487fd0316dc53cae9a3091023f969425828f3e2e0fadda43cea07dd978ea96f4ca7c202adf2201f419c56dd`
-  - **GitHub Release `1.3.4` の asset `agy_cli_linux_x64.tar.gz` の digest とも
-    完全一致** (size 62,750,975 / `sha256:db5e81e8...`)。旧 pin の 1.3.3 でも
-    asset digest (`sha256:8ee3ca32...`) が本 repo の pin と一致し、GCS manifest
-    配信物 = GitHub Release asset であることを両版で確認
-  - AUR は 1.3.2 止まりで cross-check 不可 (upstream 先行は 1.3.1〜1.3.3 時の
-    前例あり。AUR の 1.3.2 sha256 `bf8504c7...` は本 repo の旧 1.3.2 pin と一致)
+    `0fa5ff7ca8661ef6379da219dd30552327b0deaf112ea896882daaba8bd6abff76ff097ef7b38211bffb78be6871f7494a1739b7160b483cb68481a24d435c47`
+  - **GitHub Release `1.3.5` の asset `agy_cli_linux_x64.tar.gz` の digest とも
+    完全一致** (size 62,830,042 / `sha256:007a5a44...`)。旧 pin の 1.3.4 でも
+    asset digest (`sha256:db5e81e8...`) が本 repo の pin と一致し、GCS manifest
+    配信物 = GitHub Release asset であることを複数版で確認
+  - AUR は 1.3.4 に追随済みで cross-check 可能 (x86_64 sha256 `db5e81e8...` は
+    本 repo の 1.3.4 pin と一致)。1.3.5 は AUR 未追随のため cross-check 不可
+    (upstream 先行は 1.3.1〜1.3.4 時の前例あり)
   - (初回 1.2.9 時の記録) aarch64 tarball も sha256 / sha512 とも manifest と
     一致を確認済み (本 repo では使わない)
-- [x] tarball の中身は `antigravity` 1 ファイル (214,745,296 byte、root/root、
-  0755) のみ (1.3.3 は 214,237,392 byte、構成同一)。 ELF 64-bit x86-64 PIE、
+- [x] tarball の中身は `antigravity` 1 ファイル (215,060,688 byte、root/root、
+  0755) のみ (1.3.4 は 214,745,296 byte、構成同一)。 ELF 64-bit x86-64 PIE、
   stripped、Go 製。 tarball 内バイナリの sha256:
-  `5b93565c5f04ea4f7b79d49d5c3237449bf6ce47b6779e8cf46c1fae97957c98`
+  `b5385638174a5e720e904f3a2678752534fb8414d10c2c302fa16daf56cbcfc9`
 - [x] `package()`: `install -Dm755 antigravity → /usr/bin/agy` と
   `install -Dm644 LICENSE → /usr/share/licenses/antigravity-cli/LICENSE` のみ。
   curl / wget / eval / pipe-to-shell 無し。`prepare()` / `build()` 無し
 - [x] `depends=('glibc')` は妥当: バイナリの `DT_NEEDED` は
   `libc / libm / libdl / libpthread / librt / libresolv / ld-linux` の glibc 系のみ、
   要求 symbol version は最大 `GLIBC_2.26` (Arch の glibc 2.44 で充足)。
-  1.3.4 でも `DT_NEEDED` 集合・最大 symbol version とも 1.3.3 と同一
+  1.3.5 でも `DT_NEEDED` 集合・最大 symbol version とも 1.3.4 と同一
 - [x] バイナリ内に埋め込まれた宿主名は Google 管理ドメイン
   (`antigravity.google`, `googleapis.com`, `cloud.google.com`,
   `antigravity-unleash.goog` 等) と github.com / 仕様書 URL のみ。
-  不審な第三者ドメイン無し (`strings` による静的確認)。 1.3.4 でも scheme 付き
-  URL の host 集合は 1.3.3 と同一 (139 host、差分ゼロ) で新規接続先なし
+  不審な第三者ドメイン無し (`strings` による静的確認)。 1.3.5 でも scheme 付き
+  URL の host 集合は 1.3.4 と同一 (139 host、差分ゼロ) で新規接続先なし
 - [x] `provides=('agy')` / `conflicts=('agy')`: Arch 公式 repo に `agy` /
   `antigravity*` は無く衝突なし。`optdepends=('antigravity')` は AUR 側の
   desktop app を指すヒントで [nekono] 外の pkg (無くても install 可)
@@ -134,6 +135,7 @@ AUR と byte 一致。
 | 2026-10-10 | 1.3.2_5813501495738368-1 | (this PR) | release `1.3.2-5813501495738368` (Google GCS、upstream manifest の url と一致) | Issue #700。sha256 を独立実測 (`bf8504c7...`) し manifest 公開 sha512 (`8dc2bb84...`) と一致。tarball は `antigravity` 1 ファイルのまま (211,841,256 byte、1.3.1 比 +815KB)、`DT_NEEDED` 集合・最大 symbol version `GLIBC_2.26` は 1.3.1 と同一で depends 変更不要。埋め込み URL 集合は 137 host で同一、差分は Google 公式 styleguide の docs URL (`google.github.io`、prompt 文中の参照) のみで第三者ドメインの新規接続先なし。AUR は 1.3.1 止まりで cross-check 不可 (upstream 先行は 1.3.1 時の前例あり、AUR 側の x86_64 sha256 `0e313b30...` は本 repo の 1.3.1 pin と一致)。`package()` / `.install` / `LICENSE` 無変更。バイナリは未実行 (静的解析のみ)。 |
 | 2026-10-11 | 1.3.3_5524738307653632-1 | (this PR) | release `1.3.3-5524738307653632` (Google GCS、upstream manifest の url と一致。GitHub `google-antigravity/antigravity-cli` tag `1.3.3` / commit `800852e`、publisher `haofan` は従来と同一) | Issue #705。sha256 を独立実測 (`8ee3ca32...`) し manifest 公開 sha512 (`abe3ddf5...`) と一致 (AUR は 1.3.2 止まりで cross-check 不可、upstream 先行は 1.3.1/1.3.2 時の前例あり。AUR の PKGBUILD は `arch` 行 (aarch64) 以外が本 repo と同一、`LICENSE` / `antigravity-cli.install` は byte 一致)。tarball は `antigravity` 1 ファイルのまま (root/root 0755、214,237,392 byte、1.3.2 比 +2.4MB、Go 製 ELF x86-64 PIE stripped)、`DT_NEEDED` 集合・最大 symbol version `GLIBC_2.26` は 1.3.2 と同一で depends 変更不要。埋め込み URL の新規 host は `agent-plugins.org` のみで、同 release notes の plugin `agents.json` 対応に使う仕様策定サイト (Agent Plugins 1.0 open spec、JSON schema `$id` 参照) の正規ドメイン。`api.github.com` / `169.254.169.254` は旧版にも存在 (strings 断片の接着差のみ)。release notes (機能追加: pinned prompt header、MCP alwaysLoad、plugin agents.json、macOS sandbox 強化等、他 bugfix) に packaging / install 経路の変更なし。`package()` / `.install` / `LICENSE` 無変更。バイナリは未実行 (静的解析のみ)。 |
 | 2026-10-13 | 1.3.4_5524158944247808-1 | (this PR) | release `1.3.4-5524158944247808` (Google GCS、upstream manifest の `version` / `url` と一致。GitHub `google-antigravity/antigravity-cli` tag `1.3.4` / commit `9eebbed`、publisher `haofan` は従来と同一、draft / prerelease でない) | Issue #710。sha256 を独立実測 (`db5e81e8...`) し manifest 公開 sha512 (`dbdacfc5...`) と一致。加えて GitHub Release asset `agy_cli_linux_x64.tar.gz` の digest (`sha256:db5e81e8...`、size 62,750,975) とも完全一致 (旧 1.3.3 でも GCS から再取得した実測値 = asset digest `sha256:8ee3ca32...` = pin で、GCS 配信物と GitHub Release asset が同一物であることを両版で確認)。tarball は `antigravity` 1 ファイルのまま (root/root 0755、214,745,296 byte、1.3.3 比 +508KB、Go 製 ELF x86-64 PIE stripped)、`DT_NEEDED` 集合・最大 symbol version `GLIBC_2.26` は 1.3.3 と同一で depends 変更不要。埋め込み URL host 集合 (139 host) も 1.3.3 と同一で新規接続先なし。GitHub の tag 間 diff は CHANGELOG.md のみ。release notes は plugin list の `--json` 対応 / model picker / Remote Control 改善と bugfix のみで packaging / install 経路の変更なし。`package()` / `.install` / `LICENSE` 無変更。AUR は 1.3.2 止まりで cross-check 不可 (upstream 先行は 1.3.1〜1.3.3 時の前例あり、AUR の PKGBUILD は `arch` 行 (aarch64) 以外が本 repo と同一、`LICENSE` / `antigravity-cli.install` は byte 一致)。「検証結果」 section が 1.2.12 時の値のまま stale だったので 1.3.4 の値に更新。バイナリは未実行 (静的解析のみ)。 |
+| 2026-10-14 | 1.3.5_6164039479459840-1 | (this PR) | release `1.3.5-6164039479459840` (Google GCS、upstream manifest の `version` / `url` と一致。GitHub `google-antigravity/antigravity-cli` tag `1.3.5` / commit `89081f72e10a98c3689f34b1af7261f43136ab5d`、publisher `haofan` は従来と同一、draft / prerelease でない) | Issue #715。sha256 を独立実測 (`007a5a44...`) し manifest 公開 sha512 (`0fa5ff7c...`) と一致。加えて GitHub Release asset `agy_cli_linux_x64.tar.gz` の digest (`sha256:007a5a44...`、size 62,830,042) とも完全一致 (1.3.4 の asset digest `sha256:db5e81e8...` も本 repo pin と一致済み)。tarball は `antigravity` 1 ファイルのまま (root/root 0755、215,060,688 byte、1.3.4 比 +315KB、Go 製 ELF x86-64 PIE stripped)、`DT_NEEDED` 集合・最大 symbol version `GLIBC_2.26` は 1.3.4 と同一で depends 変更不要。埋め込み URL host 集合 (139 host) も 1.3.4 と同一で新規接続先なし。GitHub の tag 間 diff は CHANGELOG.md のみ。release notes は Auto mode 追加 / `/compact` コマンド追加 / `/diff` の syntax highlight・folding・性能改善・iTerm2 色修正のみで packaging / install 経路の変更なし。`package()` / `.install` / `LICENSE` 無変更。AUR は 1.3.4 に追随済み (x86_64 sha256 `db5e81e8...` = 本 repo の 1.3.4 pin と一致)、1.3.5 は未追随で cross-check 不可 (upstream 先行は前例あり)。AUR の PKGBUILD は `arch` 行 (aarch64) 以外が本 repo と同一、`LICENSE` / `antigravity-cli.install` は byte 一致。バイナリは未実行 (静的解析のみ)。 |
 
 ## 更新方針
 
