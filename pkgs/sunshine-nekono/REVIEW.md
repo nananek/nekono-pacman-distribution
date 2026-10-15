@@ -107,6 +107,7 @@ AMF SDK (1.2G) / FFmpeg source (114M) / SVT-AV1 (38M) / Vulkan-Headers (41M)。
 
 | 日付 | release | review した PKGBUILD repo SHA | upstream tag commit | findings |
 |---|---|---|---|---|
+| 2026-10-15 | 2026.906.222525.nekono1-12 | (this PR) | — (pkgrel bump のみ) | `pkgrel` +1 (deps changed): qt6-base 6.12.0-2 → 6.12.0-3 |
 | 2026-10-13 | 2026.906.222525.nekono1-11 | (this PR) | — (pkgrel bump のみ) | `pkgrel` +1 (deps changed): libayatana-appindicator 0.6.0-2 → 0.6.1-1 |
 | 2026-10-09 | 2026.906.222525.nekono1-10 | (this PR) | — (pkgrel bump のみ) | `pkgrel` +1 (deps changed): libevdev 1.13.7-1 → 1.14.0-1, nodejs 26.10.0-2 → 26.11.1-1 |
 | 2026-10-08 | 2026.906.222525.nekono1-9 | (this PR) | — (pkgrel bump のみ) | `pkgrel` +1 (deps changed): qt6-base 6.11.2-3 → 6.12.0-2, qt6-svg 6.11.2-1 → 6.12.0-1 |
