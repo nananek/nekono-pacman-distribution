@@ -19,8 +19,10 @@ name: Upstream version check (Issue)
 # 上がれば新しい Issue。
 
 on:
-  schedule:
-    - cron: '50 2 * * *'  # daily 02:50 UTC = JST 11:50 (= 朝 routine 12:00 JST までに結果が出る)
+  # refactor 2026-10-15: schedule (cron 02:50 UTC) を撤去。GitHub の schedule は
+  # 実行が実測 +2〜7h (中央値 +5h) 遅延し daily trigger の体を成さないため、
+  # 日次検知はローカル daily-ops の bin/check-upstream が実行する。
+  # この workflow は手動 fallback 専用 (cron を戻さない)。
   workflow_dispatch:
 
 permissions:

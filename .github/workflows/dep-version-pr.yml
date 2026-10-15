@@ -14,8 +14,10 @@ name: Dependency version check (PR)
 # 重複時 skip。同一 pkgrel target が再度走っても 1 PR だけになる。
 
 on:
-  schedule:
-    - cron: '55 2 * * *'  # daily 02:55 UTC = JST 11:55 (upstream check の 5 min 後、 両方 12:00 JST までに完了)
+  # refactor 2026-10-15: schedule (cron 02:55 UTC) を撤去。日次検知はローカル
+  # daily-ops の bin/check-deps が行い、署名済み・3 点反映済みの完成 PR を作る。
+  # この workflow は手動 fallback 専用 (旧スクリプトのまま unsigned PR を出すので、
+  # merge 前に build host で署名し直す従来手順が必要)。
   workflow_dispatch:
 
 permissions:
