@@ -24,6 +24,10 @@ pkgs/sane-nekono/sane-*.patch
 __pycache__/
 *.pyc
 
+# nvchecker state file (bin/check-upstream / workflow が repo root に生成)
+oldver.json
+newver.json
+
 # 配信先 (build host で hosting する signed artifact、git には載せない)
 repo/
 

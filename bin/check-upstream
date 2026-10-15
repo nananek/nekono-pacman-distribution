@@ -1,0 +1,117 @@
+#!/usr/bin/env bash
+# check-upstream: local daily-ops counterpart of the upstream-version-issue
+# workflow. Runs nvchecker on this host against nvchecker.toml, compares the
+# result with each PKGBUILD's pkgver, and opens one deterministic GitHub
+# Issue per detected update (same title / body / idempotency rules as the
+# workflow).
+#
+# Moved from the GitHub Actions schedule because `schedule` events are
+# delayed by GitHub (measured +2..7 h, median +5 h) and no longer work as a
+# daily trigger. The workflow remains as a manual workflow_dispatch fallback.
+#
+# Output is English (ASCII) per repo convention.
+#
+# Usage: bin/check-upstream [--dry-run]
+#   --dry-run   detect and print, but do not create Issues (safe to run)
+
+set -uo pipefail
+
+root="$(git rev-parse --show-toplevel 2>/dev/null)" || { echo "[check-upstream] FATAL: not a git repository" >&2; exit 1; }
+cd "$root" || exit 1
+
+dry_run=0
+for arg in "$@"; do
+    case "$arg" in
+        --dry-run) dry_run=1 ;;
+        *) echo "[check-upstream] FATAL: unknown argument: $arg" >&2; exit 2 ;;
+    esac
+done
+
+note() { printf '[check-upstream] %s\n' "$1"; }
+warn() { printf '[check-upstream][WARN] %s\n' "$1" >&2; }
+fail() { printf '[check-upstream][FATAL] %s\n' "$1" >&2; exit 1; }
+
+# --- guards ---------------------------------------------------------------
+command -v nvchecker >/dev/null 2>&1 || fail "nvchecker not found (install: nvchecker + python-packaging)"
+command -v gh >/dev/null 2>&1 || fail "gh not found"
+command -v python3 >/dev/null 2>&1 || fail "python3 not found"
+gh auth status >/dev/null 2>&1 || fail "gh not authenticated (run: gh auth login)"
+
+# --- nvchecker ------------------------------------------------------------
+# Keyfile: avoids the GitHub API rate limit for source = "github". The token
+# is written to a private temp file only (never printed, never in the repo).
+keydir="$(mktemp -d -t nekono-nvchecker-XXXXXX)" || fail "mktemp failed"
+trap 'rm -rf "$keydir"' EXIT
+
+token="$(gh auth token)" || fail "gh auth token failed"
+{
+    printf '[keys]\n'
+    printf 'github = "%s"\n' "$token"
+} > "$keydir/nvchecker-keys.toml"
+unset token
+chmod 600 "$keydir/nvchecker-keys.toml"
+
+# oldver / newver paths are fixed by [__config__] in nvchecker.toml (repo
+# root, gitignored). oldver is intentionally kept empty: the comparison
+# target is the PKGBUILD pkgver, not the previous nvchecker run.
+: > oldver.json
+note "running nvchecker (this can take a minute) ..."
+if ! nvchecker --file nvchecker.toml \
+        --keyfile "$keydir/nvchecker-keys.toml" \
+        --logger json; then
+    warn "nvchecker exited non-zero; continuing with the results it did write"
+fi
+
+# --- diff vs PKGBUILD -----------------------------------------------------
+updates="$(python3 .github/scripts/detect_upstream_updates.py)" || fail "detect_upstream_updates.py failed"
+count="$(printf '%s' "$updates" | python3 -c 'import json,sys; print(len(json.load(sys.stdin)))')" \
+    || fail "could not parse detect_upstream_updates.py output"
+
+if [ "$count" -eq 0 ]; then
+    note "no upstream updates"
+    exit 0
+fi
+note "detected ${count} upstream update(s)"
+
+# --- create Issues (idempotent, same fingerprint as the workflow) ---------
+created=0
+skipped=0
+failed=0
+while IFS=$'\t' read -r pkg old_ver new_ver; do
+    [ -n "$pkg" ] || continue
+    title="[${pkg}] upstream version: ${new_ver}"
+    existing="$(gh issue list --state all --limit 200 \
+                  --search "in:title \"${title}\"" \
+                  --json title \
+                  --jq "[.[] | select(.title == \"${title}\")] | length")" || existing=""
+    existing="${existing:-0}"
+    if [ "$existing" -gt 0 ]; then
+        note "skip ${pkg}: Issue already exists (${title})"
+        skipped=$((skipped + 1))
+        continue
+    fi
+    if [ "$dry_run" -eq 1 ]; then
+        note "would create: ${title} (${old_ver} -> ${new_ver})"
+        continue
+    fi
+    if python3 .github/scripts/create_upstream_issue.py \
+            --pkg "$pkg" --old-version "$old_ver" --new-version "$new_ver"; then
+        note "created Issue: ${title}"
+        created=$((created + 1))
+    else
+        warn "failed to create Issue for ${pkg}"
+        failed=$((failed + 1))
+    fi
+done < <(printf '%s' "$updates" | python3 -c '
+import json, sys
+for u in json.load(sys.stdin):
+    print(u["pkg"], u["old_pkgver"], u["new_pkgver"], sep="\t")
+')
+
+if [ "$dry_run" -eq 1 ]; then
+    note "dry-run: no Issues created"
+else
+    note "done (created: ${created}, skipped: ${skipped}, failed: ${failed})"
+fi
+[ "$failed" -eq 0 ] || exit 1
+exit 0

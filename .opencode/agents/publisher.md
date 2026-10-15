@@ -31,6 +31,10 @@ permissions:
   - action: shell
     resource: "command -v rclone"
     effect: allow
+  # 配信検証で /etc/pacman.conf の [nekono] Server を読む (外部 path)
+  - action: external_directory
+    resource: "/etc/*"
+    effect: allow
   - action: shell
     resource: "mktemp *"
     effect: allow

@@ -1,8 +1,10 @@
 # Phase 2: upstream Issue → 調査 → bump PR
 
-Issue は `.github/scripts/create_upstream_issue.py` が nvchecker の差分から**機械的に**立てる。
-title `[<pkg>] upstream version: <new_pkgver>`、本文は現 PKGBUILD の `source=` 引用 + human review
-checklist のみ。**verdict も supply-chain 監査も付いていない**。調査と判断は自分がここで行う。
+Issue は daily-ops Phase 0.5 の `bin/check-upstream` (nvchecker の差分 +
+`.github/scripts/create_upstream_issue.py`) が**機械的に**立てる (fallback: 手動
+workflow_dispatch)。title `[<pkg>] upstream version: <new_pkgver>`、本文は現 PKGBUILD の
+`source=` 引用 + human review checklist のみ。**verdict も supply-chain 監査も付いていない**。
+調査と判断は自分がここで行う。
 
 ## Step 0: 列挙とグルーピング
 

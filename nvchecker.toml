@@ -1,6 +1,7 @@
 # 各 pkg の upstream latest version を監視する nvchecker 設定。
-# daily cron (.github/workflows/upstream-version-issue.yml) で nvchecker を
-# 実行 → PKGBUILD の現 pkgver と差分があれば Claude 事前調査 + Issue を立てる。
+# daily-ops の検知 step (bin/check-upstream) がローカル実行し、PKGBUILD の
+# 現 pkgver と差分があれば機械的に Issue を立てる (fallback は手動
+# workflow_dispatch の .github/workflows/upstream-version-issue.yml)。
 #
 # 主要な flag (各 section で個別指定):
 #   - use_latest_release = true : GitHub Releases (or GitLab Releases) の
@@ -23,8 +24,8 @@
 # 新規 package を追加した時はここに section を足す。
 
 # nvchecker の state file path 指定 (CLI に --newver/--oldver は無く、こちらで
-# 静的に指定する仕様)。oldver は workflow 内で空ファイルとして用意し、newver
-# を出力 → detect_upstream_updates.py が PKGBUILD と比較する。
+# 静的に指定する仕様)。oldver は bin/check-upstream が空ファイルとして用意し、
+# newver を出力 → detect_upstream_updates.py が PKGBUILD と比較する。
 [__config__]
 oldver = "oldver.json"
 newver = "newver.json"

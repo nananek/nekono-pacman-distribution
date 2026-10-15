@@ -1,0 +1,78 @@
+#!/usr/bin/env bash
+# check-deps: local daily-ops counterpart of the dep-version-pr workflow.
+# Compares every pkgs/<pkg>/.deps.lock against the current Arch official-repo
+# versions (freshly synced into a throwaway db, non-root via fakeroot), and
+# for each package with changed dependencies creates a *signed, complete*
+# pkgrel-bump PR:
+#   - pkgrel +1, .deps.lock updated in place (# MISSING lines preserved),
+#     .SRCINFO pkgrel synced, REVIEW.md 更新履歴 row appended
+#   - commit signed with `-S` (Nekono GPG / YubiKey), push (pre-push gate
+#     runs), gh pr create
+#
+# Rationale: the GitHub schedule was delayed by hours (no longer a daily
+# trigger), and the old unsigned bot flow cannot pass the local pre-push gate
+# and would only be re-signed afterwards anyway; generating the finished
+# artifact locally removes both problems. The workflow remains as a manual
+# workflow_dispatch fallback (old script, unsigned commits).
+#
+# Output is English (ASCII) per repo convention.
+#
+# Usage: bin/check-deps [--dry-run]
+#   --dry-run   detect and print, but change/commit/push nothing
+
+set -uo pipefail
+
+root="$(git rev-parse --show-toplevel 2>/dev/null)" || { echo "[check-deps] FATAL: not a git repository" >&2; exit 1; }
+cd "$root" || exit 1
+
+dry_run=0
+for arg in "$@"; do
+    case "$arg" in
+        --dry-run) dry_run=1 ;;
+        *) echo "[check-deps] FATAL: unknown argument: $arg" >&2; exit 2 ;;
+    esac
+done
+
+note() { printf '[check-deps] %s\n' "$1"; }
+fail() { printf '[check-deps][FATAL] %s\n' "$1" >&2; exit 1; }
+
+# --- guards ---------------------------------------------------------------
+command -v pacman >/dev/null 2>&1 || fail "pacman not found"
+command -v fakeroot >/dev/null 2>&1 || fail "fakeroot not found (needed for the non-root db sync)"
+command -v gh >/dev/null 2>&1 || fail "gh not found"
+command -v python3 >/dev/null 2>&1 || fail "python3 not found"
+gh auth status >/dev/null 2>&1 || fail "gh not authenticated (run: gh auth login)"
+
+if [ -n "$(git status --porcelain)" ]; then
+    fail "working tree is not clean; commit/stash first"
+fi
+[ "$(git rev-parse --abbrev-ref HEAD)" = "master" ] || fail "not on master"
+git fetch origin || fail "git fetch origin failed"
+if ! git merge-base --is-ancestor origin/master HEAD; then
+    note "master is behind origin/master; fast-forwarding"
+    git merge --ff-only origin/master || fail "master diverged from origin/master"
+fi
+if [ "$(git rev-parse HEAD)" != "$(git rev-parse origin/master)" ]; then
+    fail "master has unpushed local commits; sync manually first"
+fi
+
+# --- fresh repo db (non-root, same approach as checkupdates) --------------
+dbtmp="$(mktemp -d -t nekono-db-XXXXXX)" || fail "mktemp failed"
+trap 'rm -rf "$dbtmp"' EXIT
+mkdir -p "$dbtmp/var/lib/pacman/sync" "$dbtmp/var/cache/pacman/pkg"
+note "syncing a throwaway package db (fakeroot) ..."
+# --disable-sandbox: pacman 7's download sandbox (Landlock + 'alpm' user
+# switch) cannot be applied under this host's session sandbox (same reason
+# checkupdates passes a sandbox opt-out flag). Safe here: throwaway db,
+# read-only against public mirrors.
+if ! fakeroot -- pacman -Sy --disable-sandbox --dbpath "$dbtmp/var/lib/pacman" \
+        --cachedir "$dbtmp/var/cache/pacman/pkg" \
+        --logfile "$dbtmp/pacman.log" --noconfirm; then
+    fail "throwaway db sync failed (mirror / network?)"
+fi
+
+# --- compare + generate (signed, complete PRs) ----------------------------
+# No exec: keep this shell alive so the EXIT trap removes the throwaway db.
+python3 .github/scripts/local_deps_bump.py --dbpath "$dbtmp/var/lib/pacman" "$@"
+rc=$?
+exit "$rc"

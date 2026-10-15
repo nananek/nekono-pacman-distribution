@@ -57,6 +57,9 @@ permissions:
     resource: "gpg --verify *"
     effect: allow
   - action: shell
+    resource: "LC_ALL=C gpg --verify *"
+    effect: allow
+  - action: shell
     resource: "gpg --card-status"
     effect: allow
   - action: shell

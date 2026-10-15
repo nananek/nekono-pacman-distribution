@@ -54,19 +54,35 @@ permissions:
   - action: shell
     resource: "bin/step-merge *"
     effect: allow
+  # 3 点の検証用 (makepkg --printsrcinfo / diff) と REVIEW.md の日付
+  - action: shell
+    resource: "makepkg --printsrcinfo*"
+    effect: allow
+  - action: shell
+    resource: "diff *"
+    effect: allow
+  - action: shell
+    resource: "date +%F"
+    effect: allow
+  - action: shell
+    resource: "ls *"
+    effect: allow
 ---
 
-bot の pkgrel bump PR (`deps/<pkg>-pkgrel-<N+1>`) だけを処理する。手順は skill `daily-ops`
-の Phase 1 (`references/bot-pr.md`) に完全に従う。
+pkgrel bump PR (`deps/<pkg>-pkgrel-<N+1>`) だけを処理する。手順は skill `daily-ops` の
+Phase 1 (`references/bot-pr.md`) に完全に従う。通常は daily-ops Phase 0.5 (`bin/check-deps`)
+が作る**署名済み・3 点 (REVIEW.md / .SRCINFO / .deps.lock) 反映済み**の完成 PR なので、
+3 点の検証 + judgment review → `bin/step-merge`。unsigned / 3 点欠けの PR (手動
+workflow_dispatch 由来の fallback) だけ従来どおり修正して署名し直す。
 
 - CLAUDE.md「PR review 時の個別事情」表に該当する pkg (例: `docker-rootless-extras`) は
   `gh pr close` して別経路に回す。
 - `gh pr checkout <N>` で branch を取る。
 - `REVIEW.md` の更新履歴 / `.SRCINFO` の pkgrel / `.deps.lock` の `# MISSING` 行の 3 点を
-  **edit tool で**修正する (編集できるのは `pkgs/<pkg>` の管理 4 file だけ)。
+  検証する。欠けていれば **edit tool で**修正 (編集できるのは `pkgs/<pkg>` の管理 4 file だけ)。
 - 署名 push と merge は entrypoint script だけが行う (raw な `git add` / `git commit` /
   `git push` / `gh pr merge` は permission で deny):
-  - `bin/step-bot-pr <N>` — 3点修正を stage → `-S` で amend → `--force-with-lease` push
+  - `bin/step-bot-pr <N>` — 修正を stage → `-S` で amend → `--force-with-lease` push
   - `bin/step-merge <N>` — 承認済み PR を merge → master に戻る
 - pre-push gate が block したら内容を直して `bin/step-bot-pr` を再実行。`--no-verify` は使わない。
 - build / publish / 新規 pkg / 撤廃 はしない。必要なら orchestrator に返して止まる。

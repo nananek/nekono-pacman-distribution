@@ -26,7 +26,7 @@
 .
 ├── README.md                 — この文書
 ├── CLAUDE.md                 — 規約 (review 手順 / 命名 / commit policy)
-├── nvchecker.toml            — upstream version 監視設定 (cron で daily 実行)
+├── nvchecker.toml            — upstream version 監視設定 (bin/check-upstream が daily-ops で実行)
 ├── pkgs/
 │   ├── <name>/
 │   │   ├── PKGBUILD          — AUR fork + 改変版
@@ -37,6 +37,8 @@
 │   └── ...
 ├── bin/
 │   ├── build-all             — pkgs/* を makepkg + sign + repo-add で一括処理
+│   ├── check-upstream        — nvchecker で upstream 更新を検知し Issue を立てる (daily-ops)
+│   ├── check-deps            — .deps.lock 差分から pkgrel bump の署名済み PR を作る (daily-ops)
 │   ├── sign-pkg              — 個別 .pkg.tar.zst を gpg --detach-sign
 │   ├── update-repo           — repo-add wrapper
 │   ├── prune                 — db 未登録の古い .pkg.tar.zst を削除
