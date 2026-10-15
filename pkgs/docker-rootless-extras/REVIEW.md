@@ -2,7 +2,7 @@
 
 ## 状態
 
-**review 済み、approve** (最新: 2026-10-10 / 29.9.0)
+**review 済み、approve** (最新: 2026-10-15 / 29.9.1)
 
 AUR の `docker-rootless-extras` 由来。package/install の主要処理は継承しつつ、
 安定供給できる `slirp4netns` を hard dependency に維持し、利用可能な network
@@ -30,20 +30,20 @@ maintainer の意図的設計)。Debian apt の同名 package とは flow が異
   - maintainer: Ľubomír 'the-k' Kučera
   - contributors: Hugo Osvaldo Barrera / PastLeo / koba1t
 - Upstream: https://github.com/moby/moby (= Docker / Moby project)
-  - 2 つの shell script を `docker-v29.9.0` annotated tag から取得
-  - tag object: `007c041bb4308ac5fdf552e03f92d0d9ff5dd41b` (annotated + GPG 署名済み)
-  - tag commit: `a5b58c94d334674eae3a3207d4f05417643a90d0`
+  - 2 つの shell script を `docker-v29.9.1` annotated tag から取得
+  - tag object: `512aee916afea72074ed1c2fe751a3223e494c2b` (annotated + GPG 署名済み)
+  - tag commit: `b26fb77d3e7b01f9d21b89539c1ab428f5ca431f`
   - release author: `vvoland` (既知 moby maintainer)、prerelease: false
 
 ## 検証結果
 
-- [x] `source` URL = `raw.githubusercontent.com/moby/moby/docker-v29.9.0/...`
+- [x] `source` URL = `raw.githubusercontent.com/moby/moby/docker-v29.9.1/...`
   - Docker 公式 upstream repo、typosquat / なりすましリスクなし
-- [x] `sha256sums` 4 件すべてを 2026-10-10 に独立検証
-  - upstream 2 scripts は raw URL の直接取得値を照合。29.8.2 タグの内容と
+- [x] `sha256sums` 4 件すべてを 2026-10-15 に独立検証
+  - upstream 2 scripts は raw URL の直接取得値を照合。29.9.0 タグの内容と
     **byte 単位で完全同一**のため sha256 は不変
-  - `dockerd-rootless.sh` (29.9.0): `200203633806081a401e60aefdf68a8fa73fc7dc80aa854c52a69d47710a3488` (不変)
-  - `dockerd-rootless-setuptool.sh` (29.9.0): `1c9f0dc93ebb3d75255254ec760d26a912affba7f329ab8abffe8e25eb0b3f94` (不変)
+  - `dockerd-rootless.sh` (29.9.1): `200203633806081a401e60aefdf68a8fa73fc7dc80aa854c52a69d47710a3488` (不変)
+  - `dockerd-rootless-setuptool.sh` (29.9.1): `1c9f0dc93ebb3d75255254ec760d26a912affba7f329ab8abffe8e25eb0b3f94` (不変)
   - `docker.socket` (ローカル AUR snapshot、変更なし): `d8695293e5d4a814763f13e1d36ed37273040666b4b91363d6c33171df8934c7`
   - `99-docker-rootless.conf` (ローカル AUR snapshot、変更なし): `d0d790d4c3d887b10b2b155b83a58a44980b9fa638f8c0f1faec0739dc0ef473`
 - [x] `package()`:
@@ -142,6 +142,8 @@ upstream の新 release (docker 29.8.x 等) が出たら:
    1 行追記 (review 日付 + PKGBUILD repo SHA + upstream tag commit SHA)
 
 ## 更新履歴
+
+- **2026-10-15 / 29.9.1** — approve (Issue #718)。Moby v29.9.1 (release 2026-10-14、by `vvoland`) へ sync。annotated tag object `512aee916afea72074ed1c2fe751a3223e494c2b` の target commit `b26fb77d3e7b01f9d21b89539c1ab428f5ca431f`、tagger `vvoland` (Paweł Gronowski, Docker 社員、GPG 署名 valid)。release note は containerd v2.4.2 static binaries 更新による CVE (CVE-2026-95839 / GHSA-8647-2jxj-p2rc / GHSA-hc94-p972-ch66、いずれも containerd 側) + rootless `--domainname` fix + daemon bug fix 群 + RootlessKit v3.3.0 の packaging 更新だが、本 pkg が ship する 2 script は 29.9.0 と **byte-identical** で sha256 4 値すべて不変、PKGBUILD 改変は `pkgver` 1 行のみ (`sh -n` 成功、setuptool.sh の `awk` 抽出入力も同一)。AUR も 29.9.1-1 で sha256 4 値一致、depends 構成に変更なし (意図的 diff 維持)。`.deps.lock` を現行 Arch repo へ refresh (bash 5.3.20-1 / docker 1:29.9.0-1 / rootlesskit 3.2.0-1 / slirp4netns 1.3.6-1)。Closes #718。
 
 - **2026-10-10 / 29.9.0** — approve (Issue #701)。Moby v29.9.0 (release 2026-10-08、by `vvoland`) へ sync。annotated tag object `007c041bb4308ac5fdf552e03f92d0d9ff5dd41b` の target commit `a5b58c94d334674eae3a3207d4f05417643a90d0`、tagger `vvoland` (Paweł Gronowski, Docker 社員、GPG 署名 valid)。release note は Go runtime 更新による CVE 5 件修正 (CVE-2026-97032 / 78659 / 78663 / 78669 / 56857、いずれも daemon 側 HTTP/2・Windows 経路) + BuildKit v0.34.0 / Go 1.26.9 / containerd v2.4.1 / RootlessKit 3.2.0 の packaging 更新だが、本 pkg が ship する 2 script は 29.8.2 と **byte-identical** で sha256 4 値すべて不変、PKGBUILD 改変は `pkgver` 1 行のみ (`sh -n` 成功、setuptool.sh の `awk` 抽出入力も同一)。AUR も 29.9.0-1 で sha256 4 値一致、depends 構成に変更なし (意図的 diff 維持)。Closes #701。
 
