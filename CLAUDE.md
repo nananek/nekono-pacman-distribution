@@ -196,12 +196,15 @@ GPG 秘密鍵 / Tailscale 認証 / build host hostname の機微なものは com
 makepkg 中間 / 成果物は `.gitignore` で除外。`repo/` 配下も同様。
 GitHub には PKGBUILD と build 用スクリプトのみ載る。
 
-## 自動化 (GitHub Actions)
+## 自動化 (daily-ops のローカル検知 / GitHub Actions は fallback)
 
-`.github/workflows/` に cron で回る workflow を 2 本置いて、PKGBUILD 管理の
-退屈な部分を半自動化する。
+日々の検知〜生成 (各 pkg の upstream 更新チェックと依存 version 変化の pkgrel bump) は
+**daily-ops の Phase 0.5 として build host 上でローカル実行**する (`bin/check-upstream` /
+`bin/check-deps`)。旧来の GitHub Actions cron は、GitHub の schedule 遅延 (実測 +2〜7h、
+中央値 +5h) で daily trigger の体を成さないため撤去し、`.github/workflows/` の 2 本は
+**手動 `workflow_dispatch` の fallback** に降格した (2026-10-15 refactor)。
 
-### `upstream-version-issue.yml` (daily, 02:50 UTC = JST 11:50)
+### `upstream-version-issue.yml` (workflow_dispatch fallback; 通常は bin/check-upstream)
 
 **何をする**: 各 pkg の **upstream の新 version** を検知 → **決定的な
 (AI 判定を挟まない) GitHub Issue を立てる** (PR ではない)。
@@ -232,7 +235,7 @@ supply-chain 監査 / build script diff / depends 差分確認は行わない。
 **新規 pkg を足したら**: ルート `nvchecker.toml` に section 追加が必要。
 ファイルの head コメント参照。
 
-### `dep-version-pr.yml` (daily, 02:55 UTC = JST 11:55)
+### `dep-version-pr.yml` (workflow_dispatch fallback; 通常は bin/check-deps)
 
 **何をする**: 各 pkg の **依存パッケージ (Arch 公式 repo) の version 変化**
 を検知 → **`pkgrel` を +1** + `.deps.lock` 更新 → **PR を出す** (機械的処理、
@@ -259,18 +262,20 @@ Arch host で .SRCINFO の depends + makedepends について `pacman -Si <dep>`
 
 ### 共通の前提
 
-- どちらの workflow も `container: archlinux:latest` で動かす (pacman /
-  nvchecker / makepkg と同じ環境を runner 上に確保)
+- 通常のローカル検知 (`bin/check-*`) は build host 上の `nvchecker` / `fakeroot` /
+  `gh` を使う (preflight が warning で確認)。fallback workflow は
+  `container: archlinux:latest` で動かす
 - `.deps.lock` の `# MISSING ...` 行は「Arch 公式 repo に無い (virtual
-  provides / AUR-only) ので監視対象外」を意味、`dep_version_check.py` は
-  これを silently skip
-- secrets: `GITHUB_TOKEN` (default 付与、Issue / PR / git push 用)。 両 workflow
-  とも Actions 上で AI (Claude code action) を起動しないため
+  provides / AUR-only) ので監視対象外」を意味、検知 script はこれを skip
+  (ローカル生成 commit は行を保ったまま version 行だけ更新する)
+- secrets: ローカル検知は `gh auth` の token を使う (nvchecker の keyfile は一時
+  ファイルに書き、repo には置かない)。fallback workflow は `GITHUB_TOKEN` (default
+  付与)。両者とも Actions 上で AI (Claude code action) を起動しないため
   `CLAUDE_CODE_OAUTH_TOKEN` は不要 (repo secret として残っていれば削除可)。
 
 ### PR review 時の個別事情 (人間判断要)
 
-`dep-version-pr` は機械的に **「depends.X の version が変わった → pkgrel
+pkgrel bump の検知 (`bin/check-deps` / 旧 `dep-version-pr`) は機械的に **「depends.X の version が変わった → pkgrel
 +1 で rebuild」** を仮定する。しかし PKGBUILD によっては「depends の
 特定 pkg と pkgver が sync しているので、本当は pkgver も上げる必要
 がある」というケースがある。bot ロジック側に特例を入れず、PR review
@@ -278,7 +283,7 @@ Arch host で .SRCINFO の depends + makedepends について `pacman -Si <dep>`
 
 | pkg | sync 対象 dep | 来た PR をどう処理するか |
 |---|---|---|
-| `docker-rootless-extras` | `docker` | source URL が `docker-v${pkgver}` で moby/moby tag に pinned。`depends.docker` が動いたら本来 `pkgver` も同 version に上げて sha256sums 再計算が必要。来た pkgrel bump PR は **close**、`upstream-version-issue.yml` が moby/moby の release を nvchecker で拾って Issue を立てる経路で対応する。Issue が立つまでに時差があれば手動で `workflow_dispatch` で trigger。 |
+| `docker-rootless-extras` | `docker` | source URL が `docker-v${pkgver}` で moby/moby tag に pinned。`depends.docker` が動いたら本来 `pkgver` も同 version に上げて sha256sums 再計算が必要。来た pkgrel bump PR は **close**、`bin/check-upstream` が moby/moby の release を nvchecker で拾って Issue を立てる経路で対応する。Issue が無ければ `bin/check-upstream` を再実行 (fallback: `workflow_dispatch`)。 |
 
 新規 pkg を足すとき、`pkgver` が depends のどれかと version sync する
 構造なら **必ずこの表に追記** すること。書かないと将来「来た pkgrel
@@ -291,18 +296,23 @@ bump PR をうっかり merge → 旧 pkgver のまま rebuild されて配布�
 なしで自律実行** する。途中で判断に迷う場合 (block verdict、PKGBUILD 大改修
 が必要な場合等) のみ報告して止まる。
 
-> **機械操作は `bin/step-*` 経由**: 署名 commit / push / PR 作成 / merge は
-> `bin/step-bot-pr` / `bin/step-upstream-pr` / `bin/step-merge` の entrypoint で行う。
+> **機械操作は `bin/` の entrypoint 経由**: 検知〜生成は `bin/check-upstream` /
+> `bin/check-deps`、署名 commit / push / PR 作成 / merge は `bin/step-bot-pr` /
+> `bin/step-upstream-pr` / `bin/step-merge` の entrypoint で行う。
 > OpenCode の agent permission で raw な `git commit` / `git push` / `gh pr create` /
 > `gh pr merge` は deny されている (`.opencode/agents/*.md`)。read-only の状態表示は
-> `bin/preflight`。手順の正は下記 skill 側。
+> `bin/preflight`。daily-ops の run は非対話 (ask ゼロ) 前提 (`question` は orchestrator で
+> deny)。手順の正は下記 skill 側。
 
 > **実行手順の詳細は skill にある** (repo 初見・記憶なしの agent はまずこれを読む):
 > `.claude/skills/daily-ops/` (Issue/PR 消化 → build → publish → 配信検証) /
 > `.claude/skills/package-lifecycle/` (package の追加・撤廃・復活。こちらは user 承認が要る)。
 > 以下は方針・判断表で、コマンド単位の手順・落とし穴は skill 側が正。
 
-### bot PR (dep-version-pr) の全自動フロー
+### bot PR (pkgrel bump) の全自動フロー
+
+PR は daily-ops Phase 0.5 (`bin/check-deps`) が**署名済み・3 点反映済み**で生成する
+(fallback: workflow_dispatch の unsigned PR)。
 
 ```
 gh pr list --state open  →  deps/<pkg>-pkgrel-<N> の PR を列挙
@@ -313,27 +323,29 @@ gh pr list --state open  →  deps/<pkg>-pkgrel-<N> の PR を列挙
 1. **個別事情テーブル確認** (後述「PR review 時の個別事情」)。該当する pkg
    (= `docker-rootless-extras` 等) なら `gh pr close <N>` して次へ。
 
-2. **3 点チェックを事前修正** (repo 規約の hygiene。 pkgrel bump は
-   pre-push gate を素通りするので、 下記は人手で揃える):
-   - `pkgs/<pkg>/REVIEW.md` の「更新履歴」テーブルに 5 列行を追記
+2. **3 点 (REVIEW.md / .SRCINFO / .deps.lock) を検証** — ローカル生成 PR は反映済み
+   (不足があれば skill `daily-ops` Phase 1 の手順で修正。pre-push gate は pkgrel 変更 +
+   3 点未反映を block する):
+   - `pkgs/<pkg>/REVIEW.md` の「更新履歴」テーブルに 5 列行があること
      (`| 日付 | release | SHA | — (pkgrel bump のみ) | findings |`)
-   - `pkgs/<pkg>/.SRCINFO` の `pkgrel` を PKGBUILD と一致させる
-   - `pkgs/<pkg>/.deps.lock` の `# MISSING ...` 行が消えていたら復元
-     (bot は AUR-only / virtual provide の MISSING 行を削除してしまう)
+   - `pkgs/<pkg>/.SRCINFO` の `pkgrel` が PKGBUILD と一致すること
+   - `pkgs/<pkg>/.deps.lock` の `# MISSING ...` 行が残っていること
 
-3. `git commit --amend -S --no-edit` + `git push --force-with-lease`
-   (push 時に pre-push gate = `bin/prepush-review` が走る。 block されたら
-   内容を直して再 push。 pkgrel bump は素通りが正常)
+3. 署名 push は `bin/step-bot-pr <N>` (修正を stage → `-S` で amend →
+   `--force-with-lease` push。push 時に pre-push gate = `bin/prepush-review` が走る)。
+   完成 PR で修正が無ければこの step は不要。
 
-4. push が通れば **待つべき CI は無い**。 そのまま
-   `gh pr merge <N> --merge --delete-branch`
+4. **待つべき CI は無い**。judgment review の後 `bin/step-merge <N>`
+   (中で `gh pr merge --merge --delete-branch`)
 
 5. 全 PR 処理後、build host で実行するコマンドをユーザに提示:
    ```sh
    git pull --ff-only && bin/build-all --pending
    ```
 
-### upstream Issue (upstream-version-issue) の全自動フロー
+### upstream Issue (upstream 更新) の全自動フロー
+
+Issue は daily-ops Phase 0.5 (`bin/check-upstream`) が立てる (fallback: workflow_dispatch)。
 
 ```
 gh issue list --state open  →  [<pkg>] upstream version: <new_pkgver> の Issue を列挙
@@ -376,13 +388,13 @@ bin/build-all --pending
 
 ---
 
-## デイリー運用 (Issue / PR 消化)
+## デイリー運用 (検知〜生成 → Issue / PR 消化)
 
-`upstream-version-issue` / `dep-version-pr` の 2 本の cron workflow が毎日
-JST 11:50〜11:55 (= 02:50〜02:55 UTC) に新規 Issue / PR を生成する。
-Claude に「PR 消化して」と伝えれば上記の全自動フローで処理する。
+daily-ops (skill) の Phase 0.5 が `bin/check-upstream` / `bin/check-deps` で
+新規 Issue / PR をローカル生成する (旧 cron workflow は schedule 遅延のため撤去済み。
+fallback は workflow_dispatch)。Claude に「PR 消化して」と伝えれば上記の全自動フローで処理する。
 
-### Issues タブ (upstream-version-issue 経由)
+### Issues タブ (upstream 更新検知 経由)
 
 新規 Issue title は `[<pkg>] upstream version: <new_pkgver>`。本文は
 `create_upstream_issue.py` が機械生成した human review checklist のみ
@@ -402,19 +414,19 @@ close する。冪等性 key は title なので、close されていても同 t
 
 ### Pull Requests タブ
 
-#### bot 自動 PR (`dep-version-pr` 経由)
+#### bot 自動 PR (`bin/check-deps` 経由)
 
 branch 名 `deps/<pkg>-pkgrel-<N+1>`、title `<pkg>: pkgrel bump to <N+1>
 (deps changed)`。
 
 1. **「PR review 時の個別事情」 表 (上記) で該当 pkg を確認**。該当する
-   なら `gh pr close <N>` して別経路 (upstream-version-issue) で対応。
+   なら `gh pr close <N>` して別経路 (upstream 更新 Issue) で対応。
 2. 3 点チェック事前修正 (REVIEW.md / .SRCINFO / .deps.lock)。
 3. `git commit --amend -S --no-edit` + `git push --force-with-lease`
    (push 時に pre-push gate が走る)。
 4. push が通れば CI 待ちは無い。`gh pr merge <N> --merge --delete-branch`。
 
-#### 手動 bump PR (= upstream-version-issue 由来の PR)
+#### 手動 bump PR (= upstream 更新 Issue 由来の PR)
 
 `pkgs/<pkg>` ディレクトリの PKGBUILD / .SRCINFO / .deps.lock を更新して
 立てる PR。CLAUDE.md 規約「1 PKGBUILD update = 1 commit」「`-S` 署名」を
@@ -439,8 +451,9 @@ merge 前のチェックリスト:
 
 ### 朝 routine (推奨)
 
-毎朝 1 度、Claude に「PR/Issue 消化して」と伝える。Claude が全自動で
-Issues/PRs を処理する。終了後、build host で:
+毎朝 1 度、Claude に「PR/Issue 消化して」と伝える (非対話の `opencode run` +
+systemd timer でも可。ask ゼロで完走する設計)。Claude が全自動で検知〜生成 →
+Issues/PRs の処理を行う。終了後、build host で:
 
 ```sh
 cd ~/nekono-pacman-distribution

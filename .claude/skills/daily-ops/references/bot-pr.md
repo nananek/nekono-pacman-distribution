@@ -1,13 +1,18 @@
-# Phase 1: bot PR (`dep-version-pr`) の処理
+# Phase 1: bot PR (`deps/<pkg>-pkgrel-<N>`) の処理
 
 ## 何の PR か
 
-`.github/workflows/dep-version-pr.yml` が毎日 (JST 11:55) 立てる**機械 PR**。
+`bin/check-deps` (daily-ops Phase 0.5 のローカル検知) が立てる**機械 PR**。通常は
+**署名済み・3 点反映済みの完成 PR** (fallback: 手動 workflow_dispatch の
+`.github/workflows/dep-version-pr.yml` だけが従来どおり unsigned PR を出す)。
 
-- branch `deps/<pkg>-pkgrel-<N>` / title `<pkg>: pkgrel bump to <N> (deps changed)` / author `github-actions[bot]`
-- 中身は `PKGBUILD` の `pkgrel` +1 と `.deps.lock` の更新だけ (Arch 公式 repo の依存 version が動いた →
-  ABI 追従の rebuild 指示)。本文の「Dep changes」に変わった依存が列挙される。
-- commit は **unsigned** (Actions に署名鍵を置かない方針)。merge 前に build host で署名し直す。
+- branch `deps/<pkg>-pkgrel-<N>` / title `<pkg>: pkgrel bump to <N> (deps changed)` /
+  author はローカル生成なら Nekono (fallback workflow なら `github-actions[bot]`)
+- 中身は `PKGBUILD` の `pkgrel` +1、`.deps.lock` 更新、`.SRCINFO` 同期、`REVIEW.md` 履歴 1 行
+  (Arch 公式 repo の依存 version が動いた → ABI 追従の rebuild 指示)。本文の「Dep changes」に
+  変わった依存が列挙される。
+- ローカル生成分は **署名済み** (`bin/check-deps` が `-S`)。fallback の unsigned commit だけ、
+  merge 前に build host で署名し直す。
 
 ## 列挙
 
@@ -28,12 +33,16 @@ gh pr close <N> --comment "pkgver が <dep> と sync する pkg のため pkgrel
 ```
 
 閉じたら次の PR へ。対応する upstream Issue がまだ無ければ最終報告で user に伝える
-(`workflow_dispatch` で `upstream-version-issue.yml` を手動起動する手もある)。
+(手元で `bin/check-upstream` を再実行する。fallback は `workflow_dispatch`)。
 
 同じ pkg に upstream bump (Phase 2) が同時に絡むなら、bump 側で `.deps.lock` も最新化して含め、
 bot PR は close (理由をコメント) するのが素直。迷ったら user に確認。
 
-## Step 2: 3 点修正 (repo 規約。bot は下の 3 つを満たさない)
+## Step 2: 3 点 (REVIEW.md / .SRCINFO / .deps.lock) の検証 — 欠けていれば修正
+
+`bin/check-deps` 生成の完成 PR は 3 点反映済みなので**検証だけ** (不足があれば下記
+(a)–(c) の手順で直す)。手動 workflow_dispatch 由来の旧 bot PR (unsigned) は 3 点を
+満たさないので必ず修正する。
 
 以下は**手順の説明**。agent は `pkgs/<pkg>` の管理 4 file を **edit tool で**編集する
 （`sed -i` 等の shell 書き込みは permission で allow されない）。`gh pr checkout <N>`
@@ -84,6 +93,9 @@ git diff $base -- pkgs/$pkg/.deps.lock      # 変わった version 行だけで�
 ```
 
 ## Step 3: 署名して push、merge (bin/step-* 経由)
+
+完成 PR (署名済み・3 点反映済み) は修正が無ければそのまま judgment review → `bin/step-merge`。
+unsigned / 修正ありのときは `bin/step-bot-pr` で署名し直してから merge する。
 
 raw な `git add` / `git commit --amend -S` / `git push` / `gh pr merge` は agent の
 permission で deny されている。不可逆操作は entrypoint script だけが行う:
