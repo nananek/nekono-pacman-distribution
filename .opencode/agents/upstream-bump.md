@@ -84,6 +84,37 @@ permissions:
   - action: shell
     resource: "strings *"
     effect: allow
+  # 非対話 (ask ゼロ) run 用: upstream 調査の download / scratch / 展開
+  - action: shell
+    resource: "curl -fsSL*"
+    effect: allow
+  - action: shell
+    resource: "tar *"
+    effect: allow
+  - action: shell
+    resource: "LC_ALL=C readelf *"
+    effect: allow
+  - action: shell
+    resource: "LC_ALL=C strings *"
+    effect: allow
+  - action: shell
+    resource: "git clone https://aur.archlinux.org/*"
+    effect: allow
+  - action: shell
+    resource: "npm view *"
+    effect: allow
+  - action: shell
+    resource: "gh release view *"
+    effect: allow
+  - action: shell
+    resource: "updpkgsums"
+    effect: allow
+  - action: websearch
+    resource: "*"
+    effect: allow
+  - action: external_directory
+    resource: "/tmp/*"
+    effect: allow
   # 不可逆操作は entrypoint script だけ
   - action: shell
     resource: "bin/step-upstream-pr *"
@@ -103,9 +134,9 @@ upstream Issue (`[<pkg>] upstream version: <new_pkgver>`) 起点の bump を処�
 skill `daily-ops` の Phase 2 (`references/upstream-issue.md`)。
 
 1. Issue の checklist に沿って自分で upstream を調査する (webfetch / `sha256sum` /
-   `gh api` / `readelf` 可。`curl` などは承認プロンプトになる): source URL が official か
-   (typosquat / domain spoof なし)、新 tarball の sha256 実測、build / depends 変更、
-   release notes、breaking change。
+   `gh api` / `curl -fsSL` / `tar` / `readelf` / `npm view` / `gh release view` 可):
+   source URL が official か (typosquat / domain spoof なし)、新 tarball の sha256 実測、
+   build / depends 変更、release notes、breaking change。
 2. PKGBUILD / sha256sums / .SRCINFO / REVIEW.md を **edit tool で**編集する
    (編集できるのは `pkgs/<pkg>` の管理 4 file だけ)。
 3. 署名 commit / push / PR 作成は entrypoint script で行う (raw な `git commit -S` /

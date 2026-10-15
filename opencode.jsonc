@@ -14,6 +14,9 @@
     { "action": "grep", "resource": "*", "effect": "allow" },
     { "action": "question", "resource": "*", "effect": "allow" },
     { "action": "skill", "resource": "*", "effect": "allow" },
+    // 非対話 (ask ゼロ) run 用: /tmp 配下の scratch (build/publish log /
+    // throwaway pacman db / tarball 展開先)
+    { "action": "external_directory", "resource": "/tmp/*", "effect": "allow" },
 
     { "action": "shell", "resource": "git status *", "effect": "allow" },
     { "action": "shell", "resource": "git diff *", "effect": "allow" },
