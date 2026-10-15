@@ -55,6 +55,17 @@ else
     warn "gh not found"
 fi
 
+# daily detection prerequisites (Phase 0.5: bin/check-upstream / check-deps)
+missing=""
+for tool in nvchecker fakeroot; do
+    command -v "$tool" >/dev/null 2>&1 || missing="${missing} ${tool}"
+done
+if [ -n "$missing" ]; then
+    warn "missing tool(s):${missing} (bin/check-upstream / bin/check-deps will fail)"
+else
+    note "daily detection deps OK (nvchecker, fakeroot)"
+fi
+
 if [ "$gh_ok" -eq 1 ]; then
     note "open bot PRs (deps/*):"
     gh pr list --state open --json number,headRefName,title \
