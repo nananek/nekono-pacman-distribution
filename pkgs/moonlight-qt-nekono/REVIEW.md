@@ -127,3 +127,9 @@ Nekono 自身の commit になる。下記「信頼モデルの差」を読ん�
   superproject のこの 1 commit 以外に source の差分なし、submodule 3 本
   (moonlight-common-c / qmdnsengine / SDL_GameControllerDB) も pointer 不変。
   PKGBUILD の差分は `pkgver` / `_reltag` / `pkgrel` (2→1) / `sha256sums` のみ
+- 6.1.0.nekono4 pkgrel 2 (2026-10-20, pkgrel bump のみ): 依存 version 変化
+  (ffmpeg 2:9.0.1-4 → 2:9.0.2-2, libplacebo 7.360.1-6 → 7.360.1-7,
+  qt6-base 6.11.2-3 → 6.12.0-3, qt6-declarative 6.11.2-2 → 6.12.0-1,
+  qt6-svg 6.11.2-1 → 6.12.0-1, qt6-tools 6.11.2-1 → 6.12.0-1,
+  sdl2-compat 2.32.72-1 → 2.32.74-1) に伴う rebuild。source / sha256sums に
+  変更なし
