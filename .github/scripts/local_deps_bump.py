@@ -15,7 +15,9 @@ pull request from the build host:
     ``deps/<pkg>-pkgrel-<N+1>``, push (pre-push gate runs), gh pr create
 
 Idempotency mirrors the workflow script: the branch name encodes the new
-pkgrel; an existing PR or remote branch for it -> skip.
+pkgrel; an open PR or a leftover remote branch for it -> skip. Merged/closed
+PRs do not block, because a pkgver bump resets pkgrel and the branch name is
+reused.
 
 Invoked by bin/check-deps. Output is English (ASCII) per repo convention.
 """
@@ -39,6 +41,7 @@ PKGREL_RE = re.compile(r"^pkgrel=(\d+)", re.MULTILINE)
 PKGVER_RE = re.compile(r"^pkgver=(.*)$", re.MULTILINE)
 SRCINFO_PKGREL_RE = re.compile(r"^(\s*pkgrel = )(\d+)[ \t]*$", re.MULTILINE)
 REVIEW_HEADING = "更新履歴"
+REVIEW_HEADING_RE = re.compile(r"^#{1,6}\s*" + re.escape(REVIEW_HEADING))
 ISO_DATE_RE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
 
 
@@ -109,7 +112,9 @@ def add_review_row(path: Path, release: str, summary: str) -> None:
     table's existing order (newest-last is the majority; newest-first exists
     for a couple of packages)."""
     lines = path.read_text().splitlines()
-    heading = next((i for i, l in enumerate(lines) if REVIEW_HEADING in l), None)
+    # Match the markdown heading, not an earlier prose mention of the word
+    # (e.g. "REVIEW.md「更新履歴」に 1 行追記" in the bump procedure section).
+    heading = next((i for i, l in enumerate(lines) if REVIEW_HEADING_RE.match(l.strip())), None)
     if heading is None:
         raise RuntimeError(f"'{REVIEW_HEADING}' heading not found in {path}")
     end = len(lines)
@@ -143,9 +148,15 @@ def add_review_row(path: Path, release: str, summary: str) -> None:
     path.write_text("\n".join(lines) + "\n")
 
 
-def existing_pr_for_branch(branch: str) -> bool:
-    """True if any PR (open or closed) has this branch as head."""
-    res = run("gh", "pr", "list", "--head", branch, "--state", "all",
+def existing_open_pr_for_branch(branch: str) -> bool:
+    """True if an OPEN PR has this branch as head.
+
+    Merged/closed PRs must not block regeneration: a pkgver bump resets
+    pkgrel to 1, so the same branch name (deps/<pkg>-pkgrel-<N>) is
+    legitimately reused later. A leftover remote branch is still treated as
+    in-flight by remote_branch_exists().
+    """
+    res = run("gh", "pr", "list", "--head", branch, "--state", "open",
               "--json", "number", capture=True)
     try:
         return bool(json.loads(res.stdout or "[]"))
@@ -219,7 +230,7 @@ def create_pr(entry: dict) -> None:
     branch, release = entry["branch"], entry["release"]
     pkg_dir: Path = entry["pkg_dir"]
 
-    if existing_pr_for_branch(branch) or remote_branch_exists(branch):
+    if existing_open_pr_for_branch(branch) or remote_branch_exists(branch):
         print(f"[{pkg}] branch or PR {branch} already exists, skipping")
         return
 
