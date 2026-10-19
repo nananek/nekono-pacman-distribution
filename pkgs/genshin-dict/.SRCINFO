@@ -1,7 +1,7 @@
 pkgbase = genshin-dict
 	pkgdesc = Genshin Impact dictionary for Mozc IME (Windows IME format TSV + import helper)
 	pkgver = 7.0.1
-	pkgrel = 1
+	pkgrel = 2
 	url = https://github.com/kotofurumiya/genshin-dict
 	install = genshin-dict.install
 	arch = any

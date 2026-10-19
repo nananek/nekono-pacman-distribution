@@ -110,3 +110,4 @@ upstream で新 release が出たら:
 | 2026-06-03 | 6.6.1 | (this PR) | v6.6.1 (`ff3c2efcccfc`) | safe-to-bump: 辞書エントリ追加のみ (水仙十字関係人物名・書籍名等)。PKGBUILD 構造変化なし、 sha256 独立検証済み |
 | 2026-08-09 | 7.0.0 | (this commit) | v7.0.0 (`ea720de5239066c10ef3296b79290afdbf7ceb52`) | safe-to-bump: 辞書エントリ追加のみ (観月者計画・スネージナヤ関連人名/地名、マリアネッテ)。PKGBUILD 構造変化なし、sha256 独立検証済み (issue #508 記載値と一致確認) |
 | 2026-09-06 | 7.0.1 | (this commit) | v7.0.1 (`974ee1970c28b47d5deb1fc126bdb61a733eeb8d`) | safe-to-bump: 辞書エントリ追加のみ (artifact/material/weapon/person/region/world 系 worddata 更新)。scripts/build.ts の diff もあるが PKGBUILD では未実行 (静的 TSV/LICENSE のみ package)。build()/package() 構造変化なし、sha256 独立検証済み (issue #608) |
+| 2026-10-19 | 7.0.1-2 | (this PR) | — (pkgrel bump のみ) | `pkgrel` +1 (deps changed): protobuf 34.1-1 → 36.1-1, python 3.14.5-1 → 3.14.8-1, python-protobuf 34.1-1 → 36.1-1 |
