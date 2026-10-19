@@ -108,9 +108,12 @@ def sync_srcinfo(path: Path, new_rel: int) -> None:
 
 
 def add_review_row(path: Path, release: str, summary: str) -> None:
-    """Append the Phase-1-style 5-column row under 更新履歴, matching the
-    table's existing order (newest-last is the majority; newest-first exists
-    for a couple of packages)."""
+    """Append the Phase-1-style entry under 更新履歴.
+
+    Supports both the 5-column markdown table (majority) and a plain bullet
+    list (e.g. moonlight-qt-nekono). The insertion side follows the section's
+    existing order: newest-last unless the first date is newer than the last.
+    """
     lines = path.read_text().splitlines()
     # Match the markdown heading, not an earlier prose mention of the word
     # (e.g. "REVIEW.md「更新履歴」に 1 行追記" in the bump procedure section).
@@ -129,21 +132,38 @@ def add_review_row(path: Path, release: str, summary: str) -> None:
             return cells[0]
         return None
 
-    table_rows = [j for j in range(heading + 1, end) if lines[j].lstrip().startswith("|")]
-    if not table_rows:
-        raise RuntimeError(
-            f"no markdown table under '{REVIEW_HEADING}' in {path}; update REVIEW.md manually"
-        )
-    dated = [j for j in table_rows if row_date(j)]
-    if dated:
-        if row_date(dated[0]) > row_date(dated[-1]):
-            insert_at = dated[0]  # newest-first table
-        else:
-            insert_at = dated[-1] + 1  # newest-last table (majority)
-    else:
-        insert_at = table_rows[-1] + 1
+    def bullet_date(j: int) -> str | None:
+        m = re.search(r"\((\d{4}-\d{2}-\d{2})", lines[j])
+        return m.group(1) if m else None
 
-    row = f"| {date.today().isoformat()} | {release} | (this PR) | — (pkgrel bump のみ) | {summary} |"
+    table_rows = [j for j in range(heading + 1, end) if lines[j].lstrip().startswith("|")]
+    bullet_rows = [j for j in range(heading + 1, end) if re.match(r"^[-*]\s+", lines[j])]
+
+    if table_rows:
+        dated = [j for j in table_rows if row_date(j)]
+        if dated:
+            if row_date(dated[0]) > row_date(dated[-1]):
+                insert_at = dated[0]  # newest-first table
+            else:
+                insert_at = dated[-1] + 1  # newest-last table (majority)
+        else:
+            insert_at = table_rows[-1] + 1
+        row = f"| {date.today().isoformat()} | {release} | (this PR) | — (pkgrel bump のみ) | {summary} |"
+    elif bullet_rows:
+        dated = [j for j in bullet_rows if bullet_date(j)]
+        if dated and bullet_date(dated[0]) > bullet_date(dated[-1]):
+            insert_at = dated[0]  # newest-first list
+        else:
+            # append after the last non-empty line of the section so that a
+            # multi-line entry stays intact
+            insert_at = max(j for j in range(heading + 1, end) if lines[j].strip()) + 1
+        row = f"- {release} ({date.today().isoformat()}, pkgrel bump のみ): {summary}"
+    else:
+        raise RuntimeError(
+            f"no markdown table or bullet list under '{REVIEW_HEADING}' in {path}; "
+            "update REVIEW.md manually"
+        )
+
     lines[insert_at:insert_at] = [row]
     path.write_text("\n".join(lines) + "\n")
 
