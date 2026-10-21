@@ -1,7 +1,7 @@
 pkgbase = moonlight-qt-nekono
 	pkgdesc = GameStream client for PCs, multidisplay fork
 	pkgver = 6.1.0.nekono4
-	pkgrel = 2
+	pkgrel = 3
 	url = https://github.com/nananek/moonlight-qt
 	arch = x86_64
 	license = GPL-3.0-or-later

@@ -133,3 +133,4 @@ Nekono 自身の commit になる。下記「信頼モデルの差」を読ん�
   qt6-svg 6.11.2-1 → 6.12.0-1, qt6-tools 6.11.2-1 → 6.12.0-1,
   sdl2-compat 2.32.72-1 → 2.32.74-1) に伴う rebuild。source / sha256sums に
   変更なし
+- 6.1.0.nekono4-3 (2026-10-22, pkgrel bump のみ): `pkgrel` +1 (deps changed): qt6-declarative 6.12.0-1 → 6.12.0-2
