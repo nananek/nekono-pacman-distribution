@@ -90,3 +90,4 @@ upstream の新 release (0.5.3 等) が出たら:
 | 2026-07-10 | 0.5.3-1 | upstream tag `0.5.3` | upstream tag `0.5.3` | pkgver bump 0.5.2 → 0.5.3 (Issue #375, safe-to-bump)。system color scheme 追従 fix (`gtk::init()` → `adw::init()`)。build()/package()・depends 無変更、b2sums 差し替えのみ。makepkg --verifysource で b2 検証済み |
 | 2026-08-21 | 0.5.3-2 | (this PR) | `fd5c9d1e5458b625d45e4159634b5b072f66cde1` | upstream が `0.5.3` tag を再配置。commit 固定 source、b2sums 更新、pkgrel 1 → 2。Cargo lock の crate 更新のみ、build()/package()/depends 無変更 |
 | 2026-10-20 | 0.5.3-3 | (this PR) | — (pkgrel bump のみ) | `pkgrel` +1 (deps changed): blueprint-compiler 0.20.4-1 → 0.22.2-1, clang 22.1.6-1 → 23.1.3-3, glib2 2.88.2-1 → 2.90.1-1, gtk4 1:4.22.4-1 → 1:4.24.1-1, libadwaita 1:1.9.2-1 → 1:1.10.0-1, meson 1.11.1-3 → 1.12.1-2, rust 1:1.96.1-1 → 1:1.99.1-1, wireplumber 0.5.15-1 → 0.5.18-1 |
+| 2026-10-22 | 0.5.3-4 | (this PR) | — (pkgrel bump のみ) | `pkgrel` +1 (deps changed): clang 23.1.3-3 → 23.1.3-4 |
