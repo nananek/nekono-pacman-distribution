@@ -274,3 +274,4 @@ upstream の新 release (docker 29.8.x 等) が出たら:
   当時の sha256 実測値:
   - `dockerd-rootless.sh`: `5cdcd9512da29704c8615de33390cfe950b7b720f8b52b215fbbaa7646d693d3`
   - `dockerd-rootless-setuptool.sh`: `e2d0b86f145323f9597dd1d587bbc8a5b0524dd92f34d03b49fb455768ab65e6`
+- 29.9.1-2 (2026-10-22, pkgrel bump のみ): `pkgrel` +1 (deps changed): docker 1:29.9.1-1 → 1:29.9.2-1, rootlesskit 3.2.0-1 → 3.3.0-1
