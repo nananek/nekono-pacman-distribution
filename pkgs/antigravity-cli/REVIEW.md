@@ -2,7 +2,7 @@
 
 ## 状態
 
-**review 済み、approve (注意事項あり)** (最新: 2026-10-22 / 1.4.5、初回: 2026-09-24)
+**review 済み、approve (注意事項あり)** (最新: 2026-10-27 / 1.4.7、初回: 2026-09-24)
 
 2026-10-02 に `0ae3052` で retire されたものを 2026-10-07 に復活 (user 依頼)。復元元は retire 直前版。
 
@@ -26,54 +26,55 @@ AUR と byte 一致。
 
 ## 検証結果
 
-- [x] `source_x86_64` URL = `https://storage.googleapis.com/antigravity-public/antigravity-cli/1.4.5-4952523841339392/linux-x64/cli_linux_x64.tar.gz`
+- [x] `source_x86_64` URL = `https://storage.googleapis.com/antigravity-public/antigravity-cli/1.4.7-5900205422411776/linux-x64/cli_linux_x64.tar.gz`
   - upstream の auto-updater release server
     (`antigravity-cli-auto-updater-974169037036.us-central1.run.app/manifests/linux_amd64.json`)
-    が返す `url` と **完全一致** (manifest の `version` は `1.4.5`)。同 bucket /
+    が返す `url` と **完全一致** (manifest の `version` は `1.4.7`)。同 bucket /
     path 構造は AUR 履歴 (2026-05 初回 submit 〜 現在) を通じて不変で、
     domain の付け替え / typosquat は無い
   - バイナリ内に埋め込まれた release server URL も同じ Cloud Run endpoint
-  - GitHub `google-antigravity/antigravity-cli` の tag `1.4.5` / commit `902d212319e365583596a014c152745cdf36c49a`、
-    publisher `haofan` は従来と同一、 release は draft / prerelease でない (published 2026-10-22)
-  - manifest の build id は 1.4.4 の `4783783166214144` から `4952523841339392` へ増加。
+  - GitHub `google-antigravity/antigravity-cli` の tag `1.4.7` / commit `bf1e6e6d4a05803d21dbe9af5ffba04d8b4fc0ff`、
+    publisher `haofan` は従来と同一、 release は draft / prerelease でない (published 2026-10-24)
+  - manifest の build id は 1.4.5 の `4952523841339392` から `5900205422411776` へ増加。
     この系列は元来非単調 (1.3.1 `458...` → 1.3.2 `581...` → 1.3.3 `552...`) で、
-    release の published 順 (1.4.4 = 2026-10-21、1.4.5 = 2026-10-22) と
-    manifest / GitHub tag の両方が 1.4.5 を最新として返すため rollback / 取り下げではない
+    release の published 順 (1.4.5 = 2026-10-22、1.4.6 = 10-23、1.4.7 = 10-24) と
+    manifest / GitHub tag の両方が 1.4.7 を最新として返すため rollback / 取り下げではない
 - [x] `sha256sums_x86_64` を独立実測 (`curl | sha256sum`)
-  - 実測 / PKGBUILD 値 (1.4.5): `90cc1894b6862510869ad4cf1a6f4c043b7ae7c095bad8d5c355788a0ca935c7`
+  - 実測 / PKGBUILD 値 (1.4.7): `67fd4e70be739b1f8b18f90b511da8cd2a7aef24e888e5837402e025bf7fdbfc`
   - **upstream が manifest で公開している sha512 と一致** (= AUR maintainer の
     値に頼らない独立照合): 実測 sha512
-    `fd30e8d256e28c4a6d0f5fddaa0f74b47c8c5a8e9fa2285cb03f85093e90eca0406f1c2fa57a0386bb820e21ed427e27c2315a01453dfda401c2223b2639ab30`
-  - **GitHub Release `1.4.5` の asset `agy_cli_linux_x64.tar.gz` の digest とも
-    完全一致** (size 64,814,607 / `sha256:90cc1894...`)。asset を GitHub から
+    `beda760587589f5827b0b516c3ec2c5bd5cd2e91eb0e2533807ba1e990a27dcd63aef0191e0b76fb60feab0d16eaa8210fb79842c34dd4809e257e1712edd152`
+  - **GitHub Release `1.4.7` の asset `agy_cli_linux_x64.tar.gz` の digest とも
+    完全一致** (size 65,681,429 / `sha256:67fd4e70...`)。asset を GitHub から
     再 download した tarball は GCS 配信物と **byte 一致** (`cmp` で確認)。
-    1.4.4 の asset digest (`sha256:9ae4f7f0...`) も本 repo の旧 pin と一致済みで、
+    1.4.5 の asset digest (`sha256:90cc1894...`) も本 repo の旧 pin と一致済みで、
     GCS manifest 配信物 = GitHub Release asset であることを複数版で確認
-  - AUR は 1.4.4 止まり (`f955cc3`) で 1.4.5 は未追随のため cross-check 不可
-    (AUR の x86_64 sha256 `9ae4f7f0...` は本 repo の 1.4.4 pin と一致、upstream
-    先行は 1.3.1〜1.4.3 時の前例あり)
+  - AUR も 1.4.7 に追随済み (`b9f5f9e`、x86_64 sha256 `67fd4e70...` = 本 repo の
+    pin と一致)。aarch64 asset digest (`sha256:b273c791...`) も AUR の
+    `sha256sums_aarch64` と一致
   - (初回 1.2.9 時の記録) aarch64 tarball も sha256 / sha512 とも manifest と
     一致を確認済み (本 repo では使わない)
-- [x] tarball の中身は `antigravity` 1 ファイル (223,736,040 byte、root/root、
-  0755) のみ (1.4.4 は 223,494,376 byte、構成同一)。 ELF 64-bit x86-64 PIE、
+- [x] tarball の中身は `antigravity` 1 ファイル (227,840,232 byte、root/root、
+  0755) のみ (1.4.5 は 223,736,040 byte、構成同一)。 ELF 64-bit x86-64 PIE、
   stripped、Go 製。 tarball 内バイナリの sha256:
-  `8af8e7a2a68f72fa7164e00bb59b8902c018fa43e528fc401ad7db8c2972583c`
+  `40349135371a8ed1f1af1e9f8b741de99174ae9fce6380b96c2d1f543480af7a`
 - [x] `package()`: `install -Dm755 antigravity → /usr/bin/agy` と
   `install -Dm644 LICENSE → /usr/share/licenses/antigravity-cli/LICENSE` のみ。
   curl / wget / eval / pipe-to-shell 無し。`prepare()` / `build()` 無し
 - [x] `depends=('glibc')` は妥当: バイナリの `DT_NEEDED` は
   `libc / libm / libdl / libpthread / librt / libresolv / ld-linux` の glibc 系のみ、
   要求 symbol version は最大 `GLIBC_2.26` (Arch の glibc 2.44 で充足)。
-  1.4.5 でも `DT_NEEDED` 集合・最大 symbol version とも 1.4.4 と同一 (RUNPATH 無し)
+  1.4.7 でも `DT_NEEDED` 集合・最大 symbol version とも 1.4.5 と同一 (RUNPATH 無し)
 - [x] バイナリ内に埋め込まれた宿主名は Google 管理ドメイン
   (`antigravity.google`, `googleapis.com`, `cloud.google.com`,
   `antigravity-unleash.goog` 等) と github.com / 仕様書 URL のみ。
-  不審な第三者ドメイン無し (`strings` による静的確認)。 1.4.5 では scheme 付き
-  URL の host 集合 (143 host) が 1.4.4 と **完全一致** (追加・削除とも無し)。
+  不審な第三者ドメイン無し (`strings` による静的確認)。 1.4.7 では scheme 付き
+  URL の (scheme, host) 集合 (86 entry / 80 host) が 1.4.5 と **完全一致**
+  (追加・削除とも無し)。
   `nodejs.org` / `registry.npmjs.org` (1.4.0 で内蔵された
   `chrome-devtools-mcp` ランチャーの実行時 download 先、下記 注意事項) と
   pin 済み version (Node.js 22.20.0 / `chrome-devtools-mcp@1.10.1`) は不変で、
-  ランチャー埋め込み script 周辺の strings も 1.4.4 と完全一致。
+  ランチャー埋め込み script 周辺の strings も 1.4.5 と完全一致。
   `https://opentelemetry.io/schemas/1.43.0` は OpenTelemetry SDK の schema
   識別子 (属性値の文字列定数で fetch 先ではない)。 `wss` / `grpc` の scheme 付き
   接続先も旧新とも `127.0.0.1` のみ。 第三者ドメインの新規接続先なし
@@ -116,7 +117,7 @@ AUR と byte 一致。
   時の動的取得は無い
 - [⚠] **バイナリは実行していない**。build host は YubiKey の gpg-agent を SSH
   forward で受けているため、出所を独立検証できていても未実行の closed-source
-  バイナリ (現行 1.4.5 で 223,736,040 byte ≒ 213 MiB) をここで走らせない方針。
+  バイナリ (現行 1.4.7 で 227,840,232 byte ≒ 217 MiB) をここで走らせない方針。
   上記は静的解析 (ELF header /
   `readelf` / `strings`) と hash 照合に基づく。 `agy install` が shell 環境に
   何を書くかも未解析 (= ユーザが明示的に叩く操作で、pkg は自動実行しない)
@@ -167,6 +168,7 @@ AUR と byte 一致。
 | 2026-10-20 | 1.4.3_4577820882632704-1 | (this PR) | release `1.4.3-4577820882632704` (Google GCS、upstream manifest の `version` / `url` と一致。GitHub `google-antigravity/antigravity-cli` tag `1.4.3` / commit `fdfd4becaee2439086d71e34ee06d326e06f7346`、publisher `haofan` は従来と同一、draft / prerelease でない、published 2026-10-20) | Issue #742 (`Closes #742`)。build id は 1.4.2 の `4835981233356800` から `4577820882632704` へ減少するが、系列は元来非単調 (1.3.1 `458...` → 1.3.2 `581...` → 1.3.3 `552...`) で、release の published 順 (1.4.2 = 10-18、1.4.3 = 10-20) と manifest / GitHub tag の両方が 1.4.3 を最新として返すため rollback / 取り下げではないと判断。sha256 を独立実測 (`319b2cb3...`) し manifest 公開 sha512 (`9b726b86...`) と**実測 sha512 が完全一致**。加えて GitHub Release asset `agy_cli_linux_x64.tar.gz` の digest (`sha256:319b2cb3...`、size 64,263,791) とも一致し、GitHub から再 download した tarball は GCS 配信物と byte 一致 (`cmp`)。tarball は `antigravity` 1 ファイルのまま (root/root 0755、222,322,944 byte、1.4.2 比 +1,036,288 byte、Go 製 ELF x86-64 PIE stripped)、`DT_NEEDED` 集合・最大 symbol version `GLIBC_2.26`・RUNPATH 無しは 1.4.2 と同一で depends 変更不要。埋め込み scheme 付き URL host 集合 (152 host) の実差分は `chat.google.com` / `docs.google.com` の 2 件のみ (いずれも Google 管理、第三者ドメインの新規接続先なし)。`nodejs.org` / `registry.npmjs.org` と Node.js 22.20.0 / `chrome-devtools-mcp@1.10.1` の pin は 1.4.2 から不変、`wss` / `grpc` 接続先も旧新とも `127.0.0.1` のみ。GitHub の tag 間 diff `1.4.2...1.4.3` は CHANGELOG.md のみ (+20 行)。release notes は `/diff` 検索 / `agy plugin validate` の hooks・sidecars 拡張 / `/tasks` timer 表記 / CJK・emoji の幅・カーソル修正等の機能追加と bugfix のみで packaging / install 経路の変更なし。`package()` / `.install` / `LICENSE` 無変更 (LICENSE sha256 `7bcdb3cf...` も不変)。AUR は 1.4.2 止まり (`867a9d1`) で 1.4.3 は未追随のため cross-check 不可 (AUR の x86_64 sha256 `6395837a...` は本 repo の 1.4.2 pin と一致、upstream 先行は前例あり)、AUR の PKGBUILD は `arch` 行 (aarch64) 以外が本 repo と同一。注意事項のバイナリサイズ表記を現行版に更新。バイナリは未実行 (静的解析のみ)。 |
 | 2026-10-22 | 1.4.4_4783783166214144-1 | (this PR) | release `1.4.4-4783783166214144` (Google GCS、upstream manifest の `version` / `url` と一致。GitHub `google-antigravity/antigravity-cli` tag `1.4.4` / commit `99b8981632ddf117c4eab7b1f82b615d4f683f01`、publisher `haofan` は従来と同一、draft / prerelease でない、published 2026-10-21) | Issue #744 (`Closes #744`)。sha256 を独立実測 (`9ae4f7f0...`) し manifest 公開 sha512 (`7ce149d3...`) と一致。加えて GitHub Release asset `agy_cli_linux_x64.tar.gz` の digest (`sha256:9ae4f7f0...`、size 64,706,544) とも完全一致し、GitHub から再 download した tarball は GCS 配信物と byte 一致 (`cmp`)。tarball は `antigravity` 1 ファイルのまま (root/root 0755、223,494,376 byte、1.4.3 比 +1,171,432 byte、Go 製 ELF x86-64 PIE stripped)、`DT_NEEDED` 集合・最大 symbol version `GLIBC_2.26`・RUNPATH 無しは 1.4.3 と同一で depends 変更不要。埋め込み scheme 付き URL host 集合 (143 host) の実差分は `jetski.corp.google.com` 1 件のみ (`https://jetski.corp.google.com/remote?settings...` の deeplink、Google 社内ドメイン。素の host 文字列は 1.4.3 にもあり、第三者ドメインの新規接続先なし)。`nodejs.org` / `registry.npmjs.org` と Node.js 22.20.0 / `chrome-devtools-mcp@1.10.1` の pin、埋め込みランチャー script 周辺の strings は 1.4.3 から不変、`wss` / `grpc` 接続先も旧新とも `127.0.0.1` のみ。GitHub の tag 間 diff `1.4.3...1.4.4` は CHANGELOG.md のみ (+21 行)。release notes は Windows 11 の Auto mode、`/diff` の whole-file toggle・hunk folding、MCP `root_conversation_id`、`agy plugin validate` 拡張、streaming の CPU/メモリ改善、UI / Remote Control の bugfix のみで packaging / install 経路の変更なし。`package()` / `.install` / `LICENSE` 無変更 (LICENSE sha256 `7bcdb3cf...` も不変)。AUR は 1.4.4 に追随済み (`f955cc3`、x86_64 sha256 `9ae4f7f0...` = 本 repo pin と一致) で、AUR の PKGBUILD は `arch` 行 (aarch64) 以外が本 repo と同一、`LICENSE` / `antigravity-cli.install` は byte 一致。注意事項のバイナリサイズ表記を現行版に更新。バイナリは未実行 (静的解析のみ)。 |
 | 2026-10-22 | 1.4.5_4952523841339392-1 | (this PR) | release `1.4.5-4952523841339392` (Google GCS、upstream manifest の `version` / `url` と一致。GitHub `google-antigravity/antigravity-cli` tag `1.4.5` / commit `902d212319e365583596a014c152745cdf36c49a`、publisher `haofan` は従来と同一、draft / prerelease でない、published 2026-10-22) | Issue #752 (`Closes #752`)。sha256 を独立実測 (`90cc1894...`) し manifest 公開 sha512 (`fd30e8d2...`) と一致。加えて GitHub Release asset `agy_cli_linux_x64.tar.gz` の digest (`sha256:90cc1894...`、size 64,814,607) とも完全一致し、GitHub から再 download した tarball は GCS 配信物と byte 一致 (`cmp`)。tarball は `antigravity` 1 ファイルのまま (root/root 0755、223,736,040 byte、1.4.4 比 +241,664 byte、Go 製 ELF x86-64 PIE stripped)、`DT_NEEDED` 集合・最大 symbol version `GLIBC_2.26`・RUNPATH 無しは 1.4.4 と同一で depends 変更不要。埋め込み scheme 付き URL host 集合 (143 host) は 1.4.4 と完全一致 (実差分なし、第三者ドメインの新規接続先なし)。`nodejs.org` / `registry.npmjs.org` と Node.js 22.20.0 / `chrome-devtools-mcp@1.10.1` の pin、埋め込みランチャー script 周辺の strings は 1.4.4 から不変、`wss` / `grpc` 接続先も旧新とも `127.0.0.1` のみ。GitHub の tag 間 diff `1.4.4...1.4.5` は CHANGELOG.md のみ (+15 行)。release notes は応答表示・`/diff` search / Commit Tree の改善、cron schedule の分散、idle / streaming / 長会話の CPU・メモリ・描画改善、content safety での silent retry 停止、plugin `skills` 単一文字列対応、marketplace plugin 更新の retry のみで packaging / install 経路の変更なし。`package()` / `.install` / `LICENSE` 無変更 (LICENSE sha256 `7bcdb3cf...` も不変)。AUR は 1.4.4 止まり (`f955cc3`) で 1.4.5 は未追随のため cross-check 不可 (AUR の x86_64 sha256 `9ae4f7f0...` は本 repo の旧 1.4.4 pin と一致、upstream 先行は前例あり)、AUR の PKGBUILD は `arch` 行 (aarch64) 以外が本 repo と同一、`LICENSE` / `antigravity-cli.install` は byte 一致。検証結果 section を 1.4.5 の値に更新、注意事項のバイナリサイズ表記も現行版に更新。バイナリは未実行 (静的解析のみ)。 |
+| 2026-10-27 | 1.4.7_5900205422411776-1 | (this PR) | release `1.4.7-5900205422411776` (Google GCS、upstream manifest の `version` / `url` と一致。GitHub `google-antigravity/antigravity-cli` tag `1.4.7` / commit `bf1e6e6d4a05803d21dbe9af5ffba04d8b4fc0ff`、publisher `haofan` は従来と同一、draft / prerelease でない、published 2026-10-24) | Issue #755 (`Closes #755`)。sha256 を独立実測 (`67fd4e70...`) し manifest 公開 sha512 (`beda7605...`) と一致。加えて GitHub Release asset `agy_cli_linux_x64.tar.gz` の digest (`sha256:67fd4e70...`、size 65,681,429) とも完全一致し、GitHub から再 download した tarball は GCS 配信物と byte 一致 (`cmp`)。tarball は `antigravity` 1 ファイルのまま (root/root 0755、227,840,232 byte、1.4.5 比 +4,104,192 byte、Go 製 ELF x86-64 PIE stripped)、`DT_NEEDED` 集合・最大 symbol version `GLIBC_2.26`・RUNPATH 無しは 1.4.5 と同一で depends 変更不要。埋め込み scheme 付き URL の (scheme, host) 集合 (86 entry / 80 host) は 1.4.5 と完全一致 (第三者ドメインの新規接続先なし)。`nodejs.org` / `registry.npmjs.org` と Node.js 22.20.0 / `chrome-devtools-mcp@1.10.1` の pin、埋め込みランチャー script 周辺の strings は 1.4.5 から不変、`wss` / `grpc` 接続先も旧新とも `127.0.0.1` のみ。GitHub の tag 間 diff `1.4.5...1.4.7` は CHANGELOG.md のみ (+31 行、1.4.6 と 1.4.7 の 2 commit)。release notes は 1.4.6 の plugin MCP 変数設定 UI / 組込み terminal sandbox の credential 保護強化 (`~/.docker` `~/.kube` `~/_netrc`) / context compaction の添付保持 / permission prompt の会話単位適用 / `agy plugin validate` 拡張 / CJK・emoji カーソル修正等と、1.4.7 の hook `lastUserInput` 追加 / Halloween theme / Auto mode の承認頻度改善 / headless `-p` の CPU 削減 / MCP 10KB 直返し / ADC 認証時の plugin 読込修正等のみで packaging / install 経路の変更なし。`package()` / `.install` / `LICENSE` 無変更 (LICENSE sha256 `7bcdb3cf...` も不変)。AUR は 1.4.7 に追随済み (`b9f5f9e`、x86_64 sha256 `67fd4e70...` = 本 repo pin と一致、aarch64 `b273c791...` も GitHub asset digest と一致) で、AUR の PKGBUILD は `arch` 行 (aarch64) 以外が本 repo と同一、`LICENSE` / `antigravity-cli.install` は byte 一致。検証結果 section を 1.4.7 の値に更新、注意事項のバイナリサイズ表記も現行版に更新。バイナリは未実行 (静的解析のみ)。 |
 
 ## 更新方針
 
