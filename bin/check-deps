@@ -56,9 +56,37 @@ if [ "$(git rev-parse HEAD)" != "$(git rev-parse origin/master)" ]; then
     fail "master has unpushed local commits; sync manually first"
 fi
 
+# --- rollback on interruption ---------------------------------------------
+# The guard above proves the tree starts clean, so on a non-zero exit every
+# dirty / staged path belongs to this run. A failed `git commit -S` (wrong
+# card, PIN cancel, stale gpg-agent forward) otherwise leaves the generated
+# edits staged on master, and no later entrypoint can clear the index
+# (check-deps / step-merge / step-upstream-pr all refuse a dirty tree).
+dbtmp=""
+rollback() {
+    rc=$?
+    [ -n "$dbtmp" ] && rm -rf "$dbtmp"
+    if [ "$rc" -eq 0 ]; then
+        return 0
+    fi
+    if [ "$(git rev-parse --abbrev-ref HEAD 2>/dev/null)" != "master" ]; then
+        git checkout master >/dev/null 2>&1 || true
+    fi
+    paths="$(git status --porcelain 2>/dev/null | awk '{print $NF}')"
+    if [ -n "$paths" ]; then
+        note "rolling back partial edits (exit ${rc}): $(printf '%s ' $paths)"
+        # shellcheck disable=SC2086  # package paths never contain spaces
+        git restore --staged --worktree -- $paths >/dev/null 2>&1 || true
+    fi
+    return 0
+}
+# Convert fatal signals into a normal exit so the EXIT trap runs.
+trap 'exit 130' INT
+trap 'exit 143' TERM
+trap rollback EXIT
+
 # --- fresh repo db (non-root, same approach as checkupdates) --------------
 dbtmp="$(mktemp -d -t nekono-db-XXXXXX)" || fail "mktemp failed"
-trap 'rm -rf "$dbtmp"' EXIT
 mkdir -p "$dbtmp/var/lib/pacman/sync" "$dbtmp/var/cache/pacman/pkg"
 note "syncing a throwaway package db (fakeroot) ..."
 # --disable-sandbox: pacman 7's download sandbox (Landlock + 'alpm' user

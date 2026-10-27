@@ -17,6 +17,11 @@ permissions:
   - action: edit
     resource: "pkgs/*/.deps.lock"
     effect: allow
+  # PR 本文 / commit message の draft を /tmp に置く (external_directory は
+  # allow 済みだが edit 側の allow が無いと write できない)
+  - action: edit
+    resource: "/tmp/*"
+    effect: allow
   # 他 phase の操作は構造的に禁止
   - action: shell
     resource: "bin/build-all*"
