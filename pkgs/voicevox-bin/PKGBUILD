@@ -2,9 +2,17 @@
 # Upstream AUR Maintainer: t1ckbase
 # nekono-pacman-distribution の改変 (= AUR voicevox-bin との diff):
 #   - split package を解消: AUR は voicevox-bin と voicevox-appimage の 2 つを
-#     1 PKGBUILD で吐くが、 [nekono] は editor 1 variant (system electron37 経由
-#     = voicevox-bin 側のみ) に絞る。 ayaka 用途で electron37 が常駐する方が
+#     1 PKGBUILD で吐くが、 [nekono] は editor 1 variant (system electron 経由
+#     = voicevox-bin 側のみ) に絞る。 ayaka 用途で electron が常駐する方が
 #     AppImage 全体を抱えるより軽量。
+#   - 2026-10-27 (0.26.1 への bump): system electron を electron37 から
+#     electron42 に変更。 upstream 0.26.0 で electron が 42.1.0 に上がり
+#     (emSign 証明書問題対応)、 0.26.1 は 42.11.18 pin。 配布 AppImage 自身も
+#     Chromium 148 (= Electron 42) を積んでいるため、 それに揃える。
+#     Arch 公式 extra の electron42 が pin と完全一致する 42.11.18-1 なので
+#     [nekono] 自家 build は不要 (= 以前 electron37 を自家 build した理由は
+#     extra から electron37 が rolling で落ちたため。 その事情は electron42 には
+#     当てはまらない)。
 #   - AUR の `if [ -c /dev/nvidia0 ]; then source=(...NVIDIA AppImage...)` を
 #     完全削除。 これは build host の GPU 有無で source を動的切替する非決定
 #     PKGBUILD で、 sha も NVIDIA 版分は pin されていなかった (= 重大な
@@ -16,9 +24,9 @@
 #     に network 経由で nekono-pacman0:50021 に向ける運用。
 
 pkgname=voicevox-bin
-pkgver=0.25.2
-pkgrel=8
-pkgdesc='A text-to-speech software (Electron editor, system electron37)'
+pkgver=0.26.1
+pkgrel=1
+pkgdesc='A text-to-speech software (Electron editor, system electron42)'
 arch=('x86_64')
 license=('LGPL-3.0-only')
 url=https://github.com/VOICEVOX/voicevox
@@ -26,7 +34,7 @@ provides=(voicevox)
 conflicts=(voicevox voicevox-appimage)
 depends=(
     bash
-    electron37
+    electron42
 )
 optdepends=(
     'voicevox-engine: TTS HTTP API server (local もしくは remote、 EngineSettings で URL 指定)'
@@ -38,12 +46,14 @@ source=(
     "${url}/releases/download/${pkgver}/VOICEVOX-CPU-X64.AppImage.7z.001"
     "${url}/releases/download/${pkgver}/VOICEVOX-CPU-X64.AppImage.7z.002"
 )
-# AUR voicevox-bin と同じ b2sums を流用 (= upstream が公開しているのは MD5
-# のみ、 AUR メンテナが手計算した b2sum を信頼の起点として再利用)。 makepkg
-# --verifysource で再 hash → AUR 値と一致しなければ build host で気づける。
+# hash の起点: 0.26.1 から upstream が `linux-cpu-x64-appimage.7z.txt` で
+# **sha256** を公開するようになった (= 0.25.2 時点は part サイズ + MD5 のみ)。
+# 本 repo の b2sums は実測した b2sum で、 その sha256 実測値が
+# upstream 公開値 / GitHub Release asset の digest と一致することを確認済み。
+# AUR は 0.25.2 止まりで 0.26.1 未追随のため AUR 値との cross-check は不可。
 b2sums=(
-    'e36263391b8af03da7e4e44995f5c65961fbbef7905d4cb107cb8b3fedf7bb0fbc381da261464f587126a123004b28530116170c77c2e578da182ad618ffcdc9'
-    'b0079c64ef268c207fcf870771e2436d440ad6a8465c6ae0a65d05343ae6e0e1500bd7c372e0aeef5229ab80b861776b07432ae79d8a5006824e496d28ffc41d'
+    '275680104b2ee50d73e95128b2036edc77de9dfec93bcfafc1dfed9e37e9a1f9734ce1b04dee5bc763c1e62bf95e5ff60b2a1167c74343bb5344620b3de79640'
+    'c1fe30aa99b8102b4db5feccfc0030709c239904b96d729c1f28236f2d3df666661e195eb5b4f85840f74213ddc90061b716580be7e3609e4f4144ba7537fb1a'
 )
 
 prepare() {
@@ -56,8 +66,9 @@ prepare() {
   7z -y x _merged.7z
   rm _merged.7z
 
-  # 展開後の AppImage は通常 "VOICEVOX-CPU-X64.AppImage" 名で cwd に出るはず。
-  # 7zip のバージョンによっては別名で出る可能性があるため bash glob で探す。
+  # 展開後の AppImage は 0.26.1 では "VOICEVOX-CPU.0.26.1-x64.AppImage"
+  # (= 0.25.2 の "VOICEVOX-CPU-X64.AppImage" から命名が変わった)。
+  # 7zip のバージョンや upstream の命名変更で別名になり得るため bash glob で探す。
   # 見つからない場合は diagnostic 出力して fail する。
   _appimgs=( VOICEVOX*.AppImage )
   _appimg="${_appimgs[0]}"
@@ -81,13 +92,13 @@ prepare() {
 }
 
 package() {
-  _electron=electron37
+  _electron=electron42
 
   install -Dm644 resources/app.asar "$pkgdir"/usr/lib/VOICEVOX/resources/app.asar
   install -Dm644 voicevox.desktop -t "$pkgdir"/usr/share/applications
   install -Dm644 usr/share/icons/hicolor/256x256/apps/voicevox.png -t "$pkgdir"/usr/share/pixmaps
 
-  # entrypoint: system electron37 で app.asar を起動
+  # entrypoint: system electron42 で app.asar を起動
   cat > run.sh <<EOF
 #!/bin/bash
 exec /usr/bin/${_electron} /usr/lib/VOICEVOX/resources/app.asar "\$@"
