@@ -23,6 +23,14 @@ tail -n 15 "$LOG"       # `[OK] publish complete` と `publish exit=0`
 
 (pkg が大きいと時間がかかる。長いなら `run_in_background`。`build.md` と同じく rc を捕捉する。)
 
+**permission scanner の罠 (2026-10-29 の実例)**: 1 回の shell 呼び出しは segment ごとに allow-list と
+照合され、**1 つでも allow 外の segment が混ざると呼び出し全体が auto-reject** される。上の subshell
+形式は publisher agent の allow 外 segment (`exit` / `timeout` / `./bin/publish` 等) を含むと丸ごと
+拒否され、**publish されないまま rc=0 で run が終わる** (実際に退役 4 pkg が未配信のまま終わった)。
+実行は `timeout 300 bin/publish` / `bin/publish` / `./bin/publish` のような allow 済みの形に限り、
+rc は shell tool の exit code で判断する。拒否されたら別の書き方を試すのではなく、拒否を最終報告の
+「保留・停止」に書く (同じ run で何度も書き換えると、拒否ログだけが残って原因が埋もれる)。
+
 **`bin/publish` を「1 pass に簡素化」しない**。dufs WebDAV は mtime を保存できず rclone が size-only 比較になる。
 `*.sig` は常に 119 byte なので、db や pkg を作り直しても sig が同 size で `sync` に skip され、古い sig が
 新しい db の上に残って client の `pacman -Sy` が署名不正で落ちる (2026-07-04 / 2026-08-22 に実発生)。
