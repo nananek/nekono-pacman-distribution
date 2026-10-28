@@ -28,6 +28,28 @@ permissions:
   - action: shell
     resource: "bin/publish *"
     effect: allow
+  # permission scanner は 1 呼び出しの全 segment を allow-list と照合する。
+  # 2026-10-29 の run では `timeout` / `./bin/publish` / `exit` / `date` / `wc`
+  # が allow 外で、log を取る複合 command が丸ごと auto-reject され publish が
+  # 実行されないまま終わった。よく使う形は明示的に allow する。
+  - action: shell
+    resource: "./bin/publish"
+    effect: allow
+  - action: shell
+    resource: "./bin/publish *"
+    effect: allow
+  - action: shell
+    resource: "timeout *"
+    effect: allow
+  - action: shell
+    resource: "date *"
+    effect: allow
+  - action: shell
+    resource: "wc *"
+    effect: allow
+  - action: shell
+    resource: "exit *"
+    effect: allow
   - action: shell
     resource: "command -v rclone"
     effect: allow
