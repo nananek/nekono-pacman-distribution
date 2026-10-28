@@ -57,6 +57,9 @@ permissions:
    - build → `builder`
    - publish → `publisher`
 5. merge 後に build → publish が要るなら `builder` → `publisher` の順で起動する。
+   preflight が `publish: PENDING` (build 予定が 0 件でも local の nekono.db / sig が
+   配信側と違う) を出したら、`builder` を飛ばして `publisher` だけを起動する。
+   `publish: up to date` なら `publisher` は起動しない。
 6. 自律の境界は skill `daily-ops` の「自律の境界」に従う。止まる条件に当たったら
    最終報告 (Phase 5 表) の「保留・停止」に理由を書いて終了する (非対話 run 前提で
    `question` は permission deny 済み)。**勝手に merge しない** (merge は `bin/step-merge`

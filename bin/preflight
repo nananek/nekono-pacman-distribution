@@ -114,4 +114,33 @@ else
     note "build host: NO (build/publish must run on the build host)"
 fi
 
+# publish drift: 「build 済み (署名済み) だが未 publish」の検出。
+# build-all が何もしなかった run でも、local db が配信側と違えば publish が要る
+# (退役や手動 repo-add の後は build 予定 0 件のまま db だけ進む)。
+# 配信側は client と同じ匿名 GET (Caddy :80) で読めるので認証情報は要らない。
+publish_state="unknown"
+if [ -f "$root/repo/x86_64/nekono.db.tar.gz" ]; then
+    srv="$(grep -A4 '^\[nekono\]' /etc/pacman.conf 2>/dev/null \
+        | awk -F' *= *' '/^Server/{print $2; exit}' \
+        | sed 's/\$repo/nekono/; s/\$arch/x86_64/')"
+    if [ -z "$srv" ]; then
+        note "publish: unknown ([nekono] Server not found in /etc/pacman.conf)"
+    else
+        publish_pending=0
+        for f in nekono.db.tar.gz nekono.db.tar.gz.sig; do
+            l_sha="$(sha256sum "$root/repo/x86_64/$f" 2>/dev/null | cut -c1-16)"
+            r_sha="$(curl -fsS --max-time 30 "$srv/$f" 2>/dev/null | sha256sum | cut -c1-16)"
+            [ "$l_sha" = "$r_sha" ] || publish_pending=1
+        done
+        if [ "$publish_pending" -eq 1 ]; then
+            publish_state="pending"
+            warn "publish: PENDING (local nekono.db/sig differ from published; run bin/publish even if nothing was built)"
+        else
+            publish_state="ok"
+            note "publish: up to date (nekono.db + sig MATCH)"
+        fi
+    fi
+fi
+note "publish-state: $publish_state"
+
 exit 0

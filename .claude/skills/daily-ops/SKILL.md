@@ -35,6 +35,11 @@ description: nekono-pacman-distribution の日次運用を最初から最後ま�
 署名 (remote-gpg-agent / rga) は commit `-S` にも build にも要る。罠が多いので Phase 0.5 / Phase 1 の
 前に `references/signing.md` の readiness check を通すこと (check-deps は署名 commit を作る)。
 
+**Phase 3 は「build 予定があるとき」だけだが、Phase 4 は preflight の `publish: PENDING` を見て判断する**。
+退役 (`--pending` と無関係に db から外れる) や repo-add の後は build 予定 0 件のまま db だけ進むので、
+`publish: PENDING` なら build を skip してでも `bin/publish` を実行する。`publish: up to date`
+(nekono.db + sig が配信側と MATCH) なら publish は不要。
+
 ## Phase 0: preflight
 
 `bin/preflight` を実行する（read-only。branch/file は変更しない）。working tree /
