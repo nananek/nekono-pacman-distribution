@@ -79,7 +79,7 @@ review + Nekono GPG 署名して Tailscale 配信する。
 - commit は必ず **`-S`**（Nekono GPG）。`--no-verify` は使わない。
 - **`git add -A` / `git add .` 禁止**。path を明示（`pkgs/<pkg>/` に download cache が落ちる）。
 - **1 PKGBUILD update = 1 commit**。複数 package を 1 commit に混ぜない。
-- **`gpgconf --kill` 系を実行しない**（転送された YubiKey socket を奪う）。
+- **host の `~/.config/remote-gpg-agent/` を VM にコピーしない**（秘密鍵と証明書は host に閉じる）。
 - `~/.config/nekono-pacman/publish.env` の**値を出力しない**。`bin/publish` が内部で
   読み込むので agent は `source` / `cat` / `grep` しない（`shell:*publish.env*` は
   policy で deny 済み）。

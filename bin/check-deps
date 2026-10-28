@@ -6,7 +6,7 @@
 # pkgrel-bump PR:
 #   - pkgrel +1, .deps.lock updated in place (# MISSING lines preserved),
 #     .SRCINFO pkgrel synced, REVIEW.md 更新履歴 row appended
-#   - commit signed with `-S` (Nekono GPG / YubiKey), push (pre-push gate
+#   - commit signed with `-S` (Nekono GPG / rga), push (pre-push gate
 #     runs), gh pr create
 #
 # Rationale: the GitHub schedule was delayed by hours (no longer a daily
@@ -59,7 +59,7 @@ fi
 # --- rollback on interruption ---------------------------------------------
 # The guard above proves the tree starts clean, so on a non-zero exit every
 # dirty / staged path belongs to this run. A failed `git commit -S` (wrong
-# card, PIN cancel, stale gpg-agent forward) otherwise leaves the generated
+# rga approval cancel, host rga unreachable) otherwise leaves the generated
 # edits staged on master, and no later entrypoint can clear the index
 # (check-deps / step-merge / step-upstream-pr all refuse a dirty tree).
 dbtmp=""

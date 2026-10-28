@@ -374,7 +374,7 @@ checklist に沿った調査を Claude 自身がこのセッション内で行�
 
 ### build host 作業
 
-`bin/build-all` / `bin/update-repo` / `bin/publish` は build host 上での実行が必要 (署名用 YubiKey・
+`bin/build-all` / `bin/update-repo` / `bin/publish` は build host 上での実行が必要 (署名用 rga・
 `~/.config/nekono-pacman/publish.env`・rclone)。build host は 2026-07-14 に nekono-pacman0 から
 **Claude Code が動いているこのマシン**へ移った。build host 上なら Claude が merge 後に
 `bin/build-all --pending` → `bin/publish` → 配信検証まで直接実行する (手順・判定・失敗時の復旧は
@@ -503,7 +503,7 @@ bin/build-all --pending   # 末尾で repo-add まで完了。"nothing to build"
 | 領域 | 置き場所 |
 |---|---|
 | PKGBUILD / build script / signing pipeline | nekono-pacman-distribution (この repo) |
-| build host 自体のセットアップ (apt 系・gpg-agent・pcscd・nginx 設定) | ansible-nekonodesk の Arch path 経由で別 host として管理 |
+| build host 自体のセットアップ (apt 系・rga クライアント・nginx 設定) | ansible-nekonodesk の Arch path 経由で別 host として管理 |
 | client 側 `/etc/pacman.conf` の `[nekono]` 設定 + pacman-key 信頼 | ansible-nekonodesk の `pacman_nekono_repo` role (新規) |
 | self-hosted apps の install (`pacman -S vesktop-bin` 等) | ansible-nekonodesk の `apt_packages/vars/Archlinux.yml` の "Self-hosted (nekono repo)" block |
 

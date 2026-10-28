@@ -8,7 +8,7 @@
 
 set -euo pipefail
 
-NEKONO_GPG_FP="483DC691DF9F29327EA106BD030130E2F156CD74"
+NEKONO_GPG_FP="2641FA2BFF801BBA75E8633AEF7566A07D865C0F"
 REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 REPO_DIR="$REPO_ROOT/repo/x86_64"
 DB_NAME="nekono"
@@ -25,13 +25,8 @@ if [[ ! -e "${pkgs[0]}" ]]; then
 fi
 
 cd "$REPO_DIR"
-# 挿入中 YubiKey の serial で stub を再 learn (= 両 YubiKey 切替時の
-# "Please insert card with serial ..." を回避)。
-gpg --card-status >/dev/null 2>&1 || true
-
-# --key の末尾 `!` で primary key (3EC4 keygrip) に強制固定。`!` 無しだと
-# GPG が signing-capable な subkey を勝手に選び、card に load されていない
-# [SA] subkey が選ばれて "wrong card" / "key not available" になる事案あり。
+# --key の末尾 `!` は gpg の primary key 固定指示。VM の gpg シム経由で
+# host の rga に渡り、rga が fingerprint 解決前に落とす。
 repo-add --sign --key "${NEKONO_GPG_FP}!" "$DB_NAME.db.tar.gz" \
     *.pkg.tar.zst
 
