@@ -75,46 +75,43 @@ if [ "$gh_ok" -eq 1 ]; then
         --jq '.[] | select(.title|startswith("[") and contains("upstream version:")) | "    #\(.number)\t\(.title)"' 2>/dev/null || true
 fi
 
-# signing readiness (no gpg calls; see references/signing.md)
-# `-S` alone cannot tell a live listener from a stale socket file left behind
-# by a dropped SSH RemoteForward, so consult the unix-socket listener table.
-sock="/run/user/$(id -u)/gnupg/S.gpg-agent"
-sock_state="missing"
-sock_live=0
-if [ -S "$sock" ]; then
-    sock_state="present"
-    if command -v ss >/dev/null 2>&1; then
-        if ss -xl 2>/dev/null | grep -qF "$sock"; then
-            sock_live=1
-            sock_state="present (listener bound)"
-        else
-            sock_state="STALE (no listener; reconnect SSH to re-bind)"
-        fi
+# signing readiness (rga; see references/signing.md)
+# VM では /usr/local/bin/gpg シム -> SSH -> host の rga。
+signing_ok=0
+signing_detail=""
+if [ -x /usr/local/bin/gpg ] && [ -f "$HOME/.ssh/host_bridge" ]; then
+    if ssh -o BatchMode=yes -o StrictHostKeyChecking=accept-new \
+        -o UserKnownHostsFile="$HOME/.ssh/known_hosts" \
+        -i "$HOME/.ssh/host_bridge" kts_sz@10.0.2.2 \
+        '$HOME/.local/bin/rga ping' >/dev/null 2>&1; then
+        signing_ok=1
+        signing_detail="rga via host (ssh bridge)"
     else
-        sock_state="present (liveness unknown: ss not found)"
+        signing_detail="host rga ping failed (ssh bridge)"
     fi
+elif command -v rga >/dev/null 2>&1 && rga ping >/dev/null 2>&1; then
+    signing_ok=1
+    signing_detail="local rga"
+elif [ -x "$HOME/.local/bin/rga" ] && "$HOME/.local/bin/rga" ping >/dev/null 2>&1; then
+    signing_ok=1
+    signing_detail="local rga"
+else
+    signing_detail="rga not reachable (VM: host bridge / host: rga ping)"
+fi
+
+if [ "$signing_ok" -eq 1 ]; then
+    note "signing: $signing_detail"
+else
+    warn "signing: $signing_detail"
 fi
 
 # build host detection (mirrors the daily-ops skill)
 if [ -f "$HOME/.config/nekono-pacman/publish.env" ] \
-   && [ "$sock_live" -eq 1 ] \
+   && [ "$signing_ok" -eq 1 ] \
    && [ -f "$root/repo/x86_64/nekono.db.tar.gz" ]; then
     note "build host: YES (build/publish can run here)"
 else
     note "build host: NO (build/publish must run on the build host)"
-fi
-
-if [ "$sock_live" -eq 1 ]; then
-    note "forward socket: $sock_state"
-elif [ -S "$sock" ]; then
-    warn "forward socket: $sock_state (signing will fail; see references/signing.md)"
-else
-    warn "forward socket: MISSING (signing will fail; see references/signing.md)"
-fi
-if ps -eo args 2>/dev/null | grep -E "[g]pg-agent(.*--homedir )?${HOME}/.gnupg" >/dev/null 2>&1; then
-    warn "local gpg-agent for \$HOME/.gnupg found (rogue? do NOT run gpg; see signing.md)"
-else
-    note "no local gpg-agent for \$HOME/.gnupg"
 fi
 
 exit 0

@@ -13,11 +13,9 @@
 # auto-rebuild はしない方針 = 1 PKGBUILD = 1 PR = GPG 署名規約を守るため)。
 #
 # 前提:
-#   - Arch build host で実行
-#   - YubiKey (Nekono GPG) が NFC リーダー上に乗ってる、gpg-agent / scdaemon
-#     経路が生きてる (= gpg --card-status で OpenPGP card が見える)
-#   - PIN cache が build 全体を覆える長さで効いてる (gpg-agent.conf の
-#     default-cache-ttl は 3600+ 推奨。最初の sign で 1 度入力)
+#   - Arch build host (teyvat の ephemeral VM) で実行
+#   - gpg は VM の /usr/local/bin/gpg シム。detach-sign は SSH 越しに host の
+#     rga (remote-gpg-agent) に流れる。VM に秘密鍵もクライアント証明書も無い
 #   - repo-add の base path = repo/x86_64/ (.gitignore で git 管理外)
 #   - tsort (coreutils) が PATH 上にある
 #
@@ -38,7 +36,7 @@
 
 set -euo pipefail
 
-NEKONO_GPG_FP="483DC691DF9F29327EA106BD030130E2F156CD74"
+NEKONO_GPG_FP="2641FA2BFF801BBA75E8633AEF7566A07D865C0F"
 REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 REPO_DIR="$REPO_ROOT/repo/x86_64"
 DB_NAME="nekono"
@@ -317,11 +315,11 @@ if $DRY_RUN; then
 fi
 
 echo ""
-echo "[*] Warming up gpg-agent (YubiKey PIN cache)"
-gpg-connect-agent "SCD SERIALNO" /bye >/dev/null
-# 挿入中 YubiKey の serial で stub を再 learn (= 両 YubiKey 切替時の
-# "Please insert card with serial ..." を回避)。
-gpg --card-status >/dev/null 2>&1 || true
+echo "[*] Checking signing toolchain (rga via gpg shim)"
+if ! command -v gpg >/dev/null 2>&1; then
+    echo "[FATAL] gpg が PATH に無い (VM の gpg シムを確認)" >&2
+    exit 1
+fi
 
 # Phase 1: 退役 pkg を db から外し、 orphan file を prune する。
 # build loop / repo-add より前に走らせる必要がある (= 後段の repo-add は
@@ -371,9 +369,8 @@ if [[ ${#packages[@]} -gt 0 ]]; then
 
         # makepkg: deps install + tarball verify + build + package。
         # -s で deps を pacman -S、-c で build 後 src/pkg を clean。
-        # --sign は makepkg が builtin GPG 署名する flag、Nekono GPG fp を指定。
-        # `!` 末尾で primary key 強制固定 (= card に load されていない subkey に
-        # 流れて "wrong card" になる事故防止、詳細は bin/update-repo コメント参照)。
+        # --sign は makepkg が builtin GPG 署名する flag。`!` は gpg 互換の
+        # ために残しているが、rga は fingerprint を引く前に落とす。
         makepkg -sc --noconfirm --sign --key "${NEKONO_GPG_FP}!"
 
         # makepkg --packagelist は makepkg.conf の OPTIONS=(... debug ...) から

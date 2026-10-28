@@ -16,9 +16,9 @@
 - 各 PKGBUILD は対応する `REVIEW.md` を持ち、何を見たか・何を改変したかを
   記録する。
 - ビルドした成果物は **Nekono GPG**
-  (`483DC691DF9F29327EA106BD030130E2F156CD74`) で署名する。Build host に
-  NFC リーダー + YubiKey が刺さってる前提で、master 鍵で signing する
-  (= disk 上に秘密鍵を置かない)。
+  (`2641FA2BFF801BBA75E8633AEF7566A07D865C0F`) で署名する。署名は
+  remote-gpg-agent の rga 経由で、秘密鍵は iPhone の PWA の中だけに置く
+  (= build host の disk 上に秘密鍵を置かない)。
 
 ## Repo 構造
 
@@ -94,12 +94,10 @@
 
 - `base-devel git pacman-contrib nginx` (+ from-source build dep の
   qt6-base / gtk4 / ffmpeg / sdl2 / nodejs / npm 等)
-- NFC リーダー (例: ACS ACR1252) + YubiKey
-- pcscd + gpg-agent + scdaemon を立てて Nekono GPG が `gpg --card-status`
-  で見える状態
-- Tailscale で `<host>.<tailnet>.ts.net` が解決できる
-- `~/.gnupg/gpg-agent.conf` で `default-cache-ttl 3600` 程度に伸ばす
-  (build 中 PIN cache が切れないように)
+- remote-gpg-agent のクライアント (`rga`) と、サーバ `https://gpg.tail2c8c7.ts.net`
+  のクライアント証明書 (`~/.config/remote-gpg-agent/`)
+- host から tailnet の `gpg.tail2c8c7.ts.net:8443` に接続できること
+- `rga ping` が `{"mode":"client","ok":true}` を返すこと
 
 ホスト構築自体は ansible-nekonodesk の Arch 経路 (= `site.yml` + 専用
 inventory entry) で管理する想定。
@@ -118,7 +116,7 @@ Server  = http://<build-host>.<tailnet>.ts.net/$arch
 
 ```sh
 sudo pacman-key --add /etc/pacman.d/nekono.gpg
-sudo pacman-key --lsign-key 483DC691DF9F29327EA106BD030130E2F156CD74
+sudo pacman-key --lsign-key 2641FA2BFF801BBA75E8633AEF7566A07D865C0F
 ```
 
 これらは ansible-nekonodesk の `pacman_nekono_repo` role
@@ -132,10 +130,11 @@ bin/build-all               # makepkg + gpg sign + repo-add
 sudo systemctl reload nginx # (任意) cache 飛ばす場合
 ```
 
-build-all は対話プロンプトを起こさない (gpg PIN は事前 cache 必須):
+署名は package ごとに iPhone の PWA で承認する。build-all は承認待ちで止まるので、
+PWA を開いておく:
 
 ```sh
-gpg-connect-agent "SCD SERIALNO" /bye   # YubiKey を warm up
+rga ping        # クライアント証明書とサーバ疎通の確認
 bin/build-all
 ```
 

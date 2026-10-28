@@ -7,7 +7,7 @@
 
 set -euo pipefail
 
-NEKONO_GPG_FP="483DC691DF9F29327EA106BD030130E2F156CD74"
+NEKONO_GPG_FP="2641FA2BFF801BBA75E8633AEF7566A07D865C0F"
 
 if [[ $# -ne 1 ]]; then
     echo "Usage: $0 <path-to-pkg.tar.zst>" >&2
@@ -21,12 +21,8 @@ if [[ ! -f "$pkg" ]]; then
     exit 1
 fi
 
-# 挿入中 YubiKey の serial で stub を再 learn (= 両 YubiKey 切替時の
-# "Please insert card with serial ..." を回避)。
-gpg --card-status >/dev/null 2>&1 || true
-
-# 既存の .sig があれば置き換え (--yes)。--detach-sign + --use-agent で
-# gpg-agent (= YubiKey) 経由で signing。
+# 既存の .sig があれば置き換え (--yes)。--detach-sign + --use-agent は
+# VM の gpg シム経由で host の rga に流れる (--use-agent は無視される)。
 gpg --batch --yes --detach-sign --use-agent \
     --local-user "${NEKONO_GPG_FP}!" \
     "$pkg"
