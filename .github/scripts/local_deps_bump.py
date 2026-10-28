@@ -11,7 +11,7 @@ pull request from the build host:
   - .SRCINFO pkgrel synced
   - REVIEW.md 更新履歴 gets the 5-column row (same format the manual
     Phase 1 "3-point fix" used for the old unsigned bot PRs)
-  - commit signed with ``-S`` (Nekono GPG / YubiKey) on branch
+  - commit signed with ``-S`` (Nekono GPG / rga) on branch
     ``deps/<pkg>-pkgrel-<N+1>``, push (pre-push gate runs), gh pr create
 
 Idempotency mirrors the workflow script: the branch name encodes the new

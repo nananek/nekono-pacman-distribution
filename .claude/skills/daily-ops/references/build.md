@@ -21,7 +21,7 @@ bin/build-all --pending --dry-run
 
 ## 2. 実行前チェック
 
-- 署名の readiness: `signing.md` (rogue agent 無し / forward socket あり / `gpg --card-status` で card が見える)。
+- 署名の readiness: `signing.md` (VM: `ssh -i ~/.ssh/host_bridge kts_sz@10.0.2.2 '$HOME/.local/bin/rga ping'` / 署名は 1 pkg = 1 回 iPhone PWA の承認)。
 - `df -h .` — 大型 build (moonlight-qt-nekono / sunshine-* / voicevox-bin 等) は作業領域を食う。空きが少ないなら先に user に伝える
   (ENOSPC で artifact が 0600 のまま残り client が 403 になった前例があり、build-all は chmod 0644 で補正している)。
 - makepkg `-s` は makedepends を `pacman -S` する (sudo)。sudo / pacman の prompt で止まったら user に伝える。

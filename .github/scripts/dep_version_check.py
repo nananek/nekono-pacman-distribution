@@ -10,8 +10,8 @@ Idempotency:
     name (``gh pr list --head ... --state all``). If one is found, the script
     skips push to avoid clobbering an in-flight review.
   - Commits are *unsigned*. By repository convention (CLAUDE.md) the merging
-    human re-signs the head commit with the Nekono GPG key (YubiKey) before
-    merging.
+    human re-signs the head commit with the Nekono GPG key (rga, approved on
+    the iPhone PWA) before merging.
 
 Designed to be invoked by ``.github/workflows/dep-version-pr.yml``.
 """
