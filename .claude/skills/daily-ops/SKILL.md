@@ -32,7 +32,7 @@ description: nekono-pacman-distribution の日次運用を最初から最後ま�
 | 4 | `bin/publish` → 配信側との hash 照合 | `references/publish.md` |
 | 5 | 最終報告 (本ファイル) | 下記 |
 
-署名 (YubiKey / gpg-agent) は commit `-S` にも build にも要る。罠が多いので Phase 0.5 / Phase 1 の
+署名 (remote-gpg-agent / rga) は commit `-S` にも build にも要る。罠が多いので Phase 0.5 / Phase 1 の
 前に `references/signing.md` の readiness check を通すこと (check-deps は署名 commit を作る)。
 
 ## Phase 0: preflight
@@ -97,7 +97,7 @@ bin/check-deps                  # 差分 → pkgrel bump の署名済み完成 P
 - **全 commit `-S`**。`git commit --no-verify` / `git push --no-verify` は使わない (user が明示した時だけ)。
 - **`git add -A` / `git add .` 禁止**。`pkgs/<pkg>/` に makepkg の download cache が落ちる。path を明示して add。
 - 1 PKGBUILD update = 1 commit。複数 package を 1 commit に混ぜない。
-- **`gpgconf --kill` 系を絶対に実行しない**。転送された YubiKey socket を奪う rogue agent を生む (→ `signing.md`)。
+- **host の `~/.config/remote-gpg-agent/` を VM にコピーしない** (秘密鍵と証明書は host に閉じる)。署名は 1 pkg = 1 回 iPhone の PWA 承認なので、PWA を閉じたまま `bin/build-all` を回さない (→ `signing.md`)。
 - `bin/publish` は host の `rclone` を直接使う (docker 不使用)。
 - `~/.config/nekono-pacman/publish.env` の**値を出力しない** (`cat` / `echo` / `set -x` 禁止)。
 - background 実行の通知 "exit 0" を信じない。rc を捕捉し、log 末尾と artifact で確認してから成功と言う (→ `build.md`)。
