@@ -89,6 +89,7 @@ upstream で新 release (= v0.2.0 等) が出たら:
 
 | 日付 | release | review した PKGBUILD repo SHA | upstream tag commit | findings |
 |---|---|---|---|---|
+| 2026-11-05 | 0.2.1-18 | (this PR) | — (pkgrel bump のみ) | `pkgrel` +1 (deps changed): python 3.14.8-1 → 3.14.9-1 |
 | 2026-10-27 | 0.2.1-17 | (this PR) | — (pkgrel bump のみ) | `pkgrel` +1 (deps changed): python-dbus 1.5.0-1 → 1.5.1-1 |
 | 2026-08-15 | 0.2.1-7 | (this PR) | — (pkgrel bump のみ) | `pkgrel` +1 (deps changed): python 3.14.6-1 → 3.14.7-1, python-wheel 0.47.0-1 → 0.48.0-1 |
 | 2026-08-24 | 0.2.1-8 | (this PR) | — (pkgrel bump のみ) | `pkgrel` +1 (deps changed): python-evdev 1.9.3-1 → 2.0.0-1 |
