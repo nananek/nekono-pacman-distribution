@@ -1,6 +1,6 @@
 pkgbase = voicevox-bin
 	pkgdesc = A text-to-speech software (Electron editor, system electron42)
-	pkgver = 0.26.1
+	pkgver = 0.26.2
 	pkgrel = 1
 	url = https://github.com/VOICEVOX/voicevox
 	arch = x86_64
@@ -14,9 +14,9 @@ pkgbase = voicevox-bin
 	conflicts = voicevox-appimage
 	options = !strip
 	options = !debug
-	source = https://github.com/VOICEVOX/voicevox/releases/download/0.26.1/VOICEVOX-CPU-X64.AppImage.7z.001
-	source = https://github.com/VOICEVOX/voicevox/releases/download/0.26.1/VOICEVOX-CPU-X64.AppImage.7z.002
-	b2sums = 275680104b2ee50d73e95128b2036edc77de9dfec93bcfafc1dfed9e37e9a1f9734ce1b04dee5bc763c1e62bf95e5ff60b2a1167c74343bb5344620b3de79640
-	b2sums = c1fe30aa99b8102b4db5feccfc0030709c239904b96d729c1f28236f2d3df666661e195eb5b4f85840f74213ddc90061b716580be7e3609e4f4144ba7537fb1a
+	source = https://github.com/VOICEVOX/voicevox/releases/download/0.26.2/VOICEVOX-CPU-X64.AppImage.7z.001
+	source = https://github.com/VOICEVOX/voicevox/releases/download/0.26.2/VOICEVOX-CPU-X64.AppImage.7z.002
+	b2sums = 874678d56ffc604280fc7265af65f51b17de14ecc63a4ae3480e3fe8804a448516fddc2460d18e5fafb8b6dd6ed98b89c57743420108e23e3499e7033ed47f01
+	b2sums = 6d83fcf2dfbb9152e4559c2b3ea3cc05a319933883a54003eff6ad3d7fd9306d2e6b9221fa495d9be94dcc8ea978d52907df3fb07a457cf741173c1f6e6edff7
 
 pkgname = voicevox-bin
