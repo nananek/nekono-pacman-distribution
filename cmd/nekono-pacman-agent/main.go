@@ -78,12 +78,14 @@ type app struct {
 	llm  *llm.Client
 	reg  *tool.Registry
 	root string
+	task string
 }
 
 func setup(ctx context.Context, args []string) (*app, *flag.FlagSet, error) {
 	fs := flag.NewFlagSet("agent", flag.ContinueOnError)
 	cfgPath := fs.String("config", "agent/agent.json", "path to agent config")
 	repo := fs.String("repo", ".", "repository root")
+	task := fs.String("task", "", "task message for a single-phase run (empty = generic)")
 	if err := fs.Parse(args); err != nil {
 		return nil, nil, err
 	}
@@ -101,15 +103,16 @@ func setup(ctx context.Context, args []string) (*app, *flag.FlagSet, error) {
 		return nil, nil, err
 	}
 	env := &tool.Env{RepoRoot: root, Scratch: scratch, Cfg: c, J: j}
-	a := &app{cfg: c, j: j, env: env, root: root, reg: tool.NewRegistry()}
+	a := &app{cfg: c, j: j, env: env, root: root, task: *task, reg: tool.NewRegistry()}
 	for _, f := range tool.All(env) {
 		a.reg.Add(f)
 	}
 	return a, fs, nil
 }
 
-// phaseDef builds a phase.Def from the config.
-func (a *app) phaseDef(name string) (phase.Def, error) {
+// phaseDef builds a phase.Def from the config. task overrides the default
+// user message (used when one phase runs per PR / per Issue).
+func (a *app) phaseDef(name, task string) (phase.Def, error) {
 	pc, ok := a.cfg.Phases[name]
 	if !ok {
 		return phase.Def{}, fmt.Errorf("phase %q is not defined in %s", name, a.cfg.Path)
@@ -123,7 +126,9 @@ func (a *app) phaseDef(name string) (phase.Def, error) {
 	if err != nil {
 		return phase.Def{}, fmt.Errorf("phase %q: %w", name, err)
 	}
-	task := fmt.Sprintf("phase: %s\nrepository: %s\n\nphase prompt と利用可能なツールだけを使い、最後に必ず finish ツールで結論を宣言してください。", name, a.root)
+	if task == "" {
+		task = fmt.Sprintf("phase: %s\nrepository: %s\n\nphase prompt と利用可能なツールだけを使い、最後に必ず finish ツールで結論を宣言してください。", name, a.root)
+	}
 	return phase.Def{
 		Name:     name,
 		Tools:    pc.Tools,
@@ -141,9 +146,15 @@ func (a *app) rules() (string, error) {
 	return string(b), nil
 }
 
-// runPhase executes one phase and journals its outcome.
+// runPhase executes one phase with the default task message.
 func (a *app) runPhase(ctx context.Context, name string) (phase.Outcome, error) {
-	def, err := a.phaseDef(name)
+	return a.runPhaseTask(ctx, name, "")
+}
+
+// runPhaseTask executes one phase; task is the user message for this
+// invocation (empty = the generic one).
+func (a *app) runPhaseTask(ctx context.Context, name, task string) (phase.Outcome, error) {
+	def, err := a.phaseDef(name, task)
 	if err != nil {
 		return phase.Outcome{}, err
 	}
@@ -164,6 +175,9 @@ func (a *app) runPhase(ctx context.Context, name string) (phase.Outcome, error) 
 	}
 	a.j.Emit("phase_start", map[string]any{"phase": name, "tools": def.Tools, "max_steps": def.MaxSteps})
 	a.j.Human("\n== phase %s (tools: %s)", name, strings.Join(def.Tools, ","))
+	a.env.Phase = name
+	a.env.Finished = nil
+	a.env.Escalated = nil
 
 	r := &phase.Runner{Def: def, Reg: a.reg, Env: a.env, LLM: a.llm, J: a.j, Rules: rules}
 	out := r.Run(ctx)
@@ -183,7 +197,7 @@ func cmdPhase(ctx context.Context, args []string) error {
 	if err != nil {
 		return err
 	}
-	out, err := a.runPhase(ctx, name)
+	out, err := a.runPhaseTask(ctx, name, a.task)
 	if err != nil {
 		return err
 	}

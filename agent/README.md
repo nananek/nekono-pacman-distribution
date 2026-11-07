@@ -32,15 +32,36 @@ agent/phases/*.md          phase ごとの prompt
 | phase | ツール | 判断 / 決定論 |
 |---|---|---|
 | preflight | preflight, repo_state, repo_diff, repo_log, fs_read | 状態の読み取り。blocked 条件の判定 |
+| triage | gh_pr, gh_issue, pkg_3points, pkg_srcinfo, step_bot_pr, step_merge, fs_read/write, repo_* | bot PR 1 本の 3 点検証と merge 可否 |
+| upstream | gh_repo, gh_issue, fetch, archive_*, binary_scan, pkg_srcinfo/verifysource, step_bump_pr, step_merge | 新版の調査・verdict・PKGBUILD 改修 |
 | build | build_plan, build_run, signing_probe, signing_verify, disk_free | 失敗の切り分け。成否は `build_verify` が決める |
 | publish | dist_publish, dist_verify, preflight | 失敗時の報告。一致は `dist_verify` が決める |
 
-`run` は `preflight`(tool) → `check-upstream`/`check-deps` → `build_plan` → build phase →
-`build_verify` → publish phase → `dist_verify` の順に回す。build するものが無く
-`publish: PENDING` のときは build を飛ばして publish する。
+`run` の順序 (コードで固定):
 
-**未実装 (次のコミット)**: triage (bot PR) / upstream (Issue 起点 bump) の phase。
-現在 `run` はこの 2 つを skip し、レポートの notes に残す。
+```
+preflight(tool) → check-upstream / check-deps
+  → triage  × open deps/* PR（1 本 = 1 phase run）
+  → upstream × open upstream Issue（1 本 = 1 phase run）
+  → build_plan → build phase → build_verify
+  → publish phase → dist_verify
+  → report
+```
+
+triage / upstream は対象ごとに新しい会話で走る（phase ごとに `finish` で結論）。
+`content` の escalate が出た対象は飛ばして次へ進み、run の status は
+`ok_with_escalations` になる。`harness` の gap は run 全体を止める。
+
+build plan は triage / upstream の後で計算し直す（merge 後の状態を見るため）。
+
+検証用に、merge 系ツールを除いた config を渡せば副作用なしで phase を試せる:
+
+```sh
+nekono-pacman-agent phase triage -config agent/agent.test.json -task "対象 PR: #783 ..."
+```
+
+`fetch` はホスト allowlist 制（既定: github / aur / npm / pypi / crates）+ 対象 pkg の
+`source=` に出てくるホスト。redirect は各 hop で再検査する。
 
 ## escalate の契約
 

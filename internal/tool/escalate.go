@@ -130,7 +130,7 @@ func escalationBody(phase, pkg, subject, detail string, evidence []string, fp st
 	}
 	b.WriteString("\n## 再開に必要なこと\n")
 	b.WriteString("人間の判断 (verdict) をこの Issue に書いてください。agent は次回の run で同じ fingerprint を再利用し、重複 Issue は作りません。\n")
-	b.WriteString(fmt.Sprintf("\n<!-- nekono-agent-fingerprint: %s -->\n", fp))
+	b.WriteString(fmt.Sprintf("\n<!-- nekono-pacman-agent-fingerprint: %s -->\n", fp))
 	return b.String()
 }
 
