@@ -9,7 +9,9 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"sort"
 	"strings"
+	"time"
 
 	"github.com/nananek/nekono-pacman-distribution/internal/journal"
 	"github.com/nananek/nekono-pacman-distribution/internal/llm"
@@ -79,6 +81,7 @@ func (r *Runner) Run(ctx context.Context) Outcome {
 		out.Usage.TotalTokens += comp.Usage.TotalTokens
 		if comp.Content != "" {
 			r.J.Emit("assistant", map[string]any{"phase": r.Def.Name, "text": truncate(comp.Content, 4000)})
+			r.J.Human("%s  %-14s %s", clock(), "agent", oneLine(comp.Content, 240))
 		}
 
 		if len(comp.ToolCalls) == 0 {
@@ -112,21 +115,25 @@ func (r *Runner) Run(ctx context.Context) Outcome {
 				continue
 			}
 			r.J.Emit("tool_call", map[string]any{"phase": r.Def.Name, "tool": name, "args": truncate(string(raw), 2000)})
+			r.J.Human("%s  %-14s %s", clock(), name, compactArgs(raw))
 
 			res, err := r.Reg.Call(ctx, name, raw)
 			if err != nil {
 				if gap, ok := err.(*tool.HarnessGap); ok {
 					r.J.Emit("capability_gap", map[string]any{"phase": r.Def.Name, "tool": gap.Tool, "detail": gap.Detail})
+					r.J.Human("%s  %-14s ! %s", clock(), "", oneLine(gap.Detail, 200))
 					out.Status = "harness_gap"
 					out.Summary = gap.Error()
 					out.Escalated = "harness"
 					return out
 				}
 				r.J.Emit("tool_error", map[string]any{"phase": r.Def.Name, "tool": name, "error": err.Error()})
+				r.J.Human("%s  %-14s ! %s", clock(), "", oneLine(err.Error(), 200))
 				msgs = append(msgs, toolMessage(tc.ID, "ERROR: "+err.Error()))
 				continue
 			}
 			r.J.Emit("tool_result", map[string]any{"phase": r.Def.Name, "tool": name, "summary": res.Summary})
+			r.J.Human("%s  %-14s   %s", clock(), "", oneLine(res.Summary, 220))
 			msgs = append(msgs, toolMessage(tc.ID, resultMessage(res)))
 			if r.Env.Finished != nil {
 				stop = true
@@ -170,4 +177,42 @@ func truncate(s string, max int) string {
 		return s
 	}
 	return s[:max] + fmt.Sprintf("\n... [truncated %d bytes]", len(s)-max)
+}
+
+// clock is the wall-clock prefix of the human log lines.
+func clock() string { return time.Now().Format("15:04:05") }
+
+// oneLine collapses whitespace and clips s for a single log line.
+func oneLine(s string, max int) string {
+	s = strings.Join(strings.Fields(s), " ")
+	if len(s) <= max {
+		return s
+	}
+	return s[:max] + "..."
+}
+
+// compactArgs renders tool arguments as `k=v k=v` for the human log; the full
+// JSON stays in the ndjson event.
+func compactArgs(raw json.RawMessage) string {
+	var m map[string]any
+	if err := json.Unmarshal(raw, &m); err != nil || len(m) == 0 {
+		return ""
+	}
+	keys := make([]string, 0, len(m))
+	for k := range m {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+	parts := make([]string, 0, len(keys))
+	for _, k := range keys {
+		var v string
+		if s, ok := m[k].(string); ok {
+			v = s
+		} else {
+			b, _ := json.Marshal(m[k])
+			v = string(b)
+		}
+		parts = append(parts, fmt.Sprintf("%s=%s", k, oneLine(v, 60)))
+	}
+	return oneLine(strings.Join(parts, " "), 180)
 }

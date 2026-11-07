@@ -174,7 +174,10 @@ func (a *app) runPhaseTask(ctx context.Context, name, task string) (phase.Outcom
 		a.llm.SessionID = sessionID()
 	}
 	a.j.Emit("phase_start", map[string]any{"phase": name, "tools": def.Tools, "max_steps": def.MaxSteps})
-	a.j.Human("\n== phase %s (tools: %s)", name, strings.Join(def.Tools, ","))
+	a.j.Human("\n== phase %s  (%d tools)", name, len(def.Tools))
+	if first := strings.SplitN(task, "\n", 2)[0]; first != "" && !strings.HasPrefix(first, "phase: ") {
+		a.j.Human("   %s", first)
+	}
 	a.env.Phase = name
 	a.env.Finished = nil
 	a.env.Escalated = nil
