@@ -243,7 +243,8 @@ def detect_changes(dbpath: str) -> list[dict]:
     return entries
 
 
-def create_pr(entry: dict) -> None:
+def create_pr(entry: dict) -> str:
+    """Create one finished pkgrel-bump PR. Returns created|skipped."""
     pkg = entry["pkg"]
     changed = entry["changed"]
     old_rel, new_rel = entry["old_rel"], entry["new_rel"]
@@ -252,7 +253,7 @@ def create_pr(entry: dict) -> None:
 
     if existing_open_pr_for_branch(branch) or remote_branch_exists(branch):
         print(f"[{pkg}] branch or PR {branch} already exists, skipping")
-        return
+        return "skipped"
 
     run("git", "checkout", "-B", branch)
     bump_pkgrel(pkg_dir / "PKGBUILD", new_rel)
@@ -309,49 +310,92 @@ def create_pr(entry: dict) -> None:
         raise
     print(f"[{pkg}] opened PR for branch {branch}")
     run("git", "checkout", "master")
+    return "created"
+
+
+def emit_json(payload: dict) -> None:
+    """Write the --json document to fd 3.
+
+    bin/check-deps redirects stdout to stderr in --json mode, so fd 3 is the
+    only channel the harness reads. Falls back to stdout when fd 3 is closed
+    (e.g. someone runs the script directly with --json).
+    """
+    try:
+        stream = os.fdopen(3, "w")
+    except OSError:
+        stream = sys.stdout
+    with stream:
+        json.dump(payload, stream)
+        stream.write("\n")
 
 
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--dbpath", required=True)
     parser.add_argument("--dry-run", action="store_true")
+    parser.add_argument("--json", action="store_true",
+                        help="emit one JSON document on fd 3 (bin/check-deps --json)")
     args = parser.parse_args()
+
+    def finish(rc: int, error: str = "", entries: list | None = None) -> int:
+        if args.json:
+            emit_json({
+                "dry_run": bool(args.dry_run),
+                "entries": entries or [],
+                "error": error,
+                "rc": rc,
+            })
+        return rc
 
     if not Path(args.dbpath).is_dir():
         print(f"FATAL: dbpath not found: {args.dbpath}", file=sys.stderr)
-        return 2
+        return finish(2, f"dbpath not found: {args.dbpath}")
     # Canary: a broken dbpath would make every lookup fail silently and look
     # like "no dep changes".
     if pacman_si_version("pacman", args.dbpath) is None:
         print("FATAL: cannot query the throwaway pacman db (canary 'pacman' failed)", file=sys.stderr)
-        return 2
+        return finish(2, "cannot query the throwaway pacman db (canary 'pacman' failed)")
 
     entries = detect_changes(args.dbpath)
     if not entries:
         print("no dep changes")
-        return 0
+        return finish(0)
 
     print(f"detected {len(entries)} package(s) with dep changes")
     failed = 0
+    results = []
     for entry in entries:
         dep_summary = ", ".join(f"{d} {o} -> {n}" for d, (o, n) in sorted(entry["changed"].items()))
+        result = {
+            "pkg": entry["pkg"],
+            "old_rel": entry["old_rel"],
+            "new_rel": entry["new_rel"],
+            "branch": entry["branch"],
+            "status": "",
+            "error": "",
+        }
         if args.dry_run:
             print(f"[{entry['pkg']}] would bump pkgrel {entry['old_rel']} -> {entry['new_rel']} "
                   f"({entry['branch']}): {dep_summary}")
+            result["status"] = "would_create"
+            results.append(result)
             continue
         try:
-            create_pr(entry)
+            result["status"] = create_pr(entry)
         except (subprocess.CalledProcessError, RuntimeError) as e:
             print(f"[{entry['pkg']}] FAILED: {e}", file=sys.stderr)
             run("git", "checkout", "--", ".", check=False)
             run("git", "checkout", "master", check=False)
             failed += 1
+            result["status"] = "failed"
+            result["error"] = str(e)
+        results.append(result)
 
     if args.dry_run:
         print("dry-run: nothing changed")
-        return 0
+        return finish(0, entries=results)
     print(f"done (failed: {failed})")
-    return 1 if failed else 0
+    return finish(1 if failed else 0, entries=results)
 
 
 if __name__ == "__main__":

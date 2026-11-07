@@ -7,9 +7,26 @@
 #
 # Output is English (ASCII) per repo convention.
 #
-# Usage: bin/preflight
+# Usage: bin/preflight [--json]
+#   --json   print one JSON object on stdout (human text goes to stderr).
+#            Consumed by nekono-pacman-agent; see bin/lib/json.sh.
 
 set -uo pipefail
+
+case "${1:-}" in
+    --json) JSON=true ;;
+    "") JSON=false ;;
+    *)
+        echo "usage: bin/preflight [--json]" >&2
+        exit 2
+        ;;
+esac
+# shellcheck source=lib/json.sh
+. "$(dirname "$0")/lib/json.sh"
+
+# In JSON mode everything below keeps printing to stdout, which is redirected
+# to stderr; the single JSON document goes to fd 3 instead.
+if $JSON; then exec 3>&1 1>&2; fi
 
 root="$(git rev-parse --show-toplevel 2>/dev/null)" || { echo "[preflight][FATAL] not a git repository"; exit 1; }
 cd "$root" || exit 1
@@ -17,12 +34,24 @@ cd "$root" || exit 1
 note()  { printf '[preflight] %s\n' "$1"; }
 warn()  { printf '[preflight][WARN] %s\n' "$1"; }
 
+# JSON state (kept in the same order as the text output so the two views match)
+j_dirty=""
+j_missing=""
+j_bot_prs="[]"
+j_issues="[]"
+j_fetch_ok=false
+j_gh_ok=false
+j_publish="unknown"
+j_publish_detail=""
+j_build_host=false
+
 note "repo: $root"
 
 branch="$(git rev-parse --abbrev-ref HEAD)"
 note "branch: $branch"
 
 dirty="$(git status --porcelain)"
+j_dirty="$dirty"
 if [ -n "$dirty" ]; then
     warn "working tree not clean:"
     printf '%s\n' "$dirty" | sed 's/^/    /'
@@ -38,6 +67,7 @@ else
 fi
 
 if git fetch origin >/dev/null 2>&1; then
+    j_fetch_ok=true
     note "git fetch origin OK"
 else
     warn "git fetch origin failed"
@@ -47,6 +77,7 @@ gh_ok=0
 if command -v gh >/dev/null 2>&1; then
     if gh auth status >/dev/null 2>&1; then
         gh_ok=1
+        j_gh_ok=true
         note "gh auth OK"
     else
         warn "gh not authenticated (run: gh auth login)"
@@ -60,6 +91,7 @@ missing=""
 for tool in nvchecker fakeroot; do
     command -v "$tool" >/dev/null 2>&1 || missing="${missing} ${tool}"
 done
+j_missing="${missing# }"
 if [ -n "$missing" ]; then
     warn "missing tool(s):${missing} (bin/check-upstream / bin/check-deps will fail)"
 else
@@ -73,6 +105,14 @@ if [ "$gh_ok" -eq 1 ]; then
     note "open upstream Issues:"
     gh issue list --state open --json number,title \
         --jq '.[] | select(.title|startswith("[") and contains("upstream version:")) | "    #\(.number)\t\(.title)"' 2>/dev/null || true
+    if $JSON; then
+        j_bot_prs="$(gh pr list --state open --json number,headRefName,title \
+            --jq '[.[] | select(.headRefName|startswith("deps/"))]' 2>/dev/null || echo '[]')"
+        j_issues="$(gh issue list --state open --json number,title \
+            --jq '[.[] | select(.title|startswith("[") and contains("upstream version:"))]' 2>/dev/null || echo '[]')"
+        [ -n "$j_bot_prs" ] || j_bot_prs="[]"
+        [ -n "$j_issues" ] || j_issues="[]"
+    fi
 fi
 
 # signing readiness (rga; see references/signing.md)
@@ -109,6 +149,7 @@ fi
 if [ -f "$HOME/.config/nekono-pacman/publish.env" ] \
    && [ "$signing_ok" -eq 1 ] \
    && [ -f "$root/repo/x86_64/nekono.db.tar.gz" ]; then
+    j_build_host=true
     note "build host: YES (build/publish can run here)"
 else
     note "build host: NO (build/publish must run on the build host)"
@@ -124,23 +165,49 @@ if [ -f "$root/repo/x86_64/nekono.db.tar.gz" ]; then
         | awk -F' *= *' '/^Server/{print $2; exit}' \
         | sed 's/\$repo/nekono/; s/\$arch/x86_64/')"
     if [ -z "$srv" ]; then
+        publish_state="unknown"
+        j_publish_detail="[nekono] Server not found in /etc/pacman.conf"
         note "publish: unknown ([nekono] Server not found in /etc/pacman.conf)"
     else
         publish_pending=0
+        publish_mismatch=""
         for f in nekono.db.tar.gz nekono.db.tar.gz.sig; do
             l_sha="$(sha256sum "$root/repo/x86_64/$f" 2>/dev/null | cut -c1-16)"
             r_sha="$(curl -fsS --max-time 30 "$srv/$f" 2>/dev/null | sha256sum | cut -c1-16)"
-            [ "$l_sha" = "$r_sha" ] || publish_pending=1
+            [ "$l_sha" = "$r_sha" ] || { publish_pending=1; publish_mismatch+="${publish_mismatch:+,}$f"; }
         done
         if [ "$publish_pending" -eq 1 ]; then
             publish_state="pending"
+            j_publish_detail="MISMATCH: $publish_mismatch"
             warn "publish: PENDING (local nekono.db/sig differ from published; run bin/publish even if nothing was built)"
         else
             publish_state="ok"
+            j_publish_detail="MATCH: nekono.db.tar.gz,nekono.db.tar.gz.sig"
             note "publish: up to date (nekono.db + sig MATCH)"
         fi
     fi
+else
+    j_publish_detail="no local repo/x86_64/nekono.db.tar.gz"
 fi
 note "publish-state: $publish_state"
+
+if $JSON; then
+    printf '{"repo":%s,"branch":%s,"dirty":%s,"hooks_path":%s,"hooks_ok":%s,"fetch_ok":%s,"gh_ok":%s,"missing_tools":%s,"bot_prs":%s,"upstream_issues":%s,"signing_ok":%s,"signing_detail":%s,"build_host":%s,"publish":%s,"publish_detail":%s}\n' \
+        "$(json_str "$root")" \
+        "$(json_str "$branch")" \
+        "$(json_lines "$j_dirty")" \
+        "$(json_str "$hooks")" \
+        "$(json_bool "$([ "$hooks" = ".githooks" ] && echo true)")" \
+        "$(json_bool "$j_fetch_ok")" \
+        "$(json_bool "$j_gh_ok")" \
+        "$(json_lines "$j_missing")" \
+        "$j_bot_prs" \
+        "$j_issues" \
+        "$(json_bool "$signing_ok")" \
+        "$(json_str "$signing_detail")" \
+        "$(json_bool "$j_build_host")" \
+        "$(json_str "$publish_state")" \
+        "$(json_str "$j_publish_detail")" >&3
+fi
 
 exit 0

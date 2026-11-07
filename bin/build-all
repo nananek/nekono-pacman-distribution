@@ -29,6 +29,8 @@
 #                                 # bin/build-all --pending)
 #   bin/build-all --dry-run       # build せず計画 + cascade-warn だけ表示
 #                                 # (--pending と組み合わせ可)
+#   bin/build-all --json          # 1 行の JSON を stdout に出す (人間向けの
+#                                 # log は stderr へ)。nekono-pacman-agent 用。
 #
 # Exit code:
 #   0 = 全部成功 (--pending 時、未 build が 0 件でも 0)
@@ -46,6 +48,7 @@ mkdir -p "$REPO_DIR"
 # 引数 parse: --pending / --dry-run を吸って、残りは pos args (= 個別 pkg 指定)。
 PENDING_ONLY=false
 DRY_RUN=false
+JSON=false
 while [[ $# -gt 0 ]]; do
     case "$1" in
         --pending)
@@ -54,6 +57,10 @@ while [[ $# -gt 0 ]]; do
             ;;
         --dry-run)
             DRY_RUN=true
+            shift
+            ;;
+        --json)
+            JSON=true
             shift
             ;;
         --)
@@ -69,6 +76,35 @@ while [[ $# -gt 0 ]]; do
             ;;
     esac
 done
+
+# --json: one JSON object on stdout, human text on stderr (see bin/lib/json.sh).
+# The document is emitted from an EXIT trap so fatal paths still report state.
+if $JSON; then
+    # shellcheck source=lib/json.sh
+    . "$REPO_ROOT/bin/lib/json.sh"
+    exec 3>&1 1>&2
+    j_pending=()
+    j_skipped=()
+    j_cascade=()
+    j_retire=()
+    j_built=()
+    j_error=""
+    json_exit() {
+        local rc=$?
+        printf '{"mode":%s,"dry_run":%s,"pending":%s,"skipped":%s,"cascade":%s,"retire":%s,"built":%s,"error":%s,"rc":%d}\n' \
+            "$(json_str "$($PENDING_ONLY && echo pending || echo all)")" \
+            "$(json_bool "$DRY_RUN")" \
+            "$(json_pkg_versions "${j_pending[@]}")" \
+            "$(json_pkg_versions "${j_skipped[@]}")" \
+            "$(json_pkg_versions "${j_cascade[@]}")" \
+            "$(json_str_list "${j_retire[@]}")" \
+            "$(json_str_list "${j_built[@]}")" \
+            "$(json_str "$j_error")" \
+            "$rc" >&3
+        return "$rc"
+    }
+    trap json_exit EXIT
+fi
 
 # pos args = 個別 package 指定、なければ pkgs/* 全て。
 if [[ $# -gt 0 ]]; then
@@ -234,12 +270,17 @@ if $PENDING_ONLY; then
         if ${initial_pending[$p]}; then
             packages+=("$p")
             echo "[pending] $p ${pkg_full_ver[$p]}"
+            if $JSON; then j_pending+=("$p" "${pkg_full_ver[$p]}"); fi
         else
             echo "[skip] $p ${pkg_full_ver[$p]} already built"
+            if $JSON; then j_skipped+=("$p" "${pkg_full_ver[$p]}"); fi
         fi
     done
 else
     packages=("${topo_ordered[@]}")
+    if $JSON; then
+        for p in "${packages[@]}"; do j_pending+=("$p" "${pkg_full_ver[$p]}"); done
+    fi
 fi
 
 # cascade-warn を出力 (= build target に居ない / build されない pkg のうち、
@@ -249,6 +290,7 @@ cascade_pkgs=()
 for p in "${topo_all[@]}"; do
     if [[ -n "${cascade_deps[$p]}" ]] && ! ${initial_pending[$p]:-false}; then
         cascade_pkgs+=("$p")
+        if $JSON; then j_cascade+=("$p" "${pkg_full_ver[$p]}"); fi
         echo "[cascade-warn] $p ${pkg_full_ver[$p]} should bump pkgrel via PR (= [nekono] dep ${cascade_deps[$p]% } was rebuilt in this run)"
     fi
 done
@@ -287,6 +329,7 @@ if [[ -f "$db_file" ]]; then
         [[ -n "${live_pkg_names[$n]:-}" ]] || retired_pkgs+=("$n")
     done
 fi
+if $JSON; then j_retire=("${retired_pkgs[@]}"); fi
 
 if [[ ${#packages[@]} -eq 0 && ${#retired_pkgs[@]} -eq 0 ]]; then
     echo ""
@@ -371,7 +414,11 @@ if [[ ${#packages[@]} -gt 0 ]]; then
         # -s で deps を pacman -S、-c で build 後 src/pkg を clean。
         # --sign は makepkg が builtin GPG 署名する flag。`!` は gpg 互換の
         # ために残しているが、rga は fingerprint を引く前に落とす。
-        makepkg -sc --noconfirm --sign --key "${NEKONO_GPG_FP}!"
+        makepkg -sc --noconfirm --sign --key "${NEKONO_GPG_FP}!" || {
+            _rc=$?
+            if $JSON; then j_error="makepkg failed for $pkg (rc=$_rc)"; fi
+            exit "$_rc"
+        }
 
         # makepkg --packagelist は makepkg.conf の OPTIONS=(... debug ...) から
         # <pkgbase>-debug の存在を機械的に予測するだけで、 実際に debug symbol
@@ -385,6 +432,7 @@ if [[ ${#packages[@]} -gt 0 ]]; then
                 _pkgfiles_to_move+=("$_f" "$_f.sig")
             elif [[ "$_f" != *-debug-* ]]; then
                 echo "[FATAL] expected package file missing after build: $_f" >&2
+                if $JSON; then j_error="expected package file missing: $_f"; fi
                 exit 1
             fi
         done
@@ -392,6 +440,7 @@ if [[ ${#packages[@]} -gt 0 ]]; then
         # 生成物 (.pkg.tar.zst + .sig) だけを repo/x86_64/ に移動 (= 上記の
         # 期待 file 一覧のみ、 downloaded source 等の巻き込みを防ぐ)
         mv -- "${_pkgfiles_to_move[@]}" "$REPO_DIR/"
+        if $JSON; then j_built+=("$pkg"); fi
 
         popd >/dev/null
     done
