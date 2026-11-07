@@ -17,24 +17,42 @@
 #
 # Output is English (ASCII) per repo convention.
 #
-# Usage: bin/check-deps [--dry-run]
+# Usage: bin/check-deps [--dry-run] [--json]
 #   --dry-run   detect and print, but change/commit/push nothing
+#   --json      print one JSON object on stdout (human text goes to stderr).
+#               Consumed by nekono-pacman-agent; see bin/lib/json.sh.
 
 set -uo pipefail
 
-root="$(git rev-parse --show-toplevel 2>/dev/null)" || { echo "[check-deps] FATAL: not a git repository" >&2; exit 1; }
-cd "$root" || exit 1
-
 dry_run=0
+JSON=false
 for arg in "$@"; do
     case "$arg" in
         --dry-run) dry_run=1 ;;
+        --json) JSON=true ;;
         *) echo "[check-deps] FATAL: unknown argument: $arg" >&2; exit 2 ;;
     esac
 done
 
+if $JSON; then
+    # shellcheck source=lib/json.sh
+    . "$(dirname "$0")/lib/json.sh"
+    # The generator (local_deps_bump.py) writes the JSON document to fd 3.
+    exec 3>&1 1>&2
+fi
+
+root="$(git rev-parse --show-toplevel 2>/dev/null)" || { echo "[check-deps] FATAL: not a git repository" >&2; exit 1; }
+cd "$root" || exit 1
+
 note() { printf '[check-deps] %s\n' "$1"; }
-fail() { printf '[check-deps][FATAL] %s\n' "$1" >&2; exit 1; }
+fail() {
+    printf '[check-deps][FATAL] %s\n' "$1" >&2
+    if $JSON; then
+        printf '{"dry_run":%s,"entries":[],"error":%s,"rc":1}\n' \
+            "$(json_bool "$([ "$dry_run" -eq 1 ] && echo true)")" "$(json_str "$1")" >&3
+    fi
+    exit 1
+}
 
 # --- guards ---------------------------------------------------------------
 command -v pacman >/dev/null 2>&1 || fail "pacman not found"
@@ -101,6 +119,10 @@ fi
 
 # --- compare + generate (signed, complete PRs) ----------------------------
 # No exec: keep this shell alive so the EXIT trap removes the throwaway db.
-python3 .github/scripts/local_deps_bump.py --dbpath "$dbtmp/var/lib/pacman" "$@"
+if $JSON; then
+    python3 .github/scripts/local_deps_bump.py --dbpath "$dbtmp/var/lib/pacman" --json "$@"
+else
+    python3 .github/scripts/local_deps_bump.py --dbpath "$dbtmp/var/lib/pacman" "$@"
+fi
 rc=$?
 exit "$rc"

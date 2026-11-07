@@ -1,0 +1,26 @@
+{
+  "model": "deepseek-v4.1-flash",
+  "base_url": "",
+  "api_key_file": "~/.config/nekono-pacman/opencode.key",
+  "exec_timeout_sec": 300,
+  "build_timeout_sec": 21600,
+  "max_steps": 40,
+  "dist_server_path": "",
+  "phases": {
+    "preflight": {
+      "tools": ["preflight", "repo_state", "repo_diff", "repo_log", "fs_read", "escalate", "finish"],
+      "max_steps": 12,
+      "prompt": "agent/phases/preflight.md"
+    },
+    "build": {
+      "tools": ["build_plan", "build_run", "signing_probe", "signing_verify", "disk_free", "fs_read", "escalate", "finish"],
+      "max_steps": 30,
+      "prompt": "agent/phases/build.md"
+    },
+    "publish": {
+      "tools": ["dist_publish", "dist_verify", "preflight", "fs_read", "escalate", "finish"],
+      "max_steps": 20,
+      "prompt": "agent/phases/publish.md"
+    }
+  }
+}

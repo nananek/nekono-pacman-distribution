@@ -14,7 +14,9 @@
 # values out of agent shell commands: `shell:*publish.env*` is policy-denied.
 #
 # Usage:
-#   bin/publish
+#   bin/publish [--json]
+#     --json   print one JSON object on stdout (human/rclone log goes to
+#              stderr). Consumed by nekono-pacman-agent; see bin/lib/json.sh.
 #
 # WHY TWO PASSES (important, do not "simplify" back to one sync):
 #   dufs WebDAV cannot store a client-set mtime, so rclone treats ModTime as
@@ -33,8 +35,47 @@
 #   (Regression history: claude-code 2.1.201 publish, 2026-07-04.)
 set -euo pipefail
 
+JSON=false
+case "${1:-}" in
+    --json) JSON=true ;;
+    "") ;;
+    *)
+        echo "usage: bin/publish [--json]" >&2
+        exit 2
+        ;;
+esac
+
 REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 REPO_DIR="$REPO_ROOT/repo/x86_64"
+
+if $JSON; then
+    # shellcheck source=lib/json.sh
+    . "$REPO_ROOT/bin/lib/json.sh"
+    exec 3>&1 1>&2
+    j_pass="none"
+    j_error=""
+    j_log="$(mktemp -t nekono-publish-XXXXXX.log)"
+    json_exit() {
+        local rc=$? copied=0 deleted=0
+        if [ -f "$j_log" ]; then
+            copied="$(grep -c 'Copied (new)' "$j_log" 2>/dev/null || true)"
+            deleted="$(grep -c 'Deleted' "$j_log" 2>/dev/null || true)"
+            if [ "$rc" -ne 0 ] && [ -z "$j_error" ]; then
+                j_error="$(grep -iE 'error|fatal' "$j_log" 2>/dev/null | tail -n 1 | cut -c1-200 || true)"
+            fi
+        fi
+        printf '{"ok":%s,"pass":%s,"copied_new":%d,"deleted":%d,"error":%s,"rc":%d}\n' \
+            "$(json_bool "$([ "$rc" -eq 0 ] && echo true)")" \
+            "$(json_str "$j_pass")" \
+            "${copied:-0}" \
+            "${deleted:-0}" \
+            "$(json_str "$j_error")" \
+            "$rc" >&3
+        rm -f "$j_log"
+        return "$rc"
+    }
+    trap json_exit EXIT
+fi
 
 # Load credentials from the local, gitignored file when not already exported.
 # Values are never echoed (the file path is the only thing printed on error).
@@ -47,17 +88,25 @@ if { [[ -z "${NEKONO_DAV_URL:-}" ]] || [[ -z "${NEKONO_DAV_USER:-}" ]] || [[ -z 
     set +a
 fi
 
-: "${NEKONO_DAV_URL:?set NEKONO_DAV_URL (e.g. http://nekono-dist0.<tailnet>.ts.net)}"
-: "${NEKONO_DAV_USER:?set NEKONO_DAV_USER}"
-: "${NEKONO_DAV_PASS:?set NEKONO_DAV_PASS}"
+# Explicit checks (instead of `: ${VAR:?}`) so --json can report which variable
+# is missing without ever printing its value.
+for _v in NEKONO_DAV_URL NEKONO_DAV_USER NEKONO_DAV_PASS; do
+    if [[ -z "${!_v:-}" ]]; then
+        echo "[ERROR] $_v is not set (export it, or create $_env)" >&2
+        j_error="${j_error:-$_v is not set}"
+        exit 1
+    fi
+done
 
 if [[ ! -f "$REPO_DIR/nekono.db.tar.gz" ]]; then
     echo "[ERROR] $REPO_DIR/nekono.db.tar.gz not found. Run bin/build-all first." >&2
+    j_error="nekono.db.tar.gz not found (run bin/build-all first)"
     exit 1
 fi
 
 if ! command -v rclone >/dev/null; then
     echo "[ERROR] rclone not found. Install rclone on the build host." >&2
+    j_error="rclone not found"
     exit 1
 fi
 
@@ -76,10 +125,24 @@ rclone_run() {
         rclone "$@"
 }
 
+# Run one rclone pass. In --json mode stdout+stderr are tee'd to a log so the
+# summary can report how many files were copied/deleted, while the same log is
+# still visible on stderr.
+run_pass() {
+    local pass="$1"
+    shift
+    j_pass="$pass"
+    if $JSON; then
+        rclone_run "$@" 2>&1 | tee -a "$j_log"
+    else
+        rclone_run "$@"
+    fi
+}
+
 # Pass 1: bulk sync (uploads new packages, deletes retired ones). Size-only
 # comparison is fine here because package filenames are immutable-by-version.
 echo "[*] Publishing (pass 1/2: sync packages) $REPO_DIR -> $NEKONO_DAV_URL/x86_64"
-rclone_run sync --copy-links --checkers 4 --transfers 4 -v \
+run_pass "sync" sync --copy-links --checkers 4 --transfers 4 -v \
     "$REPO_DIR" dist:x86_64
 
 # Pass 2: force-refresh the in-place-mutating db metadata + signatures. Without
@@ -91,7 +154,8 @@ rclone_run sync --copy-links --checkers 4 --transfers 4 -v \
 # would silently keep the stale signature and clients fail
 # "signature is invalid" (regression: 14 stale *.sig on 2026-08-22).
 echo "[*] Publishing (pass 2/2: force db metadata + sigs)"
-rclone_run copy --copy-links --ignore-times --include "nekono.*" --include "*.sig" -v \
+run_pass "copy-db" copy --copy-links --ignore-times --include "nekono.*" --include "*.sig" -v \
     "$REPO_DIR" dist:x86_64
 
+j_pass="done"
 echo "[OK] publish complete"

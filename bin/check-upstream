@@ -11,25 +11,65 @@
 #
 # Output is English (ASCII) per repo convention.
 #
-# Usage: bin/check-upstream [--dry-run]
+# Usage: bin/check-upstream [--dry-run] [--json]
 #   --dry-run   detect and print, but do not create Issues (safe to run)
+#   --json      print one JSON object on stdout (human text goes to stderr).
+#               Consumed by nekono-pacman-agent; see bin/lib/json.sh.
 
 set -uo pipefail
 
-root="$(git rev-parse --show-toplevel 2>/dev/null)" || { echo "[check-upstream] FATAL: not a git repository" >&2; exit 1; }
-cd "$root" || exit 1
-
 dry_run=0
+JSON=false
 for arg in "$@"; do
     case "$arg" in
         --dry-run) dry_run=1 ;;
+        --json) JSON=true ;;
         *) echo "[check-upstream] FATAL: unknown argument: $arg" >&2; exit 2 ;;
     esac
 done
 
+if $JSON; then
+    # shellcheck source=lib/json.sh
+    . "$(dirname "$0")/lib/json.sh"
+    exec 3>&1 1>&2
+    j_up_pkg=() j_up_old=() j_up_new=()
+    j_created=() j_skipped=() j_failed=()
+    j_error=""
+    emit_updates() {
+        local out="" i
+        for ((i = 0; i < ${#j_up_pkg[@]}; i++)); do
+            out+="${out:+,}{\"pkg\":$(json_str "${j_up_pkg[i]}"),\"old\":$(json_str "${j_up_old[i]:-}"),\"new\":$(json_str "${j_up_new[i]:-}")}"
+        done
+        printf '[%s]' "$out"
+    }
+    json_exit() {
+        local rc="${1:-0}"
+        local created="" skipped="" failed="" i
+        for ((i = 0; i < ${#j_created[@]}; i += 2)); do
+            created+="${created:+,}{\"pkg\":$(json_str "${j_created[i]}"),\"title\":$(json_str "${j_created[i + 1]:-}")}"
+        done
+        for ((i = 0; i < ${#j_skipped[@]}; i += 2)); do
+            skipped+="${skipped:+,}{\"pkg\":$(json_str "${j_skipped[i]}"),\"title\":$(json_str "${j_skipped[i + 1]:-}")}"
+        done
+        for ((i = 0; i < ${#j_failed[@]}; i += 2)); do
+            failed+="${failed:+,}{\"pkg\":$(json_str "${j_failed[i]}"),\"title\":$(json_str "${j_failed[i + 1]:-}")}"
+        done
+        printf '{"dry_run":%s,"updates":%s,"created":[%s],"skipped":[%s],"failed":[%s],"error":%s,"rc":%d}\n' \
+            "$(json_bool "$([ "$dry_run" -eq 1 ] && echo true)")" \
+            "$(emit_updates)" \
+            "$created" "$skipped" "$failed" \
+            "$(json_str "$j_error")" \
+            "$rc" >&3
+        return "$rc"
+    }
+fi
+
+root="$(git rev-parse --show-toplevel 2>/dev/null)" || { echo "[check-upstream] FATAL: not a git repository" >&2; exit 1; }
+cd "$root" || exit 1
+
 note() { printf '[check-upstream] %s\n' "$1"; }
 warn() { printf '[check-upstream][WARN] %s\n' "$1" >&2; }
-fail() { printf '[check-upstream][FATAL] %s\n' "$1" >&2; exit 1; }
+fail() { j_error="${1:-failed}"; printf '[check-upstream][FATAL] %s\n' "$1" >&2; exit 1; }
 
 # --- guards ---------------------------------------------------------------
 command -v nvchecker >/dev/null 2>&1 || fail "nvchecker not found (install: nvchecker + python-packaging)"
@@ -41,7 +81,15 @@ gh auth status >/dev/null 2>&1 || fail "gh not authenticated (run: gh auth login
 # Keyfile: avoids the GitHub API rate limit for source = "github". The token
 # is written to a private temp file only (never printed, never in the repo).
 keydir="$(mktemp -d -t nekono-nvchecker-XXXXXX)" || fail "mktemp failed"
-trap 'rm -rf "$keydir"' EXIT
+# Single EXIT trap: cleanup first, then the --json document (a second `trap`
+# would silently replace this one).
+on_exit() {
+    local rc=$?
+    rm -rf "$keydir"
+    if $JSON; then json_exit "$rc"; fi
+    return "$rc"
+}
+trap on_exit EXIT
 
 token="$(gh auth token)" || fail "gh auth token failed"
 {
@@ -80,6 +128,9 @@ failed=0
 while IFS=$'\t' read -r pkg old_ver new_ver; do
     [ -n "$pkg" ] || continue
     title="[${pkg}] upstream version: ${new_ver}"
+    if $JSON; then
+        j_up_pkg+=("$pkg") j_up_old+=("$old_ver") j_up_new+=("$new_ver")
+    fi
     existing="$(gh issue list --state all --limit 200 \
                   --search "in:title \"${title}\"" \
                   --json title \
@@ -87,6 +138,7 @@ while IFS=$'\t' read -r pkg old_ver new_ver; do
     existing="${existing:-0}"
     if [ "$existing" -gt 0 ]; then
         note "skip ${pkg}: Issue already exists (${title})"
+        if $JSON; then j_skipped+=("$pkg" "$title"); fi
         skipped=$((skipped + 1))
         continue
     fi
@@ -97,9 +149,11 @@ while IFS=$'\t' read -r pkg old_ver new_ver; do
     if python3 .github/scripts/create_upstream_issue.py \
             --pkg "$pkg" --old-version "$old_ver" --new-version "$new_ver"; then
         note "created Issue: ${title}"
+        if $JSON; then j_created+=("$pkg" "$title"); fi
         created=$((created + 1))
     else
         warn "failed to create Issue for ${pkg}"
+        if $JSON; then j_failed+=("$pkg" "$title"); fi
         failed=$((failed + 1))
     fi
 done < <(printf '%s' "$updates" | python3 -c '
