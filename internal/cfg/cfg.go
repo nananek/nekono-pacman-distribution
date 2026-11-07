@@ -32,6 +32,9 @@ type Config struct {
 	// (pacman's Server line). Empty means "read /etc/pacman.conf".
 	DistServerPath string `json:"dist_server_path"`
 
+	// FetchAllowHosts extends the static allowlist of the fetch tool.
+	FetchAllowHosts []string `json:"fetch_allow_hosts"`
+
 	Phases map[string]Phase `json:"phases"`
 
 	// Path is where this config was loaded from (for error messages).

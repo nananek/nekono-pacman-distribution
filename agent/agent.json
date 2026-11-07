@@ -6,11 +6,22 @@
   "build_timeout_sec": 21600,
   "max_steps": 40,
   "dist_server_path": "",
+  "fetch_allow_hosts": [],
   "phases": {
     "preflight": {
       "tools": ["preflight", "repo_state", "repo_diff", "repo_log", "fs_read", "escalate", "finish"],
       "max_steps": 12,
       "prompt": "agent/phases/preflight.md"
+    },
+    "triage": {
+      "tools": ["preflight", "repo_state", "repo_diff", "repo_merge_base", "fs_read", "fs_write", "pkg_srcinfo", "pkg_3points", "gh_pr", "gh_issue", "step_bot_pr", "step_merge", "escalate", "finish"],
+      "max_steps": 40,
+      "prompt": "agent/phases/triage.md"
+    },
+    "upstream": {
+      "tools": ["repo_state", "repo_diff", "fs_read", "fs_write", "gh_issue", "gh_repo", "gh_pr", "fetch", "archive_list", "archive_extract", "archive_diff", "binary_scan", "pkg_srcinfo", "pkg_verifysource", "step_bump_pr", "step_merge", "escalate", "finish"],
+      "max_steps": 60,
+      "prompt": "agent/phases/upstream.md"
     },
     "build": {
       "tools": ["build_plan", "build_run", "signing_probe", "signing_verify", "disk_free", "fs_read", "escalate", "finish"],

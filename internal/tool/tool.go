@@ -52,8 +52,11 @@ type Escalation struct {
 
 // Env is the shared state of one phase run.
 type Env struct {
-	RepoRoot  string
-	Scratch   string
+	RepoRoot string
+	Scratch  string
+	// Phase is the name of the running phase; tools use it in diagnostics and
+	// in capability-gap reports.
+	Phase     string
 	Cfg       *cfg.Config
 	J         *journal.Journal
 	Escalated *Escalation

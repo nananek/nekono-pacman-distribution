@@ -17,24 +17,28 @@ import (
 // runState is what the report is built from. Everything here is a structured
 // fact gathered by Go, not prose produced by the model.
 type runState struct {
-	Preflight   map[string]any `json:"preflight"`
-	Detect      map[string]any `json:"detect,omitempty"`
-	Deps        map[string]any `json:"deps,omitempty"`
-	BuildPlan   tool.BuildPlan `json:"build_plan"`
-	BuildPhase  *phaseOutcome  `json:"build_phase,omitempty"`
-	BuildVerify map[string]any `json:"build_verify,omitempty"`
-	PubPhase    *phaseOutcome  `json:"publish_phase,omitempty"`
-	DistVerify  map[string]any `json:"dist_verify,omitempty"`
-	Status      string         `json:"status"`
-	Notes       []string       `json:"notes,omitempty"`
+	Preflight   map[string]any  `json:"preflight"`
+	Detect      map[string]any  `json:"detect,omitempty"`
+	Deps        map[string]any  `json:"deps,omitempty"`
+	Triage      []*phaseOutcome `json:"triage,omitempty"`
+	Upstream    []*phaseOutcome `json:"upstream,omitempty"`
+	BuildPlan   tool.BuildPlan  `json:"build_plan"`
+	BuildPhase  *phaseOutcome   `json:"build_phase,omitempty"`
+	BuildVerify map[string]any  `json:"build_verify,omitempty"`
+	PubPhase    *phaseOutcome   `json:"publish_phase,omitempty"`
+	DistVerify  map[string]any  `json:"dist_verify,omitempty"`
+	Status      string          `json:"status"`
+	Notes       []string        `json:"notes,omitempty"`
 }
 
 type phaseOutcome struct {
-	Phase   string `json:"phase"`
-	Status  string `json:"status"`
-	Summary string `json:"summary"`
-	Steps   int    `json:"steps"`
-	Tokens  int    `json:"tokens"`
+	Phase     string `json:"phase"`
+	Item      string `json:"item,omitempty"`
+	Status    string `json:"status"`
+	Summary   string `json:"summary"`
+	Escalated string `json:"escalated,omitempty"`
+	Steps     int    `json:"steps"`
+	Tokens    int    `json:"tokens"`
 }
 
 func cmdRun(ctx context.Context, args []string) error {
@@ -42,9 +46,11 @@ func cmdRun(ctx context.Context, args []string) error {
 	cfgPath := fs.String("config", "agent/agent.json", "path to agent config")
 	repo := fs.String("repo", ".", "repository root")
 	skipDetect := fs.Bool("skip-detect", false, "skip bin/check-upstream and bin/check-deps")
+	skipTriage := fs.Bool("skip-triage", false, "do not process bot pkgrel PRs")
+	skipUpstream := fs.Bool("skip-upstream", false, "do not process upstream version Issues")
 	skipBuild := fs.Bool("skip-build", false, "do not run the build phase")
 	skipPublish := fs.Bool("skip-publish", false, "do not run the publish phase")
-	dryRun := fs.Bool("dry-run", false, "plan only: no build, no publish")
+	dryRun := fs.Bool("dry-run", false, "plan only: no triage/upstream/build/publish")
 	if err := fs.Parse(args); err != nil {
 		return err
 	}
@@ -76,6 +82,9 @@ func cmdRun(ctx context.Context, args []string) error {
 			if res.RC != 0 {
 				st.Notes = append(st.Notes, fmt.Sprintf("check-upstream rc=%d: %v", res.RC, data["error"]))
 			}
+			for _, it := range items(data["created"]) {
+				st.Notes = append(st.Notes, fmt.Sprintf("detect: created upstream Issue %v (%v)", it["pkg"], it["title"]))
+			}
 			a.j.Emit("detect", map[string]any{"stage": "upstream", "rc": res.RC, "created": lenList(data["created"]), "skipped": lenList(data["skipped"])})
 		}
 		if data, res, derr := tool.ExecJSON(ctx, a.root, 2*time.Hour, "bin/check-deps", "--json"); derr != nil {
@@ -86,12 +95,91 @@ func cmdRun(ctx context.Context, args []string) error {
 			if res.RC != 0 {
 				st.Notes = append(st.Notes, fmt.Sprintf("check-deps rc=%d: %v", res.RC, data["error"]))
 			}
+			for _, it := range items(data["entries"]) {
+				if it["status"] == "created" {
+					st.Notes = append(st.Notes, fmt.Sprintf("detect: created PR for %v (%v)", it["pkg"], it["branch"]))
+				}
+			}
 			a.j.Emit("detect", map[string]any{"stage": "deps", "rc": res.RC, "entries": lenList(data["entries"])})
 		}
 	}
 
-	// Phase 3: build plan (deterministic), then the build phase if there is
-	// anything to build and we are on the build host.
+	escalations := 0
+
+	// Phase 1: one triage run per bot pkgrel PR. The list comes from preflight
+	// (open deps/* PRs), so detect's own PRs are included.
+	if !*skipTriage && !*dryRun {
+		for _, it := range items(st.Preflight["bot_prs"]) {
+			number := intOf(it["number"])
+			head := strOf(it["headRefName"])
+			title := strOf(it["title"])
+			item := fmt.Sprintf("#%d %s", number, head)
+			if number == 0 || head == "" {
+				continue
+			}
+			task := fmt.Sprintf("phase: triage\nrepository: %s\n\n対象 PR: #%d (head=%s) %q\nこの 1 本だけを処理してください。他の PR には触れないでください。",
+				a.root, number, head, title)
+			out, rerr := a.runPhaseTask(ctx, "triage", task)
+			oc := toOutcome(out)
+			oc.Item = item
+			st.Triage = append(st.Triage, oc)
+			if out.Status == "harness_gap" {
+				st.Status = "harness_gap"
+				st.Notes = append(st.Notes, "triage: "+out.Summary)
+				return finishRun(a, st)
+			}
+			if rerr != nil || out.Status == "failed" {
+				st.Status = "failed_at_triage"
+				st.Notes = append(st.Notes, fmt.Sprintf("triage %s: %s", item, out.Summary))
+				return finishRun(a, st)
+			}
+			if out.Status != "ok" {
+				escalations++
+				st.Notes = append(st.Notes, fmt.Sprintf("triage %s: %s (%s)", item, out.Status, out.Summary))
+			}
+		}
+	}
+
+	// Phase 2: one upstream run per open upstream Issue (re-read after detect).
+	if !*skipUpstream && !*dryRun {
+		issues := items(st.Preflight["upstream_issues"])
+		if data, ok := st.Detect["created"]; ok && lenList(data) > 0 {
+			// detect just opened Issues; re-read so they are included.
+			if res, rerr := tool.GHIssueList(ctx, a.env); rerr == nil {
+				issues = res
+			}
+		}
+		for _, it := range issues {
+			number := intOf(it["number"])
+			title := strOf(it["title"])
+			if number == 0 {
+				continue
+			}
+			task := fmt.Sprintf("phase: upstream\nrepository: %s\n\n対象 Issue: #%d %q\nこの 1 本だけを処理してください。他の Issue には触れないでください。",
+				a.root, number, title)
+			out, rerr := a.runPhaseTask(ctx, "upstream", task)
+			oc := toOutcome(out)
+			oc.Item = fmt.Sprintf("#%d", number)
+			st.Upstream = append(st.Upstream, oc)
+			if out.Status == "harness_gap" {
+				st.Status = "harness_gap"
+				st.Notes = append(st.Notes, "upstream: "+out.Summary)
+				return finishRun(a, st)
+			}
+			if rerr != nil || out.Status == "failed" {
+				st.Status = "failed_at_upstream"
+				st.Notes = append(st.Notes, fmt.Sprintf("upstream #%d: %s", number, out.Summary))
+				return finishRun(a, st)
+			}
+			if out.Status != "ok" {
+				escalations++
+				st.Notes = append(st.Notes, fmt.Sprintf("upstream #%d: %s (%s)", number, out.Status, out.Summary))
+			}
+		}
+	}
+
+	// Phase 3: build plan — computed after triage/upstream so their merges are
+	// included.
 	planRes, perr := tool.BuildPlanTool(a.env).Run(ctx, json.RawMessage(`{}`))
 	if perr != nil {
 		return perr
@@ -153,13 +241,20 @@ func cmdRun(ctx context.Context, args []string) error {
 	}
 
 	if st.Status == "" {
-		st.Status = "ok"
+		if escalations > 0 {
+			st.Status = "ok_with_escalations"
+		} else {
+			st.Status = "ok"
+		}
 	}
 	return finishRun(a, st)
 }
 
 func toOutcome(o phase.Outcome) *phaseOutcome {
-	return &phaseOutcome{Phase: o.Phase, Status: o.Status, Summary: o.Summary, Steps: o.Steps, Tokens: o.Usage.TotalTokens}
+	return &phaseOutcome{
+		Phase: o.Phase, Status: o.Status, Summary: o.Summary,
+		Escalated: o.Escalated, Steps: o.Steps, Tokens: o.Usage.TotalTokens,
+	}
 }
 
 func lenList(v any) int {
@@ -167,6 +262,41 @@ func lenList(v any) int {
 		return len(a)
 	}
 	return 0
+}
+
+// items normalises a decoded JSON array into []map[string]any.
+func items(v any) []map[string]any {
+	arr, ok := v.([]any)
+	if !ok {
+		return nil
+	}
+	out := make([]map[string]any, 0, len(arr))
+	for _, x := range arr {
+		if m, ok := x.(map[string]any); ok {
+			out = append(out, m)
+		}
+	}
+	return out
+}
+
+func intOf(v any) int {
+	switch t := v.(type) {
+	case float64:
+		return int(t)
+	case int:
+		return t
+	case json.Number:
+		n, _ := t.Int64()
+		return int(n)
+	}
+	return 0
+}
+
+func strOf(v any) string {
+	if s, ok := v.(string); ok {
+		return s
+	}
+	return ""
 }
 
 // builtFiles lists the package files that exist for the planned packages.
@@ -188,6 +318,7 @@ func builtFiles(root string, plan tool.BuildPlan) []string {
 func finishRun(a *app, st *runState) error {
 	a.j.Emit("report", map[string]any{
 		"status": st.Status, "notes": st.Notes,
+		"triage": len(st.Triage), "upstream": len(st.Upstream),
 		"pending": len(st.BuildPlan.Pending), "cascade": len(st.BuildPlan.Cascade),
 		"retire": st.BuildPlan.Retire,
 	})
@@ -195,6 +326,12 @@ func finishRun(a *app, st *runState) error {
 	fmt.Fprintln(os.Stdout, string(b))
 
 	fmt.Fprintf(os.Stderr, "\n== run %s\n", st.Status)
+	for _, o := range st.Triage {
+		fmt.Fprintf(os.Stderr, "   triage   %-28s %-12s %s\n", o.Item, o.Status, firstLine(o.Summary))
+	}
+	for _, o := range st.Upstream {
+		fmt.Fprintf(os.Stderr, "   upstream %-28s %-12s %s\n", o.Item, o.Status, firstLine(o.Summary))
+	}
 	fmt.Fprintf(os.Stderr, "   build: pending=%d cascade=%d retire=%v\n", len(st.BuildPlan.Pending), len(st.BuildPlan.Cascade), st.BuildPlan.Retire)
 	if st.BuildVerify != nil {
 		fmt.Fprintf(os.Stderr, "   build_verify: ok=%v\n", st.BuildVerify["ok"])
@@ -205,8 +342,17 @@ func finishRun(a *app, st *runState) error {
 	for _, n := range st.Notes {
 		fmt.Fprintf(os.Stderr, "   note: %s\n", n)
 	}
-	if st.Status != "ok" {
+	if st.Status != "ok" && st.Status != "ok_with_escalations" {
 		return fmt.Errorf("run finished with status %s", st.Status)
 	}
 	return nil
+}
+
+func firstLine(s string) string {
+	for i, r := range s {
+		if r == '\n' {
+			return s[:i]
+		}
+	}
+	return s
 }
