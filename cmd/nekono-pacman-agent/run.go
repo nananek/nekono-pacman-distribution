@@ -73,6 +73,9 @@ func cmdRun(ctx context.Context, args []string) error {
 			a.j.Emit("warn", map[string]any{"stage": "detect", "msg": "check-upstream failed", "rc": res.RC})
 		} else {
 			st.Detect = data
+			if res.RC != 0 {
+				st.Notes = append(st.Notes, fmt.Sprintf("check-upstream rc=%d: %v", res.RC, data["error"]))
+			}
 			a.j.Emit("detect", map[string]any{"stage": "upstream", "rc": res.RC, "created": lenList(data["created"]), "skipped": lenList(data["skipped"])})
 		}
 		if data, res, derr := tool.ExecJSON(ctx, a.root, 2*time.Hour, "bin/check-deps", "--json"); derr != nil {
@@ -80,6 +83,9 @@ func cmdRun(ctx context.Context, args []string) error {
 			a.j.Emit("warn", map[string]any{"stage": "detect", "msg": "check-deps failed", "rc": res.RC})
 		} else {
 			st.Deps = data
+			if res.RC != 0 {
+				st.Notes = append(st.Notes, fmt.Sprintf("check-deps rc=%d: %v", res.RC, data["error"]))
+			}
 			a.j.Emit("detect", map[string]any{"stage": "deps", "rc": res.RC, "entries": lenList(data["entries"])})
 		}
 	}

@@ -44,6 +44,7 @@ j_gh_ok=false
 j_publish="unknown"
 j_publish_detail=""
 j_build_host=false
+j_build_host_detail=""
 
 note "repo: $root"
 
@@ -146,13 +147,19 @@ else
 fi
 
 # build host detection (mirrors the daily-ops skill)
-if [ -f "$HOME/.config/nekono-pacman/publish.env" ] \
-   && [ "$signing_ok" -eq 1 ] \
-   && [ -f "$root/repo/x86_64/nekono.db.tar.gz" ]; then
+# The three conditions are reported separately: "build_host: NO" alone does not
+# say whether publish.env, signing or the artifacts db is the missing piece.
+bh_missing=""
+[ -f "$HOME/.config/nekono-pacman/publish.env" ] || bh_missing+="${bh_missing:+,}publish_env"
+[ "$signing_ok" -eq 1 ] || bh_missing+="${bh_missing:+,}signing"
+[ -f "$root/repo/x86_64/nekono.db.tar.gz" ] || bh_missing+="${bh_missing:+,}repo_db"
+if [ -z "$bh_missing" ]; then
     j_build_host=true
+    j_build_host_detail="ok"
     note "build host: YES (build/publish can run here)"
 else
-    note "build host: NO (build/publish must run on the build host)"
+    j_build_host_detail="missing:${bh_missing}"
+    note "build host: NO (build/publish must run on the build host; missing:${bh_missing})"
 fi
 
 # publish drift: 「build 済み (署名済み) だが未 publish」の検出。
@@ -192,11 +199,12 @@ fi
 note "publish-state: $publish_state"
 
 if $JSON; then
-    printf '{"repo":%s,"branch":%s,"dirty":%s,"hooks_path":%s,"hooks_ok":%s,"fetch_ok":%s,"gh_ok":%s,"missing_tools":%s,"bot_prs":%s,"upstream_issues":%s,"signing_ok":%s,"signing_detail":%s,"build_host":%s,"publish":%s,"publish_detail":%s}\n' \
+    printf '{"repo":%s,"branch":%s,"dirty":%s,"hooks_path":%s,"hooks_path_set":%s,"hooks_ok":%s,"fetch_ok":%s,"gh_ok":%s,"missing_tools":%s,"bot_prs":%s,"upstream_issues":%s,"signing_ok":%s,"signing_detail":%s,"build_host":%s,"build_host_detail":%s,"publish":%s,"publish_detail":%s}\n' \
         "$(json_str "$root")" \
         "$(json_str "$branch")" \
         "$(json_lines "$j_dirty")" \
         "$(json_str "$hooks")" \
+        "$(json_bool "$([ -n "$hooks" ] && echo true)")" \
         "$(json_bool "$([ "$hooks" = ".githooks" ] && echo true)")" \
         "$(json_bool "$j_fetch_ok")" \
         "$(json_bool "$j_gh_ok")" \
@@ -206,6 +214,7 @@ if $JSON; then
         "$(json_bool "$signing_ok")" \
         "$(json_str "$signing_detail")" \
         "$(json_bool "$j_build_host")" \
+        "$(json_str "$j_build_host_detail")" \
         "$(json_str "$publish_state")" \
         "$(json_str "$j_publish_detail")" >&3
 fi
