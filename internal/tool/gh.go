@@ -85,6 +85,12 @@ func GHPRTool(env *Env) *Func {
 				// clone with a narrowed remote.origin.fetch (this host's older
 				// checkouts have master-only) makes it fail half-way and leaves
 				// the tree switched, so widen the refspec first (harmless).
+				// Refuse to switch branches under uncommitted work: a partial
+				// checkout would leave the tree in a state no other tool can
+				// repair (only fs_write for managed files exists).
+				if st := run(ctx, env.RepoRoot, execTimeout(env), "git", "status", "--porcelain"); st.RC != 0 || strings.TrimSpace(st.Stdout) != "" {
+					return Result{}, fmt.Errorf("working tree is not clean; refusing to switch branches (commit or stash first)")
+				}
 				run(ctx, env.RepoRoot, 2*time.Minute, "git", "fetch", "origin",
 					"+refs/heads/*:refs/remotes/origin/*")
 				res := run(ctx, env.RepoRoot, execTimeout(env), "gh", "pr", "checkout", strconv.Itoa(a.Number))
