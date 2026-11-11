@@ -5,19 +5,13 @@
   // subagent に委譲する進行役)。通常のコーディングは `opencode --agent build` か /agent で切替。
   "default_agent": "orchestrator",
 
-  // モデル / エンドポイント: 未指定だと opencode の既定 (opencode Zen free) に落ちて
-  // 日次運用が認証で止まる。Go サブスクを ocgo バランシング proxy 経由で叩くよう固定する。
-  // apiKey は repo に置かず、ホスト側の鍵ファイル (0600) を読む。鍵は
-  // `opencode auth login` の保管庫ではなくこのファイルが正 (再構築時はここに戻す)。
+  // モデル: 未指定だと opencode の既定 (opencode Zen free) に落ちて日次運用が認証で止まる。
+  //
+  // エンドポイント (baseURL / apiKey) はここに書かない。project config は global より
+  // 優先されるため、書くと quagent の VM (外向き遮断 + ホスト認証プロキシ) でも
+  // ocgo へ直接つなぎに行き、遮断されて止まる。ホストは ~/.config/opencode/
+  // opencode.jsonc が、VM は quagent が書く global config が受け持つ。
   "model": "opencode-go/deepseek-v4.1-flash",
-  "providers": {
-    "opencode-go": {
-      "settings": {
-        "baseURL": "https://ocgo.tail2c8c7.ts.net/inference/go/openai/v1",
-        "apiKey": "{file:~/.config/nekono-pacman/opencode.key}"
-      }
-    }
-  },
 
   // tool 層: 既定 ask。読み取り・調査だけ allow。last match wins (広いルールを先、例外を後)。
   "permissions": [
