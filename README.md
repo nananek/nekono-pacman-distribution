@@ -70,6 +70,7 @@
 | package | source 方針 | 役割 |
 |---|---|---|
 | `docker-rootless-extras` | from-source             | Docker rootless mode 補助バイナリ |
+| `eleos`                  | from-source (Go)        | nftables ファイアウォール (YAML 設定、netlink 直操作) |
 | `pam_pkcs11`             | from-source (C)         | PIV/PKCS#11 PAM 認証モジュール |
 | `pass-secret-service`    | from-source (Rust)      | pass を D-Bus secrets backend に |
 

@@ -40,6 +40,15 @@ github = "moby/moby"
 use_latest_release = true
 prefix = "docker-v"
 
+[eleos]
+# 自家 package (AUR 不在)。nexryai/eleos (nftables ファイアウォール、Go)。
+# release tag は "vX.Y.Z" 形式で GitHub Releases を切る運用のため
+# use_latest_release を使う (= pkgver 0.8.5 は v0.8.5 の prefix を strip した値)。
+source = "github"
+github = "nexryai/eleos"
+use_latest_release = true
+prefix = "v"
+
 [ff2mpv-rust]
 # Firefox 拡張 "ff2mpv" の native messaging host (Rust 実装、ryze312/
 # ff2mpv-rust)。AUR `ff2mpv-rust` を fork。Python upstream

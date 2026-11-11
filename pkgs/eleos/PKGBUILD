@@ -1,0 +1,46 @@
+# 自家 package (AUR 不在)。upstream は GitHub Actions で .deb / .rpm / snap を
+# 配布しているが Arch 向け package は無いため、本 repo で PKGBUILD を新規作成する。
+# upstream README "Install from source" との diff:
+#   - `go build -o elctl main.go` → `go build -o elctl .` (internal/ 配下を
+#     module 単位で build する。main.go 単体指定でも動くが module 全体を対象に
+#     するのが本来の意図)
+#   - `-trimpath` と `-ldflags '-s -w'` を追加 (= build 環境の path を binary に
+#     残さない + サイズ削減。upstream の eleos.spec と同じ flag)
+#   - CGO_ENABLED=0 で完全 static binary にする (= upstream も同設定)
+#   - systemd unit / default config は upstream の file をそのまま install
+
+pkgname=eleos
+pkgver=0.8.5
+pkgrel=1
+pkgdesc="Lightweight nftables firewall configured with YAML and applied over netlink"
+arch=('x86_64')
+url="https://github.com/nexryai/eleos"
+license=('MIT')
+depends=()
+makedepends=('go')
+backup=('etc/eleos.yml')
+source=("$pkgname-$pkgver.tar.gz::$url/archive/refs/tags/v$pkgver.tar.gz")
+sha256sums=('3ccdcf65d5c55f5cc6a11b4e923bd74cd6a2058ba50c8719977517f4148663e0')
+
+build() {
+	cd "$pkgname-$pkgver"
+	export CGO_ENABLED=0
+	go build -buildvcs=false -trimpath -ldflags '-s -w' -o elctl .
+}
+
+check() {
+	cd "$pkgname-$pkgver"
+	export CGO_ENABLED=0
+	# integration/ は `-tags integration` 指定時のみ build される (実 nftables と
+	# veth / netns を要求するため通常の check では走らない)
+	go test ./...
+}
+
+package() {
+	cd "$pkgname-$pkgver"
+	install -Dm755 elctl "$pkgdir/usr/bin/elctl"
+	install -Dm644 systemd/eleos.service "$pkgdir/usr/lib/systemd/system/eleos.service"
+	install -Dm644 config.default.yml "$pkgdir/etc/eleos.yml"
+	install -Dm644 LICENSE "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
+	install -Dm644 README.md "$pkgdir/usr/share/doc/$pkgname/README.md"
+}
