@@ -9,5 +9,5 @@ glib2=2.90.1-1
 gtk4=1:4.24.1-1
 libadwaita=1:1.10.0-1
 meson=1.12.1-2
-rust=1:1.99.1-1
-wireplumber=0.5.18-1
+rust=1:1.99.1-2
+wireplumber=0.5.19-1
