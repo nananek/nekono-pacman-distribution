@@ -10,7 +10,7 @@
 #   - systemd unit / default config は upstream の file をそのまま install
 
 pkgname=eleos
-pkgver=0.8.5
+pkgver=0.8.6
 pkgrel=1
 pkgdesc="Lightweight nftables firewall configured with YAML and applied over netlink"
 arch=('x86_64')
@@ -20,7 +20,7 @@ depends=()
 makedepends=('go')
 backup=('etc/eleos.yml')
 source=("$pkgname-$pkgver.tar.gz::$url/archive/refs/tags/v$pkgver.tar.gz")
-sha256sums=('3ccdcf65d5c55f5cc6a11b4e923bd74cd6a2058ba50c8719977517f4148663e0')
+sha256sums=('41b1f9195343b5cea32d59e07ca45972208b605650df29ca81e6d9f94dd17570')
 
 build() {
 	cd "$pkgname-$pkgver"
