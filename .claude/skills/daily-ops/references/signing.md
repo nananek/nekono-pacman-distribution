@@ -1,7 +1,7 @@
 # 署名 (remote-gpg-agent / rga) の前提と罠
 
-署名が要る操作: `git commit -S` / `--amend -S`、`bin/build-all` (makepkg `--sign`、`repo-add --sign`)、
-`bin/update-repo`、`bin/sign-pkg`。
+署名が要る操作: `git commit -S` / `--amend -S`、`bin/build-all` (`bin/sign-pkgs` の並列 detach-sign、
+`repo-add --sign`)、`bin/update-repo`、`bin/sign-pkg`、`bin/sign-pkgs`。
 
 ## 構成 (2026-10 以降)
 
@@ -13,6 +13,12 @@
   iPhone の PWA が Face ID で承認する。**秘密鍵もクライアント証明書も VM には置かない。**
 - VM は tailnet に出ない。署名は host の SSH bridge key (`~/.ssh/host_bridge`) 経由。
 - `--local-user` の末尾 `!` は gpg の primary key 固定指示。rga が fingerprint 解決前に落とす。
+- `bin/build-all` は `makepkg --sign` を使わない。makepkg の署名は build 直後に同期で走り、
+  承認待ち (最大 900 秒) の間 build 全体が止まるため。build を `--nosign` で済ませた後、
+  `bin/sign-pkgs` が artifact を並列に署名する (`--jobs`、既定 4)。承認回数は 1 pkg = 1 回で不変。
+- build host の gpg シムは `--detach-sign` を rga に流す。加えて `--list-secret-key` は
+  `rga keys` を見て成功扱いにする (秘密鍵がローカル keyring に無いため。`makepkg --sign` を
+  単発で使う場合に必要)。
 
 ## readiness check (署名系の操作の前に)
 
@@ -55,8 +61,9 @@ rga keys
 
 ## 承認の運用
 
-- 1 package = 1 承認。`bin/build-all --pending` で複数 build するときは、PWA を開いたまま
-  承認を続ける。通知は補助で、来なくても PWA の承認画面に出る。
-- 署名要求の `description` は作業ディレクトリ (例: `/home/kts_sz/repos/nekono-pacman-distribution`)。
+- 1 package = 1 承認。`bin/build-all --pending` は build が終わった pkg から `bin/sign-pkgs` に渡し、
+  最大 4 件の承認要求を同時に出す。PWA の一覧に並ぶので、まとめて承認してよい (順不同)。
+  通知は補助で、来なくても PWA の承認画面に出る。
+- 署名要求の `description` は作業ディレクトリ (リポジトリの絶対パス)。
 - 署名が拒否された場合、rga は exit 1 で止まる。build 済みの pkg は `repo/x86_64/` に残るので、
   原因を直して `bin/build-all --pending` を再実行する。
