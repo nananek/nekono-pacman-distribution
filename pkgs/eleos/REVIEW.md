@@ -2,11 +2,18 @@
 
 ## 状態
 
-**review 済み、approve** (2026-11-11、自家 PKGBUILD の新規作成 + Arch VM での実機検証つき)
+**review 済み、approve** (2026-11-13、0.8.6 へ bump。初回 review は 2026-11-11 の
+自家 PKGBUILD 新規作成 + Arch VM での実機検証)
 
-AUR に `eleos` は存在しない (`aur.archlinux.org/rpc/v5/info?arg[]=eleos` が
-`resultcount: 0`)。upstream の GitHub Releases / COPR / APT / snap のいずれにも
-Arch 向け package は無いため、本 repo で PKGBUILD を新規作成した (AUR fork ではない)。
+AUR に `eleos` は存在しない (`aur.archlinux.org/rpc/v5/info?arg[]=eleos` が 2026-11-11 時点で
+`resultcount: 0`。2026-11-13 の bump 時は AUR が TLS で到達できず再確認できなかったが、
+release notes にも AUR 追加の記載は無い)。upstream の GitHub Releases / COPR / APT / snap の
+いずれにも Arch 向け package は無かったため、本 repo で PKGBUILD を新規作成した (AUR fork ではない)。
+
+> 2026-11-12 の v0.8.6 で upstream 自身が `packaging/arch/` に PKGBUILD を追加し、
+> GitHub Pages の pacman repository (`[eleos]`) で `eleos` を配布し始めた (経緯は下記
+> 「upstream の Arch packaging との関係」)。本 repo の PKGBUILD は従来どおり自家管理で、
+> upstream の release asset は使わない。
 
 ## 用途
 
@@ -29,19 +36,32 @@ ICMP echo をレートリミット付き許可、port scan 対策 (XMAS / NULL /
 - Upstream: https://github.com/nexryai/eleos
   - owner: nexryai (作成 2023-06-17、stars 13、forks 0、MIT)
   - `url` / README / `eleos.spec` の URL と一致 (typosquat / なりすまし無し)
-- Tag: `v0.8.5` (annotated tag `13af17a3062c8e6c0efcbffb9cd72f65d437d7ec`)
-  → commit `50ffcf8bfccfbe877cdcadb6cef0f0838facb863`
-  (2026-11-11T11:19:50Z "Release v0.8.5"、tag 自体は SSH 署名付き)
-- 取得元: `https://github.com/nexryai/eleos/archive/refs/tags/v0.8.5.tar.gz`
+- Tag: `v0.8.6` (annotated tag `1877e0b8051da33f84d02af8723be312b3d3d521`、署名 verified)
+  → commit `3b2277783b5adb57fc33b130784a029f2a8fbee4`
+  (2026-11-12T07:56:29Z "Release v0.8.6"、tag 自体は署名付き)
+- 取得元: `https://github.com/nexryai/eleos/archive/refs/tags/v0.8.6.tar.gz`
   (GitHub の release tag tarball。upstream の公式 release 手順と同じ)
+- release: 2026-11-12T12:01:13Z 公開 (draft / prerelease ではない)、author は
+  従来と同じ `github-actions[bot]` (release workflow による自動公開)
 
 ## 検証結果
 
 - [x] `source` URL = upstream の公式 release tag path。domain / owner は upstream と一致
-- [x] `sha256sums` を独立実測: `3ccdcf65d5c55f5cc6a11b4e923bd74cd6a2058ba50c8719977517f4148663e0`
-      (= `curl -fsSL <url> | sha256sum`。PKGBUILD の値と一致)。upstream は tag に
-      SSH 署名を付けているが、tarball の detached checksum は公開していないため
-      sha256 pin を正とする
+- [x] `sha256sums` を独立実測: `41b1f9195343b5cea32d59e07ca45972208b605650df29ca81e6d9f94dd17570`
+      (= `curl -fsSL <url> | sha256sum`。PKGBUILD の値と一致)。upstream が `main` の
+      `packaging/arch/PKGBUILD` に公開している `sha256sums` とも一致 (2026-11-13 取得)。
+      tag `v0.8.6` は annotated tag で署名 verified
+- [x] 旧新 tarball (`v0.8.5` → `v0.8.6`) の diff: 差分は `AGENTS.md` / `README.md` /
+      `.copr/Makefile` / `.github/workflows/release.yml` / `systemd/eleos.service` と
+      新規 `packaging/arch/` のみ。**Go source (`main.go` / `internal/` / `go.mod` /
+      `go.sum` / `config.default.yml`) は byte 一致**で、build 対象と依存に変化なし
+- [x] `systemd/eleos.service` の変化は hardening のみ (`CapabilityBoundingSet=CAP_NET_ADMIN`,
+      `NoNewPrivileges=yes`, `ProtectSystem=strict` (旧 true), `ProtectHome=yes`,
+      `PrivateTmp` / `PrivateDevices` / `DevicePolicy=closed`, `ProtectKernel*`,
+      `RestrictAddressFamilies=AF_NETLINK AF_UNIX`, `SystemCallFilter=@system-service`,
+      `IPAddressDeny=any` 等を追加)。`ExecStart` / `ExecReload` / `ExecStop` と
+      `/etc/eleos.yml` の参照先は不変。本 PKGBUILD は unit を upstream のまま install する
+      方針なので追従する。elctl は netlink のみ使うため `IPAddressDeny=any` と矛盾しない
 - [x] `build()` / `check()` / `package()` に curl / wget / exec / eval / pipe-to-shell /
       動的 fetch / `pip install` は無い。`go build` + `go test ./...` + `install` のみ
 - [x] Go の依存は `go.sum` で checksum pin 済み (`github.com/google/nftables`,
@@ -103,13 +123,31 @@ upstream README の "Install from source" は
 中身を見たい場合だけ `nftables` を入れればよい)。
 
 `.deps.lock` は `makedepends=go` の 1 行のみ。`go` は Arch 公式 `extra`
-(`2:1.27.4-1` 時点) なので監視対象。
+(`2:1.27.4-1` 時点) なので監視対象。`depends=()` / `makedepends=('go')` は 0.8.6 でも不変。
+
+### upstream の Arch packaging との関係
+
+v0.8.6 から upstream は `packaging/arch/{PKGBUILD,.SRCINFO,build.sh}` を持ち、
+release workflow が x86_64 / aarch64 の `.pkg.tar.zst` を release asset に上げ、
+GitHub Pages の pacman repository でも配布する。upstream の PKGBUILD は本 repo の
+PKGBUILD を元にしている (同じ `install` 行・同じ build flag) が、次の点で**意図的に違う**:
+
+- `arch=('x86_64')` のみ ([nekono] は `repo/x86_64/` のみ配信。upstream は aarch64 も配信)
+- cross-compile 用の `GOARCH` / `GOOS` / `GOTOOLCHAIN=auto` export と
+  `check()` の cross 判定を持たない (native build のみなので不要)
+- `options=('!strip' '!debug')` を付けない (cross build しないため strip で問題ない)
+
+release notes / README は upstream の pacman repo を案内するが、本 repo は
+release asset を使わず tag tarball から自前 build する。同じ pkgname `eleos` が
+upstream repo と [nekono] の両方に存在し得るため、client 側で両 repo を有効にすると
+同一 version では repo 優先順で選ばれる (version が上がれば pacman は新しい方を取る)。
 
 ## 更新履歴
 
 | 日付 | release | review した PKGBUILD repo SHA | upstream tag commit | findings |
 |---|---|---|---|---|
 | 2026-11-11 | 0.8.5-1 | (this PR) | `50ffcf8b` (tag `v0.8.5`) | 受入 (自家 PKGBUILD 新規作成) |
+| 2026-11-13 | 0.8.6-1 | (this PR) | `3b227778` (tag `v0.8.6`) | 受入。Go source 変更なし、差分は systemd unit の hardening と upstream の Arch packaging (`packaging/arch/`, release workflow) のみ。`depends` / `makedepends` 不変 |
 
 ### 次回 bump 時の確認点
 
@@ -120,4 +158,9 @@ upstream README の "Install from source" は
   `GOTOOLCHAIN=auto` による toolchain download が走る。build 失敗時はここを疑う)
 - systemd unit / `config.default.yml` の変更有無 (`diff` で確認し、変わっていれば
   `backup` 対象や rule の意味が変わっていないか review する)
+- 0.8.6 で unit に `SystemCallFilter=@system-service` / `RestrictAddressFamilies=AF_NETLINK AF_UNIX`
+  / `IPAddressDeny=any` が入った。unit がさらに厳しくなった場合、`elctl enable|apply|disable`
+  が netlink 以外 (file write / DNS / exec 等) を必要としていないか実機で確認する
+- upstream の `packaging/arch/PKGBUILD` が変わったら、(a) 本 repo の build 手順に取り込むべき
+  変更か (b) 本 repo 固有の意図的 diff かの切り分けを更新する
 - `ports:` / `router:` / `nat:` など設定 schema の破壊的変更が無いか
