@@ -4,10 +4,10 @@
 # Format: 1 line per package: <name>=<full-version>
 
 blueprint-compiler=0.22.2-1
-clang=23.1.4-1
+clang=23.1.5-1
 glib2=2.90.1-1
 gtk4=1:4.24.1-1
 libadwaita=1:1.10.0-1
 meson=1.12.1-2
-rust=1:1.99.1-2
+rust=1:1.99.1-4
 wireplumber=0.5.19-1
