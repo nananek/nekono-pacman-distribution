@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# build-all: pkgs/* の PKGBUILD を順番に makepkg + gpg --detach-sign +
-# repo-add する pipeline。
+# build-all: pkgs/* の PKGBUILD を順番に makepkg (--nosign) + bin/sign-pkgs
+# (並列 detach-sign) + repo-add する pipeline。
 #
 # build 順は **[nekono] 内部 cross-dep の topological sort** (= dep が先、
 # 依存先が後)。 alphabetical ではないので、 例えば python-fastmcp は
@@ -14,8 +14,10 @@
 #
 # 前提:
 #   - Arch build host (teyvat の ephemeral VM) で実行
-#   - gpg は VM の /usr/local/bin/gpg シム。detach-sign は SSH 越しに host の
-#     rga (remote-gpg-agent) に流れる。VM に秘密鍵もクライアント証明書も無い
+#   - gpg は build host のシム。detach-sign は rga (remote-gpg-agent) に流れる。
+#     build host に秘密鍵もクライアント証明書も無い
+#   - 署名は makepkg ではなく bin/sign-pkgs が行う (build を止めずに並列で
+#     PWA の承認要求を出すため。承認は 1 pkg = 1 回で回数は変わらない)
 #   - repo-add の base path = repo/x86_64/ (.gitignore で git 管理外)
 #   - tsort (coreutils) が PATH 上にある
 #
@@ -412,9 +414,12 @@ if [[ ${#packages[@]} -gt 0 ]]; then
 
         # makepkg: deps install + tarball verify + build + package。
         # -s で deps を pacman -S、-c で build 後 src/pkg を clean。
-        # --sign は makepkg が builtin GPG 署名する flag。`!` は gpg 互換の
-        # ために残しているが、rga は fingerprint を引く前に落とす。
-        makepkg -sc --noconfirm --sign --key "${NEKONO_GPG_FP}!" || {
+        # --sign は使わない: makepkg の署名は build 直後に同期で走り、 PWA の
+        # 承認待ち (最大 900 秒) の間 build が止まる。署名は下の bin/sign-pkgs
+        # で artifact をまとめて並列に行う (承認 1 pkg = 1 回は変わらない)。
+        # 副次的に、 秘密鍵がローカル keyring に無い構成でも makepkg の
+        # `gpg --list-secret-key` 事前チェックに引っかからなくなる。
+        makepkg -sc --noconfirm --nosign || {
             _rc=$?
             if $JSON; then j_error="makepkg failed for $pkg (rc=$_rc)"; fi
             exit "$_rc"
@@ -427,15 +432,28 @@ if [[ ${#packages[@]} -gt 0 ]]; then
         # 期待 file 一覧との差分が生まれる (= nekono-voicevox-mcp で実発生)。
         # debug package の欠落は許容し、 それ以外の欠落は build 異常として fail。
         _pkgfiles_to_move=()
+        _pkgfiles_to_sign=()
         for _f in "${_expected_pkgfiles[@]}"; do
             if [[ -f "$_f" ]]; then
                 _pkgfiles_to_move+=("$_f" "$_f.sig")
+                _pkgfiles_to_sign+=("$_f")
             elif [[ "$_f" != *-debug-* ]]; then
                 echo "[FATAL] expected package file missing after build: $_f" >&2
                 if $JSON; then j_error="expected package file missing: $_f"; fi
                 exit 1
             fi
         done
+
+        # 署名: build 済み artifact を並列に detach-sign する。失敗したら
+        # repo/ に移す前に止める (= 未署名 artifact を db に入れない)。
+        if [[ ${#_pkgfiles_to_sign[@]} -gt 0 ]]; then
+            python3 "$REPO_ROOT/bin/sign-pkgs" --key "${NEKONO_GPG_FP}!" \
+                "${_pkgfiles_to_sign[@]}" || {
+                _rc=$?
+                if $JSON; then j_error="signing failed for $pkg (rc=$_rc)"; fi
+                exit "$_rc"
+            }
+        fi
 
         # 生成物 (.pkg.tar.zst + .sig) だけを repo/x86_64/ に移動 (= 上記の
         # 期待 file 一覧のみ、 downloaded source 等の巻き込みを防ぐ)

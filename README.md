@@ -40,6 +40,7 @@
 │   ├── check-upstream        — nvchecker で upstream 更新を検知し Issue を立てる (daily-ops)
 │   ├── check-deps            — .deps.lock 差分から pkgrel bump の署名済み PR を作る (daily-ops)
 │   ├── sign-pkg              — 個別 .pkg.tar.zst を gpg --detach-sign
+│   ├── sign-pkgs             — 複数 .pkg.tar.zst を rga で並列 detach-sign (build-all が使う)
 │   ├── update-repo           — repo-add wrapper
 │   ├── prune                 — db 未登録の古い .pkg.tar.zst を削除
 │   ├── serve                 — build host 上で nginx が repo/ を Tailscale 配信
@@ -131,8 +132,8 @@ bin/build-all               # makepkg + gpg sign + repo-add
 sudo systemctl reload nginx # (任意) cache 飛ばす場合
 ```
 
-署名は package ごとに iPhone の PWA で承認する。build-all は承認待ちで止まるので、
-PWA を開いておく:
+署名は package ごとに iPhone の PWA で承認する。build は署名待ちで止まらず、
+`bin/sign-pkgs` が最大 4 件ずつ承認要求を出すので、PWA を開いて承認する:
 
 ```sh
 rga ping        # クライアント証明書とサーバ疎通の確認

@@ -1,0 +1,161 @@
+#!/usr/bin/env python3
+"""sign-pkgs: 複数の .pkg.tar.zst を Nekono GPG で並列に detach-sign する。
+
+bin/build-all は `makepkg --sign` を使わない。makepkg の署名は build の直後に
+同期で走るため、iPhone PWA の承認待ち (最大 900 秒) の間 build 全体が止まる。
+代わりに build を `--nosign` で済ませ、このスクリプトで artifact をまとめて
+署名する。gpg は PATH 上のもの (= remote-gpg-agent のシム) をそのまま使う。
+
+  bin/sign-pkgs [--key FPR] [--jobs N] FILE...
+
+--jobs (既定 4、環境変数 NEKONO_SIGN_JOBS でも可) は同時に PWA へ出す承認
+要求の上限。承認は 1 file = 1 回で、回数自体は `makepkg --sign` と同じ。
+署名後は必ず `gpg --verify` でローカルの公開鍵と突き合わせる。
+
+Exit code: 0 = 全件署名 + verify 成功 / 1 = 1 件でも失敗。
+"""
+
+from __future__ import annotations
+
+import argparse
+import asyncio
+import os
+import sys
+from typing import Optional
+
+DEFAULT_KEY = "2641FA2BFF801BBA75E8633AEF7566A07D865C0F!"
+DEFAULT_JOBS = 4
+DEFAULT_TIMEOUT = 1200  # rga client の timeoutSec (既定 900) より長く取る
+
+
+def _log(msg: str) -> None:
+    print(f"[sign] {msg}", file=sys.stderr, flush=True)
+
+
+async def _run(cmd: list[str], timeout: int, capture: bool) -> tuple[int, Optional[str]]:
+    """Run cmd. capture=True なら stdout/stderr を集めて返す (署名は stderr を
+    inherit して rga の「PWA の承認待ちです」を行中に表示させる)。"""
+    proc = await asyncio.create_subprocess_exec(
+        *cmd,
+        stdin=asyncio.subprocess.DEVNULL,
+        stdout=asyncio.subprocess.DEVNULL if capture else None,
+        stderr=asyncio.subprocess.PIPE if capture else None,
+    )
+    try:
+        if capture:
+            _, stderr = await asyncio.wait_for(proc.communicate(), timeout)
+        else:
+            await asyncio.wait_for(proc.wait(), timeout)
+            stderr = b""
+    except asyncio.TimeoutError:
+        proc.kill()
+        await proc.wait()
+        return 124, f"timeout after {timeout}s"
+    text = stderr.decode(errors="replace").strip() if stderr else None
+    return proc.returncode or 0, text
+
+
+async def _sign_one(path: str, key: str, timeout: int) -> Optional[str]:
+    """1 file を署名 + verify する。成功なら None、失敗なら理由を返す。"""
+    sig = path + ".sig"
+    try:
+        os.unlink(sig)
+    except FileNotFoundError:
+        pass
+
+    rc, err = await _run(
+        [
+            "gpg", "--batch", "--yes", "--detach-sign", "--use-agent",
+            "--local-user", key, "--no-armor", path,
+        ],
+        timeout,
+        capture=False,
+    )
+    if rc != 0:
+        return f"gpg --detach-sign failed (rc={rc})"
+
+    rc, err = await _run(
+        ["gpg", "--batch", "--verify", sig, path],
+        timeout,
+        capture=True,
+    )
+    if rc != 0:
+        detail = f": {err}" if err else ""
+        return f"gpg --verify failed (rc={rc}){detail}"
+    return None
+
+
+async def _sign_all(
+    files: list[str], key: str, jobs: int, timeout: int
+) -> list[tuple[str, str]]:
+    semaphore = asyncio.Semaphore(jobs)
+    total = len(files)
+    started = 0
+
+    async def worker(path: str) -> Optional[tuple[str, str]]:
+        nonlocal started
+        async with semaphore:
+            started += 1
+            i = started
+            name = os.path.basename(path)
+            _log(f"{i}/{total} {name}: waiting for PWA approval")
+            error = await _sign_one(path, key, timeout)
+            if error:
+                _log(f"FAILED {name}: {error}")
+                return path, error
+            _log(f"signed {name}")
+            return None
+
+    results = await asyncio.gather(*(worker(path) for path in files))
+    return [r for r in results if r is not None]
+
+
+def main(argv: Optional[list[str]] = None) -> int:
+    parser = argparse.ArgumentParser(
+        description="Sign several Arch package files in parallel via rga.",
+    )
+    parser.add_argument(
+        "--key",
+        default=os.environ.get("NEKONO_GPG_FP", DEFAULT_KEY),
+        help="signing key (fingerprint; trailing '!' is stripped by rga)",
+    )
+    parser.add_argument(
+        "--jobs",
+        type=int,
+        default=int(os.environ.get("NEKONO_SIGN_JOBS", str(DEFAULT_JOBS))),
+        help="max concurrent PWA approval requests (default: 4)",
+    )
+    parser.add_argument(
+        "--timeout",
+        type=int,
+        default=int(os.environ.get("NEKONO_SIGN_TIMEOUT", str(DEFAULT_TIMEOUT))),
+        help="per-file timeout in seconds (default: 1200)",
+    )
+    parser.add_argument("files", nargs="+", metavar="FILE")
+    args = parser.parse_args(argv)
+
+    if args.jobs < 1:
+        parser.error("--jobs must be >= 1")
+
+    missing = [path for path in args.files if not os.path.isfile(path)]
+    for path in missing:
+        _log(f"not found: {path}")
+    if missing:
+        return 1
+
+    errors = asyncio.run(
+        _sign_all(args.files, args.key, args.jobs, args.timeout)
+    )
+    if errors:
+        _log(f"{len(errors)}/{len(args.files)} failed")
+        return 1
+    _log(f"{len(args.files)} file(s) signed and verified")
+    return 0
+
+
+if __name__ == "__main__":
+    try:
+        sys.exit(main())
+    except KeyboardInterrupt:
+        print("[sign] interrupted", file=sys.stderr, flush=True)
+        sys.exit(130)

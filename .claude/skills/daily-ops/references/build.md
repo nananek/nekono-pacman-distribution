@@ -1,8 +1,8 @@
 # Phase 3: build (`bin/build-all --pending`)
 
 前提: このマシンが build host (`SKILL.md` の preflight で `BUILD_HOST`)。違えば user にコマンドを提示して終了。
-`bin/build-all` は pkgs/* を **[nekono] 内 cross-dep の topological order** で makepkg → Nekono GPG 署名 →
-`repo-add --sign` → `bin/prune` まで一気に行う。
+`bin/build-all` は pkgs/* を **[nekono] 内 cross-dep の topological order** で makepkg (`--nosign`) →
+`bin/sign-pkgs` (並列 detach-sign) → `repo-add --sign` → `bin/prune` まで一気に行う。
 
 ## 1. 計画を見る
 
@@ -21,7 +21,8 @@ bin/build-all --pending --dry-run
 
 ## 2. 実行前チェック
 
-- 署名の readiness: `signing.md` (VM: `ssh -i ~/.ssh/host_bridge kts_sz@10.0.2.2 '$HOME/.local/bin/rga ping'` / 署名は 1 pkg = 1 回 iPhone PWA の承認)。
+- 署名の readiness: `signing.md` の手順で確認する (VM は SSH bridge 経由で host の rga に届くこと)。署名は 1 pkg = 1 回 iPhone PWA の承認。`bin/build-all` は build 後に
+  `bin/sign-pkgs` で最大 4 件 (既定) の承認要求をまとめて出す。
 - `df -h .` — 大型 build (moonlight-qt-nekono / sunshine-* / voicevox-bin 等) は作業領域を食う。空きが少ないなら先に user に伝える
   (ENOSPC で artifact が 0600 のまま残り client が 403 になった前例があり、build-all は chmod 0644 で補正している)。
 - makepkg `-s` は makedepends を `pacman -S` する (sudo)。sudo / pacman の prompt で止まったら user に伝える。
