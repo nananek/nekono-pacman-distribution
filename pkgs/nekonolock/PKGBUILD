@@ -10,7 +10,7 @@
 # なく GitHub Release を publish 済み (nvchecker は use_latest_release で見る)。
 
 pkgname=nekonolock
-pkgver=0.1.0
+pkgver=0.2.0
 pkgrel=1
 pkgdesc="Sway screen locker unlocked by a YubiKey OpenPGP challenge or a password"
 arch=('x86_64')
@@ -34,7 +34,7 @@ source=("$pkgname-$pkgver.tar.gz::https://github.com/nananek/nekonolock/archive/
         'nekonolock-auth.socket'
         'nekonolock-auth.service'
         'LICENSE')
-sha256sums=('f85020ee4140f20edb8f86d017a4b4ec098c1fd67ae95a0586bdf94967bdbda3'
+sha256sums=('2126593d4b115b588b69074d9362b6b67d403a741e6dba56dc05256abb50ae0e'
             'cf1dfa3894ade5cb6801a00285a41f8dccd924116bcefea31b9683dd46957c4a'
             '79d6f29fd92abaef7c0265a5dbe784fb63a5e3ae20e5059c09bca4dd0d58d675'
             '510be1b0b290947ff3b51b5f25a005c8510c2b41575e213f49eac13e49e7c0d2'
