@@ -1,0 +1,9 @@
+#%PAM-1.0
+# nekonolock のパスワード認証。
+#
+# login は system-login -> system-auth を辿るため、Arch の pam_faillock
+# （auth の preauth / authfail と account）がそのまま効く。
+# 認証ヘルパは pam_authenticate に続けて pam_acct_mgmt を呼ぶので、
+# auth と account の両方が要る。
+auth     include login
+account  include login

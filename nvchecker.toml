@@ -104,6 +104,14 @@ github = "nananek/nekono-btkeycast"
 use_latest_release = true
 prefix = "v"
 
+[nekonolock]
+# 自家 package。 Sway (ext-session-lock-v1) 用のスクリーンロッカー。
+# release tag は vX.Y.Z 形式 (prefix "v")。
+source = "github"
+github = "nananek/nekonolock"
+use_latest_release = true
+prefix = "v"
+
 [pam_pkcs11]
 # OpenSC は release tag に "pam_pkcs11-X.Y.Z" の prefix を付ける。
 source = "github"

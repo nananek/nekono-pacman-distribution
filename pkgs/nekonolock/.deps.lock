@@ -1,0 +1,10 @@
+# Snapshot of Arch official repo versions for depends + makedepends of nekonolock.
+# Auto-generated and updated by .github/workflows/dep-version-pr.yml.
+# Source: pkgs/nekonolock/.SRCINFO (depends + makedepends entries).
+# Format: 1 line per package: <name>=<full-version>
+
+gnupg=2.4.9-4
+libxkbcommon=1.13.2-1
+pam=1.7.3-1
+rust=1:1.99.1-4
+ttf-dejavu=2.37+18+g9b5d1b2f-8
