@@ -2,7 +2,7 @@
 
 ## 状態
 
-**review 済み、 approve** (2026-11-15、 v0.2.1 text baseline update)
+**review 済み、 approve** (2026-11-15、 v0.3.0 sudo PAM update)
 
 自家 source PKGBUILD (= AUR fork ではない、 nananek 自身の upstream を
 GitHub release tag archive から直接 vendor)。 own-package フローは
@@ -22,33 +22,37 @@ PIV / pam_pkcs11 ではなく OpenPGP applet 一本に寄せている
 
 - Upstream: https://github.com/nananek/nekonolock
   - 主開発者 nananek (= 自家 upstream)
-  - tag `v0.2.1` (= prefix "v")、 commit `b84c76f31eb0d0ae7dd4eeb9b93f359330963a79`
+  - tag `v0.3.0` (= prefix "v")、 commit `e77e7bf38df31bfce1db63f72156b65e0d3e839d`
   - tag GPG 署名: **verified** (GitHub API `verification.verified=true`、
     signer `483DC691DF9F29327EA106BD030130E2F156CD74`)
   - license: MIT
-- distfile: GitHub Release archive (= `archive/refs/tags/v0.1.0.tar.gz`)
+- distfile: GitHub Release archive (= `archive/refs/tags/v0.3.0.tar.gz`)
 
 ## 検証結果
 
-- [x] `source` URL = `github.com/nananek/nekonolock/archive/refs/tags/v0.2.1.tar.gz`
+- [x] `source` URL = `github.com/nananek/nekonolock/archive/refs/tags/v0.3.0.tar.gz`
   - 自家 upstream、 typosquat 検討対象外
 - [x] `sha256sums` 独立検証
   - 実測 (review 時に curl 直取得 + `sha256sum`):
-    `70d06934e5075c62359991a17731ff638d0b37143b6c48bacc29f150ebd72135`
-  - 同梱 file 4 点も `packaging/` から再計算し、 PKGBUILD の値と一致
+    `55a854ec2360f776df82b695cc677302bc77fdd6b37d2d58bb695e6d1bd05c4b`
+  - 同梱 file 5 点も `packaging/` から再計算し、 PKGBUILD の値と一致
     - `nekonolock.pam` `cf1dfa38...`
     - `nekonolock-auth.socket` `79d6f29f...`
-    - `nekonolock-auth.service` `510be1b0...`
+    - `nekonolock-auth.service` `b772d0db...`
+    - `nekonolock-sudo.toml` `ef8eed8f...`
     - `LICENSE` `e8a8dae9...`
-- [x] tag `v0.2.1` GPG 署名状態: verified (上記 Source 参照)
+- [x] tag `v0.3.0` GPG 署名状態: verified (上記 Source 参照)
 - [x] `prepare()`: `cargo fetch --locked --target <host>` のみ。
   `Cargo.lock` を commit 済みで、 build 時の動的取得は無い
 - [x] `build()`: `cargo build --release --frozen -p nekonolock -p nekonolock-auth`
+  - v0.3.0 archive は `crates/pam` を含むため `-p pam-nekonolock` も追加される
   - `--frozen` で lockfile / registry の変更を拒否する
   - shell injection / eval / curl / wget / pipe-to-shell なし
 - [x] `check()`: `cargo test --frozen --workspace` — upstream CI と同じ
   (`.github/workflows/ci.yml`)。 追加のテスト依存取得なし
 - [x] `package()`: `install` のみ。 install script / post-install hook なし
+  - `pam_nekonolock.so` を `/usr/lib/security/` に、 `sudo.toml` の例を
+    `/usr/share/doc/nekonolock/` に置く
 - [x] `depends`: upstream の実装と照合
   - `gnupg` — OpenPGP applet へのチャレンジ署名 (`gpg --detach-sign` /
     `--verify`) を subprocess で呼ぶ
@@ -67,9 +71,14 @@ PIV / pam_pkcs11 ではなく OpenPGP applet 一本に寄せている
   - `nekonolock-auth.service` は socket activation 専用で `[Install]` を
     持たない。 enable するのは `.socket` だけ
   - `SocketMode=0600` / `DirectoryMode=0700` / `UMask=0077`
+  - user unit の sandbox は `RestrictAddressFamilies=AF_UNIX` など安全な範囲。
+    `CapabilityBoundingSet=` / `ProtectHostname=` 等は user namespace で PAM を
+    壊すため入れない (exposure 7.5)
 - [x] PAM: `/etc/pam.d/nekonolock` は `auth` と `account` の両方で `login` を
   include する。 認証ヘルパが `pam_authenticate` の後に `pam_acct_mgmt` を
-  呼ぶため `account` が要る。 `backup=` で pacman の管理対象にする
+  呼ぶため `account` が要る。 `backup=` で pacman の管理対象にする。
+  sudo 用は `/usr/lib/security/pam_nekonolock.so` を同梱し、 既定では PAM 設定を
+  変えない (ansible の `nekonolock_sudo_auth` で有効化する)
 - [x] `secrets` 混入なし
 - [x] `arch=('x86_64')` — `libxkbcommon` / `libpam` に link する native binary。
   upstream CI も x86_64 の Ubuntu で検証している
@@ -84,11 +93,12 @@ PIV / pam_pkcs11 ではなく OpenPGP applet 一本に寄せている
 | **PAM file を package に同梱し、 ansible 側を正にする** | パスワード認証の include 先はホストの PAM 方針 (pam_faillock 等) に依存する。 package は動く既定を置き、 ansible role が上書きする |
 | **`ttf-dejavu` を depends に置く** | `[ui] font` の既定値が DejaVu。 フォントが無いとロック画面が描画できない |
 | **`pcsclite` / `ccid` は optdepends** | scdaemon の `disable-ccid` 運用が既定。 pcscd 経由はホスト設定で選ぶ |
+| **sudo 用 PAM モジュールを同梱（既定無効）** | root への認証はユーザーが差し替えられるヘルパの応答を信頼しない。 root 所有の設定と公開鍵で検証し、 有効化は ansible で明示する |
 
 ## 結論
 
 **approve** — build host で `bin/build-all nekonolock` で build + sign + repo db
-追加可。 PAM file はパッケージ同梱の既定を使い、 ホスト固有の変更は
+追加可。v0.3.0 から `pam_nekonolock.so` も同梱される。 PAM file はパッケージ同梱の既定を使い、 ホスト固有の変更は
 ansible-nekonodesk の `nekonolock` role で行う。
 
 publish 後の配備:
@@ -98,8 +108,8 @@ publish 後の配備:
 
 ## 更新方針
 
-upstream で新 release (= v0.3.0 等) が出たら:
-1. user が `git tag -s v0.3.0 -m "Release 0.3.0"` + `git push origin v0.3.0` +
+upstream で新 release (= v0.4.0 等) が出たら:
+1. user が `git tag -s v0.4.0 -m "Release 0.4.0"` + `git push origin v0.4.0` +
    GitHub Release publish
 2. nvchecker (GitHub Releases、 `nananek/nekonolock`、 prefix "v") が新 release
    を検知 → Issue が立つ
@@ -115,3 +125,4 @@ upstream で新 release (= v0.3.0 等) が出たら:
 | 2026-11-15 | 0.1.0-1 | (this PR) | `10ee9c85c92d6769b45bc3c2b20ffc89cde27c80` | 初回 add、自家 source v0.1.0。 tag GPG 署名 verified、 tag archive sha256 独立再計算、 依存と systemd unit を source と照合 |
 | 2026-11-15 | 0.2.0-1 | (this PR) | `4cd874d301fbc5d043d30cf6a349340cf4b93149` | 0.2.0 bump (Ink UI / HiDPI / 無操作時の純黒)。 depends / systemd unit / PAM は不変。 tag GPG 署名 verified、 tag archive sha256 独立再計算、 `.deps.lock` の rust を 1.100.0-1 に更新 |
 | 2026-11-15 | 0.2.1-1 | (this PR) | `b84c76f31eb0d0ae7dd4eeb9b93f359330963a79` | 0.2.1 bump (共通ベースライン / 全大文字コピー)。 depends / systemd unit / PAM は不変。 tag GPG 署名 verified、 tag archive sha256 独立再計算 |
+| 2026-11-15 | 0.3.0-1 | (this PR) | `e77e7bf38df31bfce1db63f72156b65e0d3e839d` | 0.3.0 bump (sudo 用 PAM モジュール / PIN キャッシュ消去 / カード抜去時の password 切替)。 systemd unit を安全な sandbox に更新。 tag GPG 署名 verified、 tag archive sha256 独立再計算 |
