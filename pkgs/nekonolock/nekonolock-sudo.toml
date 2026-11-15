@@ -1,0 +1,15 @@
+# /etc/nekonolock/sudo.toml の例。root:root 0644 で置く。
+#
+# sudo 用の PAM モジュール (pam_nekonolock.so) はこのファイルだけを読み、
+# ユーザーの ~/.config/nekonolock/config.toml は読まない。
+# enabled = false の間は何もしない（パスワード認証へそのまま進む）。
+[sudo]
+enabled = true
+# 16 桁の long key ID か 40 桁の fingerprint。
+key = "030130E2F156CD74"
+# 検証に使う公開鍵。root 所有で、group / other から書き換えられないこと。
+public_key = "/etc/nekonolock/sudo-key.asc"
+challenge_bytes = 32
+timeout_sec = 30
+# 空なら全ユーザー。名前を並べたときだけ、そのユーザーに限定する。
+users = []

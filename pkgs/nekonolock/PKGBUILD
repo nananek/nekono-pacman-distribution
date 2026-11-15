@@ -3,14 +3,13 @@
 # 自家 source PKGBUILD（AUR fork ではない）。nananek/nekonolock の Rust
 # workspace から UI (nekonolock) と認証ヘルパ (nekonolock-auth) をビルドする。
 # systemd user unit 2 本（socket activation）と /etc/pam.d/nekonolock を同梱し、
-# 既定フォント ttf-dejavu と libxkbcommon を depends に置く（upstream の
-# docs/design.md §12）。
+# 既定フォント ttf-dejavu と libxkbcommon を depends に置く（設計 §12）。
+# ソースに crates/pam があれば sudo 用の pam_nekonolock.so も入れる。
 #
-# source は GitHub release tag の archive を pin する。tag を切っただけでは
-# なく GitHub Release を publish 済み (nvchecker は use_latest_release で見る)。
+# 配布先は [nekono] repo。移植手順と検証方法は packaging/README.md。
 
 pkgname=nekonolock
-pkgver=0.2.1
+pkgver=0.3.0
 pkgrel=1
 pkgdesc="Sway screen locker unlocked by a YubiKey OpenPGP challenge or a password"
 arch=('x86_64')
@@ -29,15 +28,19 @@ optdepends=(
 )
 backup=('etc/pam.d/nekonolock')
 
+# source は GitHub release tag の archive を pin する。tag を切っただけでは
+# なく GitHub Release を publish 済み (nvchecker は use_latest_release で見る)。
 source=("$pkgname-$pkgver.tar.gz::https://github.com/nananek/nekonolock/archive/refs/tags/v$pkgver.tar.gz"
         'nekonolock.pam'
         'nekonolock-auth.socket'
         'nekonolock-auth.service'
+        'nekonolock-sudo.toml'
         'LICENSE')
-sha256sums=('70d06934e5075c62359991a17731ff638d0b37143b6c48bacc29f150ebd72135'
+sha256sums=('55a854ec2360f776df82b695cc677302bc77fdd6b37d2d58bb695e6d1bd05c4b'
             'cf1dfa3894ade5cb6801a00285a41f8dccd924116bcefea31b9683dd46957c4a'
             '79d6f29fd92abaef7c0265a5dbe784fb63a5e3ae20e5059c09bca4dd0d58d675'
-            '510be1b0b290947ff3b51b5f25a005c8510c2b41575e213f49eac13e49e7c0d2'
+            'b772d0dbc1add14b36c411be8ae4563b0c395d1b47e50724e14bdcd2532da33f'
+            'ef8eed8fadef6bb5b1cce399cbd3e925a192c6020816845fdf65bc625de59c98'
             'e8a8dae92194b557ef75b2ba2e287354f59638463c51aad3378520de6b17b59e')
 
 prepare() {
@@ -47,7 +50,13 @@ prepare() {
 
 build() {
     cd "$pkgname-$pkgver"
-    cargo build --release --frozen -p nekonolock -p nekonolock-auth
+    local -a crates=(-p nekonolock -p nekonolock-auth)
+    # 古い tag archive には crates/pam が無い。ある場合だけ sudo 用の
+    # PAM モジュールもビルドする。
+    if [[ -d crates/pam ]]; then
+        crates+=(-p pam-nekonolock)
+    fi
+    cargo build --release --frozen "${crates[@]}"
 }
 
 check() {
@@ -59,6 +68,13 @@ package() {
     cd "$pkgname-$pkgver"
     install -Dm755 target/release/nekonolock "$pkgdir/usr/bin/nekonolock"
     install -Dm755 target/release/nekonolock-auth "$pkgdir/usr/bin/nekonolock-auth"
+
+    if [[ -d crates/pam ]]; then
+        install -Dm755 target/release/libpam_nekonolock.so \
+            "$pkgdir/usr/lib/security/pam_nekonolock.so"
+    fi
+    install -Dm644 ../nekonolock-sudo.toml \
+        "$pkgdir/usr/share/doc/$pkgname/sudo.toml.example"
 
     install -Dm644 ../nekonolock.pam "$pkgdir/etc/pam.d/nekonolock"
     install -Dm644 ../nekonolock-auth.socket \
