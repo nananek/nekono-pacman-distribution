@@ -305,6 +305,36 @@ func isUpstreamTitle(title string) bool {
 	return strings.HasPrefix(title, "[") && strings.Contains(title, "] upstream version:")
 }
 
+// BotPRList returns the open deps/* (bot pkgrel) PRs, in the same shape
+// bin/preflight reports them (number / headRefName / title). The driver uses it
+// to re-read the list after detect has opened new PRs.
+func BotPRList(ctx context.Context, env *Env) ([]map[string]any, error) {
+	res, err := GHPRTool(env).Run(ctx, json.RawMessage(`{"method":"list","filter":"deps"}`))
+	if err != nil {
+		return nil, err
+	}
+	data, ok := res.Data.(map[string]any)
+	if !ok {
+		return nil, fmt.Errorf("gh pr list: unexpected result")
+	}
+	raw, ok := data["prs"].([]map[string]any)
+	if !ok {
+		return nil, fmt.Errorf("gh pr list: unexpected prs payload")
+	}
+	// gh_pr calls the head branch "head"; preflight and the driver use
+	// "headRefName", so normalise here.
+	out := make([]map[string]any, 0, len(raw))
+	for _, pr := range raw {
+		out = append(out, map[string]any{
+			"number":      pr["number"],
+			"headRefName": pr["head"],
+			"title":       pr["title"],
+			"draft":       pr["draft"],
+		})
+	}
+	return out, nil
+}
+
 // GHIssueList returns the open upstream-version Issues. The driver uses it to
 // re-read the list after detect has created new ones.
 func GHIssueList(ctx context.Context, env *Env) ([]map[string]any, error) {

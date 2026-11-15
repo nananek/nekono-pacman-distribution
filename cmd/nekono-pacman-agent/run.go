@@ -106,10 +106,19 @@ func cmdRun(ctx context.Context, args []string) error {
 
 	escalations := 0
 
-	// Phase 1: one triage run per bot pkgrel PR. The list comes from preflight
-	// (open deps/* PRs), so detect's own PRs are included.
+	// Phase 1: one triage run per bot pkgrel PR. The list starts from preflight
+	// (open deps/* PRs); detect runs before this phase and can open new ones, so
+	// it is re-read here (the upstream phase below does the same).
 	if !*skipTriage && !*dryRun {
-		for _, it := range items(st.Preflight["bot_prs"]) {
+		botPRs := items(st.Preflight["bot_prs"])
+		if createdDeps(st.Deps) > 0 {
+			if res, rerr := tool.BotPRList(ctx, a.env); rerr == nil {
+				botPRs = res
+			} else {
+				st.Notes = append(st.Notes, fmt.Sprintf("triage: re-read of bot PRs failed (%v), using the preflight list", rerr))
+			}
+		}
+		for _, it := range botPRs {
 			number := intOf(it["number"])
 			head := strOf(it["headRefName"])
 			title := strOf(it["title"])
@@ -255,6 +264,17 @@ func toOutcome(o phase.Outcome) *phaseOutcome {
 		Phase: o.Phase, Status: o.Status, Summary: o.Summary,
 		Escalated: o.Escalated, Steps: o.Steps, Tokens: o.Usage.TotalTokens,
 	}
+}
+
+// createdDeps counts the deps/* PRs bin/check-deps opened in this run.
+func createdDeps(d map[string]any) int {
+	n := 0
+	for _, it := range items(d["entries"]) {
+		if strOf(it["status"]) == "created" {
+			n++
+		}
+	}
+	return n
 }
 
 func lenList(v any) int {
