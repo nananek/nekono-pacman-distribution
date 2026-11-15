@@ -10,16 +10,10 @@ Restart=on-failure
 RestartSec=1s
 UMask=0077
 
-# user unit では capability / namespace / filesystem の制限が暗黙の
-# user namespace を作り、PAM の setuid 経路 (unix_chkpwd / pam_faillock) を
-# 壊す。CapabilityBoundingSet= は user manager で status=218/CAPABILITIES に
-# なる。ここではソケット種別と namespace / syscall の最小限だけを絞る。
-RestrictAddressFamilies=AF_UNIX
-RestrictNamespaces=yes
-RestrictRealtime=yes
-RestrictSUIDSGID=yes
-LockPersonality=yes
-SystemCallArchitectures=native
+# systemd の sandbox / capability / namespace 制限は PAM の setuid 経路
+# (unix_chkpwd / pam_faillock) と衝突するため入れない。CapabilityBoundingSet=
+# は user manager で status=218/CAPABILITIES、RestrictAddressFamilies=AF_UNIX
+# などは PAM 認証を失敗させることを実機で確認した。
 
 # socket activation 専用。有効化するのは .socket だけで、.service は
 # [Install] を持たない（systemd.socket の推奨構成）。

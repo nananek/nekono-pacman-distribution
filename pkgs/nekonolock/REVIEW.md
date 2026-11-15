@@ -2,7 +2,7 @@
 
 ## 状態
 
-**review 済み、 approve** (2026-11-15、 v0.3.1 PAM/auth patch)
+**review 済み、 approve** (2026-11-15、 v0.3.2 sandbox revert)
 
 自家 source PKGBUILD (= AUR fork ではない、 nananek 自身の upstream を
 GitHub release tag archive から直接 vendor)。 own-package フローは
@@ -22,26 +22,26 @@ Sway (wlroots) 用のスクリーンロッカー。 `ext-session-lock-v1` で画
 
 - Upstream: https://github.com/nananek/nekonolock
   - 主開発者 nananek (= 自家 upstream)
-  - tag `v0.3.1` (= prefix "v")、 commit `89e7285ed893ca562ffd182bc41d2c15f9591315`
+  - tag `v0.3.2` (= prefix "v")、 commit `af5b78cd0d2602f3ae069a268356096b6043c83c`
   - tag GPG 署名: **verified** (GitHub API `verification.verified=true`、
     signer `483DC691DF9F29327EA106BD030130E2F156CD74`)
   - license: MIT
-- distfile: GitHub Release archive (= `archive/refs/tags/v0.3.1.tar.gz`)
+- distfile: GitHub Release archive (= `archive/refs/tags/v0.3.2.tar.gz`)
 
 ## 検証結果
 
-- [x] `source` URL = `github.com/nananek/nekonolock/archive/refs/tags/v0.3.1.tar.gz`
+- [x] `source` URL = `github.com/nananek/nekonolock/archive/refs/tags/v0.3.2.tar.gz`
   - 自家 upstream、 typosquat 検討対象外
 - [x] `sha256sums` 独立検証
   - 実測 (review 時に curl 直取得 + `sha256sum`):
-    `6ff10526ffe67a91b783c3d8ae8319baccc4989b0eded96c03265b9e0a0b2bfe`
+    `d24de56b68f9d66cc0d0adca741c94265bf30a12e526933b0b74215a823afa7f`
   - 同梱 file 5 点も `packaging/` から再計算し、 PKGBUILD の値と一致
     - `nekonolock.pam` `f4ca0637...` (password-only chain)
     - `nekonolock-auth.socket` `79d6f29f...`
-    - `nekonolock-auth.service` `b772d0db...`
+    - `nekonolock-auth.service` `3576102a...`
     - `nekonolock-sudo.toml` `ef8eed8f...`
     - `LICENSE` `e8a8dae9...`
-- [x] tag `v0.3.1` GPG 署名状態: verified (上記 Source 参照)
+- [x] tag `v0.3.2` GPG 署名状態: verified (上記 Source 参照)
 - [x] `prepare()`: `cargo fetch --locked --target <host>` のみ。
   `Cargo.lock` を commit 済みで、 build 時の動的取得は無い
 - [x] `build()`: `cargo build --release --frozen -p nekonolock -p nekonolock-auth`
@@ -71,9 +71,9 @@ Sway (wlroots) 用のスクリーンロッカー。 `ext-session-lock-v1` で画
   - `nekonolock-auth.service` は socket activation 専用で `[Install]` を
     持たない。 enable するのは `.socket` だけ
   - `SocketMode=0600` / `DirectoryMode=0700` / `UMask=0077`
-  - user unit の sandbox は `RestrictAddressFamilies=AF_UNIX` など安全な範囲。
-    `CapabilityBoundingSet=` / `ProtectHostname=` 等は user namespace で PAM を
-    壊すため入れない (exposure 7.5)
+  - user unit は sandbox を入れず `UMask=0077` だけ。`CapabilityBoundingSet=` は
+    `status=218/CAPABILITIES`、`RestrictAddressFamilies` などは PAM の setuid
+    経路を壊すため入れない
 - [x] PAM: `/etc/pam.d/nekonolock` の `auth` は `pam_faillock` + `pam_unix`
   の password-only chain。 `account` は `login` include で `pam_acct_mgmt` を
   通す。 `system-auth` の `pam_pkcs11` を先に通すと、 ロック画面の password が
@@ -128,3 +128,4 @@ upstream で新 release (= v0.4.0 等) が出たら:
 | 2026-11-15 | 0.2.1-1 | (this PR) | `b84c76f31eb0d0ae7dd4eeb9b93f359330963a79` | 0.2.1 bump (共通ベースライン / 全大文字コピー)。 depends / systemd unit / PAM は不変。 tag GPG 署名 verified、 tag archive sha256 独立再計算 |
 | 2026-11-15 | 0.3.0-1 | (this PR) | `e77e7bf38df31bfce1db63f72156b65e0d3e839d` | 0.3.0 bump (sudo 用 PAM モジュール / PIN キャッシュ消去 / カード抜去時の password 切替)。 systemd unit を安全な sandbox に更新。 tag GPG 署名 verified、 tag archive sha256 独立再計算 |
 | 2026-11-15 | 0.3.1-1 | (this PR) | `89e7285ed893ca562ffd182bc41d2c15f9591315` | 0.3.1 patch (ロック画面の PAM auth を password-only chain / カード抜去検知 1 秒)。 PAM file の hash を更新。 tag GPG 署名 verified、 tag archive sha256 独立再計算 |
+| 2026-11-15 | 0.3.2-1 | (this PR) | `af5b78cd0d2602f3ae069a268356096b6043c83c` | 0.3.2 patch (認証ヘルパの systemd sandbox を撤回し UMask のみに戻す)。 unit の hash を更新。 tag GPG 署名 verified、 tag archive sha256 独立再計算 |
