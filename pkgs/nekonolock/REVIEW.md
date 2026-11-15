@@ -2,7 +2,7 @@
 
 ## 状態
 
-**review 済み、 approve** (2026-11-15、 v0.2.0 UI update)
+**review 済み、 approve** (2026-11-15、 v0.2.1 text baseline update)
 
 自家 source PKGBUILD (= AUR fork ではない、 nananek 自身の upstream を
 GitHub release tag archive から直接 vendor)。 own-package フローは
@@ -22,7 +22,7 @@ PIV / pam_pkcs11 ではなく OpenPGP applet 一本に寄せている
 
 - Upstream: https://github.com/nananek/nekonolock
   - 主開発者 nananek (= 自家 upstream)
-  - tag `v0.2.0` (= prefix "v")、 commit `4cd874d301fbc5d043d30cf6a349340cf4b93149`
+  - tag `v0.2.1` (= prefix "v")、 commit `b84c76f31eb0d0ae7dd4eeb9b93f359330963a79`
   - tag GPG 署名: **verified** (GitHub API `verification.verified=true`、
     signer `483DC691DF9F29327EA106BD030130E2F156CD74`)
   - license: MIT
@@ -30,17 +30,17 @@ PIV / pam_pkcs11 ではなく OpenPGP applet 一本に寄せている
 
 ## 検証結果
 
-- [x] `source` URL = `github.com/nananek/nekonolock/archive/refs/tags/v0.2.0.tar.gz`
+- [x] `source` URL = `github.com/nananek/nekonolock/archive/refs/tags/v0.2.1.tar.gz`
   - 自家 upstream、 typosquat 検討対象外
 - [x] `sha256sums` 独立検証
   - 実測 (review 時に curl 直取得 + `sha256sum`):
-    `2126593d4b115b588b69074d9362b6b67d403a741e6dba56dc05256abb50ae0e`
+    `70d06934e5075c62359991a17731ff638d0b37143b6c48bacc29f150ebd72135`
   - 同梱 file 4 点も `packaging/` から再計算し、 PKGBUILD の値と一致
     - `nekonolock.pam` `cf1dfa38...`
     - `nekonolock-auth.socket` `79d6f29f...`
     - `nekonolock-auth.service` `510be1b0...`
     - `LICENSE` `e8a8dae9...`
-- [x] tag `v0.2.0` GPG 署名状態: verified (上記 Source 参照)
+- [x] tag `v0.2.1` GPG 署名状態: verified (上記 Source 参照)
 - [x] `prepare()`: `cargo fetch --locked --target <host>` のみ。
   `Cargo.lock` を commit 済みで、 build 時の動的取得は無い
 - [x] `build()`: `cargo build --release --frozen -p nekonolock -p nekonolock-auth`
@@ -114,3 +114,4 @@ upstream で新 release (= v0.3.0 等) が出たら:
 |---|---|---|---|---|
 | 2026-11-15 | 0.1.0-1 | (this PR) | `10ee9c85c92d6769b45bc3c2b20ffc89cde27c80` | 初回 add、自家 source v0.1.0。 tag GPG 署名 verified、 tag archive sha256 独立再計算、 依存と systemd unit を source と照合 |
 | 2026-11-15 | 0.2.0-1 | (this PR) | `4cd874d301fbc5d043d30cf6a349340cf4b93149` | 0.2.0 bump (Ink UI / HiDPI / 無操作時の純黒)。 depends / systemd unit / PAM は不変。 tag GPG 署名 verified、 tag archive sha256 独立再計算、 `.deps.lock` の rust を 1.100.0-1 に更新 |
+| 2026-11-15 | 0.2.1-1 | (this PR) | `b84c76f31eb0d0ae7dd4eeb9b93f359330963a79` | 0.2.1 bump (共通ベースライン / 全大文字コピー)。 depends / systemd unit / PAM は不変。 tag GPG 署名 verified、 tag archive sha256 独立再計算 |
