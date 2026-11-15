@@ -1,0 +1,70 @@
+# Maintainer: Nekono Nana KAKKO KARI <3267314+nananek@users.noreply.github.com>
+#
+# 自家 source PKGBUILD（AUR fork ではない）。nananek/nekonolock の Rust
+# workspace から UI (nekonolock) と認証ヘルパ (nekonolock-auth) をビルドする。
+# systemd user unit 2 本（socket activation）と /etc/pam.d/nekonolock を同梱し、
+# 既定フォント ttf-dejavu と libxkbcommon を depends に置く（upstream の
+# docs/design.md §12）。
+#
+# source は GitHub release tag の archive を pin する。tag を切っただけでは
+# なく GitHub Release を publish 済み (nvchecker は use_latest_release で見る)。
+
+pkgname=nekonolock
+pkgver=0.1.0
+pkgrel=1
+pkgdesc="Sway screen locker unlocked by a YubiKey OpenPGP challenge or a password"
+arch=('x86_64')
+url="https://github.com/nananek/nekonolock"
+license=('MIT')
+depends=(
+    'gnupg'         # OpenPGP applet のチャレンジ署名（gpg --detach-sign / --verify）
+    'libxkbcommon'  # wl_keyboard のキーマップ
+    'pam'           # libpam.so.0 を dlopen する
+    'ttf-dejavu'    # [ui] font の既定フォント
+)
+makedepends=('rust')  # cargo を含む
+optdepends=(
+    'pcsclite: YubiKey を pcscd 経由で使う場合（scdaemon の disable-ccid）'
+    'ccid: PC/SC の CCID ドライバ'
+)
+backup=('etc/pam.d/nekonolock')
+
+source=("$pkgname-$pkgver.tar.gz::https://github.com/nananek/nekonolock/archive/refs/tags/v$pkgver.tar.gz"
+        'nekonolock.pam'
+        'nekonolock-auth.socket'
+        'nekonolock-auth.service'
+        'LICENSE')
+sha256sums=('f85020ee4140f20edb8f86d017a4b4ec098c1fd67ae95a0586bdf94967bdbda3'
+            'cf1dfa3894ade5cb6801a00285a41f8dccd924116bcefea31b9683dd46957c4a'
+            '79d6f29fd92abaef7c0265a5dbe784fb63a5e3ae20e5059c09bca4dd0d58d675'
+            '510be1b0b290947ff3b51b5f25a005c8510c2b41575e213f49eac13e49e7c0d2'
+            'e8a8dae92194b557ef75b2ba2e287354f59638463c51aad3378520de6b17b59e')
+
+prepare() {
+    cd "$pkgname-$pkgver"
+    cargo fetch --locked --target "$(rustc -vV | sed -n 's/host: //p')"
+}
+
+build() {
+    cd "$pkgname-$pkgver"
+    cargo build --release --frozen -p nekonolock -p nekonolock-auth
+}
+
+check() {
+    cd "$pkgname-$pkgver"
+    cargo test --frozen --workspace
+}
+
+package() {
+    cd "$pkgname-$pkgver"
+    install -Dm755 target/release/nekonolock "$pkgdir/usr/bin/nekonolock"
+    install -Dm755 target/release/nekonolock-auth "$pkgdir/usr/bin/nekonolock-auth"
+
+    install -Dm644 ../nekonolock.pam "$pkgdir/etc/pam.d/nekonolock"
+    install -Dm644 ../nekonolock-auth.socket \
+        "$pkgdir/usr/lib/systemd/user/nekonolock-auth.socket"
+    install -Dm644 ../nekonolock-auth.service \
+        "$pkgdir/usr/lib/systemd/user/nekonolock-auth.service"
+
+    install -Dm644 ../LICENSE "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
+}

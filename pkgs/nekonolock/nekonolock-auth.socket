@@ -1,0 +1,14 @@
+[Unit]
+Description=nekonolock authentication helper socket
+Documentation=https://github.com/nananek/nekonolock
+
+[Socket]
+# プロトコルは SOCK_SEQPACKET（設計 §6）。ListenStream= にすると
+# SOCK_STREAM になり、ヘルパ側の種別検証で起動を拒否する。
+ListenSequentialPacket=%t/nekonolock/auth.sock
+SocketMode=0600
+DirectoryMode=0700
+RemoveOnStop=yes
+
+[Install]
+WantedBy=sockets.target

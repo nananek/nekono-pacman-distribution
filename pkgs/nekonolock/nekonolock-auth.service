@@ -1,0 +1,14 @@
+[Unit]
+Description=nekonolock authentication helper
+Documentation=https://github.com/nananek/nekonolock
+Requires=nekonolock-auth.socket
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/nekonolock-auth
+Restart=on-failure
+RestartSec=1s
+UMask=0077
+
+# socket activation 専用。有効化するのは .socket だけで、.service は
+# [Install] を持たない（systemd.socket の推奨構成）。
