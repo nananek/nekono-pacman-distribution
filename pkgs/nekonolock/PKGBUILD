@@ -11,7 +11,7 @@
 
 pkgname=nekonolock
 pkgver=0.1.0
-pkgrel=1
+pkgrel=2
 pkgdesc="Sway screen locker unlocked by a YubiKey OpenPGP challenge or a password"
 arch=('x86_64')
 url="https://github.com/nananek/nekonolock"

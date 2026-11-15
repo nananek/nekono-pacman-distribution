@@ -113,3 +113,4 @@ upstream で新 release (= v0.2.0 等) が出たら:
 | 日付 | release | review した PKGBUILD repo SHA | upstream tag commit | findings |
 |---|---|---|---|---|
 | 2026-11-15 | 0.1.0-1 | (this PR) | `10ee9c85c92d6769b45bc3c2b20ffc89cde27c80` | 初回 add、自家 source v0.1.0。 tag GPG 署名 verified、 tag archive sha256 独立再計算、 依存と systemd unit を source と照合 |
+| 2026-11-15 | 0.1.0-2 | (this PR) | — (pkgrel bump のみ) | `pkgrel` +1 (deps changed): rust 1:1.99.1-4 → 1:1.100.0-1 |
