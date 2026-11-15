@@ -1,9 +1,16 @@
 #%PAM-1.0
 # nekonolock のパスワード認証。
 #
-# login は system-login -> system-auth を辿るため、Arch の pam_faillock
-# （auth の preauth / authfail と account）がそのまま効く。
-# 認証ヘルパは pam_authenticate に続けて pam_acct_mgmt を呼ぶので、
-# auth と account の両方が要る。
-auth     include login
+# `auth include login` にすると system-auth の pam_pkcs11 sufficient が先に
+# 走り、ロック画面のパスワードが PIV PIN としてカードに送られる。ここでは
+# system-auth の auth chain から pam_pkcs11 だけを除いた password-only の
+# chain を使う。account は login のままでよい。
+auth     required pam_faillock.so preauth
+-auth    [success=2 default=ignore] pam_systemd_home.so
+auth     [success=1 default=bad] pam_unix.so try_first_pass nullok
+auth     [default=die] pam_faillock.so authfail
+auth     optional pam_permit.so
+auth     required pam_env.so
+auth     required pam_faillock.so authsucc
+
 account  include login
