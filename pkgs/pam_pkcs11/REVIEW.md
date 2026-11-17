@@ -125,3 +125,4 @@ upstream の新 release (0.6.14 等) が出たら:
 | 2026-10-19 | 0.6.14-2 | (this PR) | — (pkgrel bump のみ) | `pkgrel` +1 (deps changed): automake 1.18.1-1 → 1.19-1, openssl 3.6.4-1 → 3.6.5-1, pcsclite 2.5.1-1 → 2.5.3-1, pkgconf 3.0.7-1 → 3.0.10-1 |
 | 2026-11-11 | 0.6.14-3 | (this PR) | — (pkgrel bump のみ) | `pkgrel` +1 (deps changed): openssl 3.6.5-1 → 4.1.0-1 |
 | 2026-11-15 | 0.6.14-4 | (this PR) | — (pkgrel bump のみ) | `pkgrel` +1 (deps changed): automake 1.19-1 → 1.20-1 |
+| 2026-11-17 | 0.6.14-5 | (this PR) | — (pkgrel bump のみ) | `pkgrel` +1 (deps changed): pkgconf 3.0.10-1 → 3.0.11-1 |
