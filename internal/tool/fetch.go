@@ -32,7 +32,13 @@ var defaultFetchHosts = []string{
 	"objects.githubusercontent.com",
 	"codeload.github.com",
 	"raw.githubusercontent.com",
+	// GitHub release assets answer github.com with a 302 to this host; without
+	// it the bytes are unreachable and checksums cannot be measured.
+	"release-assets.githubusercontent.com",
 	"aur.archlinux.org",
+	// Official repo metadata (packages/<repo>/<arch>/<pkg>/json) is the only
+	// way to compare against what Arch ships; it is not on GitHub.
+	"archlinux.org",
 	"registry.npmjs.org",
 	"pypi.org",
 	"files.pythonhosted.org",
@@ -143,8 +149,11 @@ func FetchTool(env *Env) *Func {
 			if head.Len() > 0 {
 				data["body"] = head.String()
 			}
+			// The summary carries the full digest: a truncated prefix reads to
+			// the model as "the real sha256 is not obtainable" and it stops
+			// instead of pinning checksum.
 			return Result{
-				Summary: fmt.Sprintf("%s: http %d, %d bytes, sha256=%s", u.Host, resp.StatusCode, n, sum[:16]),
+				Summary: fmt.Sprintf("%s: http %d, %d bytes, sha256=%s", u.Host, resp.StatusCode, n, sum),
 				Data:    data,
 			}, nil
 		},
