@@ -133,9 +133,10 @@ func cmdRun(ctx context.Context, args []string) error {
 			oc.Item = item
 			st.Triage = append(st.Triage, oc)
 			if out.Status == "harness_gap" {
-				st.Status = "harness_gap"
-				st.Notes = append(st.Notes, "triage: "+out.Summary)
-				return finishRun(a, st)
+				// Same rule as upstream: skip the item, never the run.
+				escalations++
+				st.Notes = append(st.Notes, fmt.Sprintf("triage %s: harness gap, skipped (%s)", item, out.Summary))
+				continue
 			}
 			if rerr != nil || out.Status == "failed" {
 				st.Status = "failed_at_triage"
@@ -171,9 +172,13 @@ func cmdRun(ctx context.Context, args []string) error {
 			oc.Item = fmt.Sprintf("#%d", number)
 			st.Upstream = append(st.Upstream, oc)
 			if out.Status == "harness_gap" {
-				st.Status = "harness_gap"
-				st.Notes = append(st.Notes, "upstream: "+out.Summary)
-				return finishRun(a, st)
+				// A missing tool is a bug in the harness, not a reason to
+				// abandon the day: record it, skip this item, keep going so
+				// build/publish still run. The gap stays visible in the notes
+				// and in st.Upstream/N.BuildPlan instead of killing the run.
+				escalations++
+				st.Notes = append(st.Notes, fmt.Sprintf("upstream #%d: harness gap, skipped (%s)", number, out.Summary))
+				continue
 			}
 			if rerr != nil || out.Status == "failed" {
 				st.Status = "failed_at_upstream"
