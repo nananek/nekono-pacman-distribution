@@ -95,6 +95,15 @@ if git show-ref --verify --quiet "refs/heads/$branch"; then
     exit 1
 fi
 
+# A leftover remote branch of the same name (an open PR from an earlier run)
+# makes the push a non-fast-forward. The bump is already done there, so merge
+# that PR instead of rebuilding it.
+if git ls-remote --exit-code --heads origin "$branch" >/dev/null 2>&1; then
+    note "BLOCK: origin already has '$branch' (an open PR for this bump)."
+    note "review it with gh_pr diff and merge it with bin/step-merge <PR>, or close the PR first."
+    exit 1
+fi
+
 allow=("PKGBUILD" "REVIEW.md" ".SRCINFO" ".deps.lock")
 
 # Refuse untracked files under pkgs/<pkg> that are not allowlisted (cache trap).

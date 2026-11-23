@@ -44,9 +44,14 @@ upstream の新版を **1 つだけ** bump する phase。対象 Issue 番号と
    `Assisted-by: nekono-pacman-agent (<model>)`、`body` には
    **Issue ごとに `Closes #a, closes #b`**（最初の 1 件しか自動 close されないため、
    `Closes #a, #b` は不可）と調査結果 / Test plan を書く。
+   **同じ `pkg/<pkg>-<ver>` の PR が既に open なら作らない**（前 run の残り。
+   push が non-fast-forward で落ちる）。その場合は PR を review して 9 で merge する。
+   `gh_pr` method=checkout は `pkg/*` には使えない（古い branch に切り替わって
+   harness 側の `bin/` が巻き戻り、以降の step が全部止まる）。diff で見る。
 8. `gh_pr` method=diff で judgment review（source URL / build() の怪しい step / depends）。
    この review は**自分で行う**。人間の返事を待って PR を open のまま phase を
    終えない（block と判断したときだけ `escalate(kind="content")` で抜ける）。
+   既存 PR を review した場合も、その PR を 9 で merge する（コメントだけで終えない）。
 9. 問題なければ `step_merge`。merge 後に `gh_issue` で全 Issue が CLOSED か確認し、
    `finish(status="ok")` に pkg・版・PR 番号・確認したことを書く。
    **1 item の完了 = Issue が閉じた状態**。PR を作っただけで `finish` しない

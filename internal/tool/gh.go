@@ -88,6 +88,17 @@ func GHPRTool(env *Env) *Func {
 				// Refuse to switch branches under uncommitted work: a partial
 				// checkout would leave the tree in a state no other tool can
 				// repair (only fs_write for managed files exists).
+				// pkg/<pkg>-<ver> heads are the harness's own bump branches:
+				// checking one out reverts bin/ and internal/ to that branch's
+				// older commit and leaves HEAD off master, which blocks every
+				// later step_* call. They are reviewed with gh_pr diff and
+				// merged with step_merge, which needs no checkout.
+				if hv := run(ctx, env.RepoRoot, execTimeout(env), "gh", "pr", "view", strconv.Itoa(a.Number),
+					"--json", "headRefName", "--jq", ".headRefName"); hv.RC == 0 {
+					if h := strings.TrimSpace(hv.Stdout); strings.HasPrefix(h, "pkg/") {
+						return Result{}, fmt.Errorf("refusing to check out '%s': pkg/* bump branches are reviewed with gh_pr diff and merged with step_merge; checking one out reverts the harness scripts and leaves HEAD off master", h)
+					}
+				}
 				if st := run(ctx, env.RepoRoot, execTimeout(env), "git", "status", "--porcelain"); st.RC != 0 || strings.TrimSpace(st.Stdout) != "" {
 					return Result{}, fmt.Errorf("working tree is not clean; refusing to switch branches (commit or stash first)")
 				}
