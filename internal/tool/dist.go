@@ -22,6 +22,9 @@ func DistPublishTool(env *Env) *Func {
 		Params:  obj(``),
 		Mutates: true,
 		Run: func(ctx context.Context, _ json.RawMessage) (Result, error) {
+			if err := requireCleanMaster(ctx, env, "dist_publish"); err != nil {
+				return Result{}, err
+			}
 			res := runStreaming(ctx, env, "publish", env.RepoRoot, buildTimeout(env), "bin/publish", "--json")
 			var data map[string]any
 			if err := json.Unmarshal([]byte(strings.TrimSpace(strings.Split(res.Stdout, "\n")[0])), &data); err != nil {

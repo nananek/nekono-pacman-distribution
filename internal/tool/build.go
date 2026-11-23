@@ -57,6 +57,9 @@ func BuildPlanTool(env *Env) *Func {
 		Desc:   "Dry-run `bin/build-all --pending` and return the structured plan: packages to build (with versions), already-built skips, cascade-warn packages, packages to retire.",
 		Params: obj(``),
 		Run: func(ctx context.Context, _ json.RawMessage) (Result, error) {
+			if err := requireCleanMaster(ctx, env, "build_plan"); err != nil {
+				return Result{}, err
+			}
 			res := run(ctx, env.RepoRoot, buildTimeout(env), "bin/build-all", "--pending", "--dry-run", "--json")
 			plan, err := parsePlan(res)
 			if err != nil {
@@ -87,6 +90,9 @@ func BuildRunTool(env *Env) *Func {
 			args := []string{"--pending", "--json"}
 			if a.DryRun {
 				args = append(args, "--dry-run")
+			}
+			if err := requireCleanMaster(ctx, env, "build_run"); err != nil {
+				return Result{}, err
 			}
 			res := runStreaming(ctx, env, "build", env.RepoRoot, buildTimeout(env), "bin/build-all", args...)
 			plan, err := parsePlan(res)
