@@ -9,7 +9,7 @@
 # 配布先は [nekono] repo。移植手順と検証方法は packaging/README.md。
 
 pkgname=nekonolock
-pkgver=0.3.3
+pkgver=0.3.4
 pkgrel=1
 pkgdesc="Sway screen locker unlocked by a YubiKey OpenPGP challenge or a password"
 arch=('x86_64')
@@ -36,7 +36,7 @@ source=("$pkgname-$pkgver.tar.gz::https://github.com/nananek/nekonolock/archive/
         'nekonolock-auth.service'
         'nekonolock-sudo.toml'
         'LICENSE')
-sha256sums=('f15510f901ddec9985e4c9d85e2684e3091738f703c3b1cc6de2ba8d46af4210'
+sha256sums=('b541a774b4ef39b6695af32d6907507ac9434f5c127c3a9928bf9bc41952d684'
             'f4ca063733416b7e67e7af3eaa32b048d53affb2f4fc284b8e903a0d375c5f47'
             '79d6f29fd92abaef7c0265a5dbe784fb63a5e3ae20e5059c09bca4dd0d58d675'
             '3576102ac52ccbd2daa0bacaf8c08c7b01e0f9fec51557aca68639033fd4dd82'

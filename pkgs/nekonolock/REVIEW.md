@@ -2,7 +2,7 @@
 
 ## 状態
 
-**review 済み、 approve** (2026-11-16、 v0.3.3 patch)
+**review 済み、 approve** (2026-11-23、 v0.3.4 patch)
 
 自家 source PKGBUILD (= AUR fork ではない、 nananek 自身の upstream を
 GitHub release tag archive から直接 vendor)。 own-package フローは
@@ -22,30 +22,47 @@ Sway (wlroots) 用のスクリーンロッカー。 `ext-session-lock-v1` で画
 
 - Upstream: https://github.com/nananek/nekonolock
   - 主開発者 nananek (= 自家 upstream)
-  - tag `v0.3.3` (= prefix "v")、 commit `5c99476f281f07830f68764725477d4be7bb18fe`
+  - tag `v0.3.4` (= prefix "v")、 tag object `cdb3a58d4cea5780ea02d2b7a6d117a57a44f236`、
+    commit `752a53a3904b5219ca1f0e97a738ba01fb093970`
   - tag GPG 署名: **verified** (GitHub API `verification.verified=true`、
     signer `483DC691DF9F29327EA106BD030130E2F156CD74`)
   - license: MIT
-- distfile: GitHub Release archive (= `archive/refs/tags/v0.3.3.tar.gz`)
+- distfile: GitHub Release archive (= `archive/refs/tags/v0.3.4.tar.gz`、
+  公開 2026-11-23T08:09:53Z、 asset なし = GitHub 自動生成 archive のみ)
 
 ## 検証結果
 
-- [x] `source` URL = `github.com/nananek/nekonolock/archive/refs/tags/v0.3.3.tar.gz`
-  - 自家 upstream、 typosquat 検討対象外
+- [x] `source` URL = `github.com/nananek/nekonolock/archive/refs/tags/v0.3.4.tar.gz`
+  - 自家 upstream、 typosquat 検討対象外。domain / owner は前回と不変
 - [x] `sha256sums` 独立検証
-  - 実測 (review 時に curl 直取得 + `sha256sum`):
-    `f15510f901ddec9985e4c9d85e2684e3091738f703c3b1cc6de2ba8d46af4210`
-  - 同梱 file 5 点も `packaging/` から再計算し、 PKGBUILD の値と一致
+  - 実測 (2 回独立に取得して同一値であることを確認):
+    `b541a774b4ef39b6695af32d6907507ac9434f5c127c3a9928bf9bc41952d684`
+  - `makepkg --verifysource` で全 6 source が Passed
+  - 同梱 file 5 点は v0.3.3 と**バイト単位で不変** (upstream `packaging/` から
+    再取得して PKGBUILD の値と一致を確認)
     - `nekonolock.pam` `f4ca0637...` (password-only chain)
     - `nekonolock-auth.socket` `79d6f29f...`
     - `nekonolock-auth.service` `3576102a...`
     - `nekonolock-sudo.toml` `ef8eed8f...`
     - `LICENSE` `e8a8dae9...`
-- [x] tag `v0.3.3` GPG 署名状態: verified (上記 Source 参照)
+- [x] tag `v0.3.4` GPG 署名状態: verified (上記 Source 参照)
+- [x] v0.3.3 → v0.3.4 の差分 (6 commits、 8 files、 いずれも想定内)
+  - `Cargo.lock` (+11/-11): nix 0.31 → 0.32 ほか依存 crate の更新のみ。
+    crates.io 以外の source 追加・git 依存・path 依存の新規追加は無し
+  - `Cargo.toml` / `crates/auth/Cargo.toml` / `crates/proto/Cargo.toml`:
+    `rust-version = "1.99"` は不変。nix の version 指定のみ `0.32` に更新
+  - `crates/proto/src/socket.rs` (+3/-10): nix 0.32 の `accept4` が `AsFd` を
+    取るようになったため、`RawFd` → `OwnedFd` 変換の `unsafe fn own_fd` を
+    削除。**unsafe ブロックが 1 個減る方向の変更**。socket の種別検証
+    (`SOCK_SEQPACKET` 必須)、`SO_PEERCRED` の uid 検証、0700/0600 の
+    permission 強制はいずれも不変
+  - `packaging/*`: upstream 側の pkgver/sha256 追従のみ (内容は [nekono] の
+    PKGBUILD と等価)
+  - install script / postinstall / 動的 fetch / 新規 AUR-only 依存の追加は無し
 - [x] `prepare()`: `cargo fetch --locked --target <host>` のみ。
-  `Cargo.lock` を commit 済みで、 build 時の動的取得は無い
+  `Cargo.lock` を commit 済みで、 build 時の動的取得は無い (不変)
 - [x] `build()`: `cargo build --release --frozen -p nekonolock -p nekonolock-auth`
-  - v0.3.0 archive は `crates/pam` を含むため `-p pam-nekonolock` も追加される
+  - v0.3.4 archive は `crates/pam` を含むため `-p pam-nekonolock` も追加される
   - `--frozen` で lockfile / registry の変更を拒否する
   - shell injection / eval / curl / wget / pipe-to-shell なし
 - [x] `check()`: `cargo test --frozen --workspace` — upstream CI と同じ
@@ -53,7 +70,7 @@ Sway (wlroots) 用のスクリーンロッカー。 `ext-session-lock-v1` で画
 - [x] `package()`: `install` のみ。 install script / post-install hook なし
   - `pam_nekonolock.so` を `/usr/lib/security/` に、 `sudo.toml` の例を
     `/usr/share/doc/nekonolock/` に置く
-- [x] `depends`: upstream の実装と照合
+- [x] `depends`: upstream の実装と照合 (v0.3.4 で変化なし)
   - `gnupg` — OpenPGP applet へのチャレンジ署名 (`gpg --detach-sign` /
     `--verify`) を subprocess で呼ぶ
   - `libxkbcommon` — `wl_keyboard` のキーマップ変換。 upstream README が
@@ -64,7 +81,7 @@ Sway (wlroots) 用のスクリーンロッカー。 `ext-session-lock-v1` で画
   1.99` を満たす。 build host の rust 1.100.0-1 で確認
 - [x] `optdepends`: `pcsclite` / `ccid` — pcscd 経由で YubiKey を使うホスト
   向け。 既定の scdaemon 直接経路では不要
-- [x] `systemd` unit:
+- [x] `systemd` unit: v0.3.3 と同一 (hash 一致)
   - `nekonolock-auth.socket` は `ListenSequentialPacket=` (= `SOCK_SEQPACKET`)。
     `ListenStream=` にすると `SOCK_STREAM` になり、 ヘルパが起動時に種別を
     検証して拒否する (upstream 設計 §6)
@@ -99,7 +116,7 @@ Sway (wlroots) 用のスクリーンロッカー。 `ext-session-lock-v1` で画
 ## 結論
 
 **approve** — build host で `bin/build-all nekonolock` で build + sign + repo db
-追加可。v0.3.0 から `pam_nekonolock.so` も同梱される。 PAM file はパッケージ同梱の既定を使い、 ホスト固有の変更は
+追加可。`pam_nekonolock.so` も同梱される。 PAM file はパッケージ同梱の既定を使い、 ホスト固有の変更は
 ansible-nekonodesk の `nekonolock` role で行う。
 
 publish 後の配備:
@@ -130,3 +147,4 @@ upstream で新 release (= v0.4.0 等) が出たら:
 | 2026-11-15 | 0.3.1-1 | (this PR) | `89e7285ed893ca562ffd182bc41d2c15f9591315` | 0.3.1 patch (ロック画面の PAM auth を password-only chain / カード抜去検知 1 秒)。 PAM file の hash を更新。 tag GPG 署名 verified、 tag archive sha256 独立再計算 |
 | 2026-11-15 | 0.3.2-1 | (this PR) | `af5b78cd0d2602f3ae069a268356096b6043c83c` | 0.3.2 patch (認証ヘルパの systemd sandbox を撤回し UMask のみに戻す)。 unit の hash を更新。 tag GPG 署名 verified、 tag archive sha256 独立再計算 |
 | 2026-11-16 | 0.3.3-1 | (this PR) | `5c99476f281f07830f68764725477d4be7bb18fe` | 0.3.3 patch (左上ラベルを既定でマシン名 / CLEAR_PASSPHRASE の ERR 判定 / PAM 署名の一時ファイルを fd 基準に)。 depends / systemd unit / PAM は不変。 tag GPG 署名 verified、 tag archive sha256 独立再計算 |
+| 2026-11-23 | 0.3.4-1 | (this PR) | `752a53a3904b5219ca1f0e97a738ba01fb093970` | 0.3.4 patch (依存 crate 更新、 nix 0.32 の `accept4` が `AsFd` 化したことに追従して `unsafe fn own_fd` を削除)。 depends / systemd unit / PAM / 同梱 file 5 点は不変。 tag GPG 署名 verified、 tag archive sha256 を 2 回独立取得で一致確認 |
