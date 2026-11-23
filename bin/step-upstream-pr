@@ -11,6 +11,8 @@
 #   - creates pkg/<pkg>-<pkgver> from the current HEAD (carrying the changes)
 #   - stages ONLY pkgs/<pkg>/{PKGBUILD,REVIEW.md,.SRCINFO,.deps.lock}
 #   - refuses untracked files under pkgs/<pkg> (likely makepkg download cache)
+#   - parks changes outside pkgs/<pkg> in a stash (another pkg's leftover work;
+#     never committed, and the tree is clean for the merge that follows)
 #   - commits with a Nekono GPG signature (`-S`)
 #   - pushes (the pre-push gate runs here) and opens the PR
 #
@@ -47,8 +49,36 @@ note() { printf '[step-upstream-pr] %s\n' "$1"; }
 [[ "$ver" =~ ^[A-Za-z0-9@._+:-]+$ ]] || { note "BLOCK: invalid pkgver '$ver'"; exit 1; }
 [ -d "pkgs/$pkg" ] || { note "BLOCK: pkgs/$pkg not found"; exit 1; }
 
+# Unrelated changes (another package's half-finished work, e.g. a previous item
+# that escalated) are parked in a stash instead of blocking the bump: they never
+# enter the commit, and the tree stays clean for `git checkout` and the merge.
+unrelated=()
+mapfile -t unrelated < <(
+    { git diff --name-only
+      git diff --cached --name-only
+      git ls-files --others --exclude-standard
+    } | sort -u | grep -v "^pkgs/$pkg/" || true
+)
+if [ "${#unrelated[@]}" -gt 0 ]; then
+    note "parking changes outside pkgs/$pkg (they stay out of this PR):"
+    printf '    %s\n' "${unrelated[@]}"
+    git stash push -u -m "step-upstream-pr $pkg $ver: parked unrelated changes" \
+        -- "${unrelated[@]}"
+    note "parked as: $(git stash list | head -1)"
+fi
+
+# A previous item can leave HEAD on its own PR branch. Return to master here:
+# only pkgs/<pkg>/ is dirty by now (everything else was parked above), so the
+# other branch's commit and this pkg's edits do not overlap.
 cur="$(git rev-parse --abbrev-ref HEAD)"
-[ "$cur" = "master" ] || { note "BLOCK: on '$cur', expected master (edit on master, the script makes the branch)"; exit 1; }
+if [ "$cur" != "master" ]; then
+    note "returning to master from '$cur'"
+    if ! out="$(git checkout master 2>&1)"; then
+        note "BLOCK: cannot return to master from '$cur':"
+        printf '%s\n' "$out" | sed 's/^/    /'
+        exit 1
+    fi
+fi
 
 # The branch must be cut from an up-to-date master, otherwise the PR is based
 # on a stale tree. The agent cannot `git pull` (not allowed), so enforce
@@ -62,13 +92,6 @@ fi
 branch="pkg/$pkg-$ver"
 if git show-ref --verify --quiet "refs/heads/$branch"; then
     note "BLOCK: local branch '$branch' already exists"
-    exit 1
-fi
-
-other="$(git status --porcelain | awk '{print $2}' | grep -v "^pkgs/$pkg/" || true)"
-if [ -n "$other" ]; then
-    note "BLOCK: unrelated changes present; commit/stash them first:"
-    printf '%s\n' "$other" | sed 's/^/    /'
     exit 1
 fi
 
@@ -150,4 +173,9 @@ fi
 gh pr create --base master --title "$title" --body-file "$bodyfile" --head "$branch"
 
 note "opened PR for $branch"
+
+# Leave the tree on master: the next upstream item edits master, and step-merge
+# expects to be able to merge without a leftover branch checked out.
+git checkout master
+note "back on master (branch $branch stays pushed; merge with bin/step-merge)"
 note "after judgment review: bin/step-merge <PR>"

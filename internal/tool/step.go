@@ -18,7 +18,7 @@ import (
 func StepBotPRTool(env *Env) *Func {
 	return &Func{
 		Name:    "step_bot_pr",
-		Desc:    "Run `bin/step-bot-pr <N>`: stage pkgs/<pkg>/{PKGBUILD,REVIEW.md,.SRCINFO,.deps.lock}, amend the bot commit with a Nekono GPG signature and force-push with lease (the pre-push gate runs). Requires the PR branch to be checked out (gh_pr checkout).",
+		Desc:    "Run `bin/step-bot-pr <N>`: stage pkgs/<pkg>/{PKGBUILD,REVIEW.md,.SRCINFO,.deps.lock}, park changes outside pkgs/<pkg> in a stash, amend the bot commit with a Nekono GPG signature and force-push with lease (the pre-push gate runs), then return to master. Requires the PR branch to be checked out (gh_pr checkout).",
 		Params:  obj(`"number":{"type":"integer"}`, "number"),
 		Mutates: true,
 		Run: func(ctx context.Context, raw json.RawMessage) (Result, error) {
@@ -68,7 +68,7 @@ func StepMergeTool(env *Env) *Func {
 func StepBumpPRTool(env *Env) *Func {
 	return &Func{
 		Name: "step_bump_pr",
-		Desc: "Run `bin/step-upstream-pr <pkg> <ver>`: create pkg/<pkg>-<ver> from HEAD carrying the working-tree edits, stage only pkgs/<pkg>/{PKGBUILD,REVIEW.md,.SRCINFO,.deps.lock}, commit with a Nekono GPG signature, push and open the PR.",
+		Desc: "Run `bin/step-upstream-pr <pkg> <ver>`: create pkg/<pkg>-<ver> from HEAD carrying the working-tree edits, park changes outside pkgs/<pkg> in a stash, stage only pkgs/<pkg>/{PKGBUILD,REVIEW.md,.SRCINFO,.deps.lock}, commit with a Nekono GPG signature, push, open the PR and return to master. Also returns to master if a previous item left HEAD on its own branch.",
 		Params: obj(`"pkg":{"type":"string"},"version":{"type":"string"},"title":{"type":"string"},"message":{"type":"string","description":"commit message (attribution line included)"},"body":{"type":"string","description":"PR body; put 'Closes #N' per issue, one keyword each"},"closes":{"type":"array","items":{"type":"integer"},"description":"issue numbers to close (only used when body is empty)"}`,
 			"pkg", "version", "title", "message"),
 		Mutates: true,
