@@ -61,7 +61,10 @@ func DistVerifyTool(env *Env) *Func {
 			if err != nil {
 				return Result{}, err
 			}
-			client := &http.Client{Timeout: 90 * time.Second}
+			// Packages can be large over the tailnet (electron37-bin is 118 MB and
+			// took 89 s from the host): a 90 s total timeout made the hash of a
+			// healthy file look like a MISMATCH and burned the publish phase.
+			client := &http.Client{Timeout: 15 * time.Minute}
 			type fileCheck struct {
 				File   string `json:"file"`
 				Result string `json:"result"`
@@ -77,7 +80,7 @@ func DistVerifyTool(env *Env) *Func {
 				remote, code, err := sha256URL(ctx, client, srv+"/"+f)
 				switch {
 				case err != nil || code != http.StatusOK:
-					checks = append(checks, fileCheck{File: f, Result: "MISMATCH", Detail: fmt.Sprintf("http %d", code)})
+					checks = append(checks, fileCheck{File: f, Result: "MISMATCH", Detail: fmt.Sprintf("http %d: %v", code, err)})
 				case local == remote:
 					checks = append(checks, fileCheck{File: f, Result: "MATCH"})
 				default:
@@ -164,6 +167,14 @@ func sha256URL(ctx context.Context, c *http.Client, url string) (string, int, er
 	}
 	defer resp.Body.Close()
 	h := sha256.New()
-	_, _ = io.Copy(h, io.LimitReader(resp.Body, 1<<31))
+	n, cerr := io.Copy(h, io.LimitReader(resp.Body, 1<<31))
+	if cerr != nil {
+		return "", resp.StatusCode, cerr
+	}
+	// A truncated body must not be reported as "sha256 differs": that reads as a
+	// bad publish and sends the phase into a retry loop.
+	if resp.ContentLength > 0 && n != resp.ContentLength {
+		return "", resp.StatusCode, fmt.Errorf("short read: %d of %d bytes", n, resp.ContentLength)
+	}
 	return hex.EncodeToString(h.Sum(nil)), resp.StatusCode, nil
 }
