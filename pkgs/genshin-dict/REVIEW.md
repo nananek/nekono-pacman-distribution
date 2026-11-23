@@ -113,3 +113,4 @@ upstream で新 release が出たら:
 | 2026-10-19 | 7.0.1-2 | (this PR) | — (pkgrel bump のみ) | `pkgrel` +1 (deps changed): protobuf 34.1-1 → 36.1-1, python 3.14.5-1 → 3.14.8-1, python-protobuf 34.1-1 → 36.1-1 |
 | 2026-11-07 | 7.0.1-3 | (this PR) | — (pkgrel bump のみ) | `pkgrel` +1 (deps changed): python 3.14.8-1 → 3.14.9-1 |
 | 2026-11-11 | 7.0.1-4 | (this PR) | — (pkgrel bump のみ) | `pkgrel` +1 (deps changed): python 3.14.9-1 → 3.14.10-1 |
+| 2026-11-23 | 7.2.0 | (this commit) | v7.2.0 (`08a05a0b883afb51baf41da4bd536d76ceaf17d0`) | safe-to-bump: 辞書エントリ追加のみ (スネージナヤ 7.2 地名/人名、星海 新規 region、person/snezhnaya・unknown、world/boss・enemy・teyvat、item/material 更新)。scripts/build.ts / lib/platform.ts / dict.d.ts / release.yml は v7.0.1 と byte 一致 (未実行・無関係)。新規追加は contributor 用 `.npmrc` (`min-release-age=7`, `strict-allow-scripts=true`) のみで、npm を実行しない本 PKGBUILD には影響なし。install script / postinstall / 動的 fetch の追加なし。build()/package() 構造変化なし、`makepkg --verifysource` で sha256 独立検証済み (issue #807) |
