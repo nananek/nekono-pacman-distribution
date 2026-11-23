@@ -2,7 +2,7 @@
 
 ## 状態
 
-**review 済み、approve** (2026-11-13、0.8.6 へ bump。初回 review は 2026-11-11 の
+**review 済み、approve** (2026-11-14、0.8.7 へ bump。初回 review は 2026-11-11 の
 自家 PKGBUILD 新規作成 + Arch VM での実機検証)
 
 AUR に `eleos` は存在しない (`aur.archlinux.org/rpc/v5/info?arg[]=eleos` が 2026-11-11 時点で
@@ -36,50 +36,61 @@ ICMP echo をレートリミット付き許可、port scan 対策 (XMAS / NULL /
 - Upstream: https://github.com/nexryai/eleos
   - owner: nexryai (作成 2023-06-17、stars 13、forks 0、MIT)
   - `url` / README / `eleos.spec` の URL と一致 (typosquat / なりすまし無し)
-- Tag: `v0.8.6` (annotated tag `1877e0b8051da33f84d02af8723be312b3d3d521`、署名 verified)
-  → commit `3b2277783b5adb57fc33b130784a029f2a8fbee4`
-  (2026-11-12T07:56:29Z "Release v0.8.6"、tag 自体は署名付き)
-- 取得元: `https://github.com/nexryai/eleos/archive/refs/tags/v0.8.6.tar.gz`
+- Tag: `v0.8.7` (annotated tag `586b2301ff479d4cd9594d933a78feb0b485b11b`、
+  SSH 署名 verified) → commit `276ce1ff0bcc90f81d26c4e6ceec2afc4c0d5584`
+  (2026-11-14T07:59:44Z "Deploy documentation alongside signed package repositories
+  on release"、tag 自体は署名付き)
+- 取得元: `https://github.com/nexryai/eleos/archive/refs/tags/v0.8.7.tar.gz`
   (GitHub の release tag tarball。upstream の公式 release 手順と同じ)
-- release: 2026-11-12T12:01:13Z 公開 (draft / prerelease ではない)、author は
+- release: 2026-11-14T08:03:54Z 公開 (draft / prerelease ではない)、author は
   従来と同じ `github-actions[bot]` (release workflow による自動公開)
 
 ## 検証結果
 
 - [x] `source` URL = upstream の公式 release tag path。domain / owner は upstream と一致
-- [x] `sha256sums` を独立実測: `41b1f9195343b5cea32d59e07ca45972208b605650df29ca81e6d9f94dd17570`
-      (= `curl -fsSL <url> | sha256sum`。PKGBUILD の値と一致)。upstream が `main` の
-      `packaging/arch/PKGBUILD` に公開している `sha256sums` とも一致 (2026-11-13 取得)。
-      tag `v0.8.6` は annotated tag で署名 verified
-- [x] 旧新 tarball (`v0.8.5` → `v0.8.6`) の diff: 差分は `AGENTS.md` / `README.md` /
-      `.copr/Makefile` / `.github/workflows/release.yml` / `systemd/eleos.service` と
-      新規 `packaging/arch/` のみ。**Go source (`main.go` / `internal/` / `go.mod` /
-      `go.sum` / `config.default.yml`) は byte 一致**で、build 対象と依存に変化なし
-- [x] `systemd/eleos.service` の変化は hardening のみ (`CapabilityBoundingSet=CAP_NET_ADMIN`,
-      `NoNewPrivileges=yes`, `ProtectSystem=strict` (旧 true), `ProtectHome=yes`,
-      `PrivateTmp` / `PrivateDevices` / `DevicePolicy=closed`, `ProtectKernel*`,
-      `RestrictAddressFamilies=AF_NETLINK AF_UNIX`, `SystemCallFilter=@system-service`,
-      `IPAddressDeny=any` 等を追加)。`ExecStart` / `ExecReload` / `ExecStop` と
-      `/etc/eleos.yml` の参照先は不変。本 PKGBUILD は unit を upstream のまま install する
-      方針なので追従する。elctl は netlink のみ使うため `IPAddressDeny=any` と矛盾しない
+      (v0.8.6 から変化なし)
+- [x] `sha256sums` を独立実測: `81561d10b71dc0acdf3a5185cfcea425d08bbc314596475d867d8acae973ed37`
+      (= `fetch` した raw bytes の sha256。`makepkg --verifysource` も同じ値で Passed)。
+      upstream が `main` の `packaging/arch/{PKGBUILD,.SRCINFO}` に公開している
+      `sha256sums` とも一致 (2026-11-14 取得)。tag `v0.8.7` は annotated tag で
+      SSH 署名 verified
+- [x] 旧新 tarball (`v0.8.6` → `v0.8.7`) の diff: 変更 43 file の内訳は
+      `.github/workflows/{release,snap}.yml` / `AGENTS.md` / `README.md` /
+      `eleos.spec` / `packaging/arch/{PKGBUILD,.SRCINFO}` と、**新規 `docs/` 一式**
+      (Astro + pnpm による多言語ドキュメント site。`pnpm-lock.yaml` を含む)。
+      **Go source (`main.go` / `internal/` / `integration/` / `go.mod` / `go.sum` /
+      `config.default.yml` / `systemd/eleos.service`) は byte 一致**で、build 対象と
+      依存に変化なし (`go.sum` は両 tag で sha256 が同一であることを確認)
+- [x] `go.mod`: `go 1.26.10` で 0.8.6 と同一。Arch の `go` は `.deps.lock` の
+      `2:1.27.4-1` でより新しいため `GOTOOLCHAIN=auto` の toolchain download は走らない
 - [x] `build()` / `check()` / `package()` に curl / wget / exec / eval / pipe-to-shell /
-      動的 fetch / `pip install` は無い。`go build` + `go test ./...` + `install` のみ
-- [x] Go の依存は `go.sum` で checksum pin 済み (`github.com/google/nftables`,
-      `mdlayher/netlink`, `lorenzosaino/go-sysctl`, `golang.org/x/sys`, `gopkg.in/yaml.v2`)
-- [x] `makedepends=('go')` のみ。`CGO_ENABLED=0` の完全 static binary なので
-      `depends` は空 (実行時に必要なのは kernel の nf_tables だけ)
-- [x] `arch=('x86_64')` に限定 ([nekono] は `repo/x86_64/` のみ配信)。
-      upstream の CI は arm / riscv64 等も build しているが、本 repo では x86_64 のみ
-- [x] `pkgver` は literal (`0.8.5`)。`$` 展開を含まないので upstream 検知と比較可能
+      動的 fetch / `pip install` は無い。`go build` + `go test ./...` + `install` のみ。
+      diff が無いため今回は build script を変更していない
+- [x] Go の依存は `go.sum` で checksum pin 済みで、0.8.6 と完全一致
+      (`github.com/google/nftables` v0.3.0, `mdlayher/netlink`, `lorenzosaino/go-sysctl`,
+      `golang.org/x/sys` v0.45.0, `gopkg.in/yaml.v2` v2.4.0)。新規依存なし
+- [x] `makedepends=('go')` のみ、`depends=()` は不変。`CGO_ENABLED=0` の完全 static
+      binary で、実行時に必要なのは kernel の nf_tables だけ
+- [x] `arch=('x86_64')` に限定 ([nekono] は `repo/x86_64/` のみ配信)。upstream の CI は
+      arm / riscv64 / s390x 等も build し、pacman repo では aarch64 も配布するが、
+      本 repo では x86_64 のみ
+- [x] `pkgver` は literal (`0.8.7`)。`$` 展開を含まないので upstream 検知と比較可能
 - [x] `prepare()` は無し (patch 無し)
-- [x] `*.install` (post_install 等) は追加していない。systemd unit は upstream の
-      `systemd/eleos.service` をそのまま `usr/lib/systemd/system/` に置くだけで、
-      enable は user 操作に任せる
+- [x] `*.install` (post_install 等) は追加していない。`packaging/deb/build-deb.sh` や
+      `snap/` hook は本 PKGBUILD では使わない
+- [x] `systemd/eleos.service` は 0.8.6 と byte 一致 (hardening 設定・`ExecStart` /
+      `ExecReload` / `ExecStop`・`/etc/eleos.yml` 参照先すべて不変)
 - [x] `/etc/eleos.yml` は upstream `config.default.yml` を byte 一致で install し、
-      `backup=('etc/eleos.yml')` で upgrade 時の設定保持を保証
+      `backup=('etc/eleos.yml')` で upgrade 時の設定保持を保証。`config.default.yml` も
+      0.8.6 と byte 一致
+- [x] 設定 schema (`default:` / `ports:` / `router:` / `nat:`) の破壊的変更なし
+      (Go source と default config が無変更のため)
 - [x] secret 混入なし。`.git` / download cache を package に含めない
 - [x] 落とし穴 #1–7 非該当 (prebuilt binary 無し / Python 無し / 7z 無し /
       環境依存 source 分岐無し / prepare 専用 tool 無し / 自前 tarball 無し)
+- [ ] **実機検証は今回未実施** (0.8.6 で行った Arch VM での 50 check は、Go source・
+      systemd unit・default config が byte 一致のため再実行していない。binary の中身は
+      同一の source から生成されるが、`bin/build-all` と client 検証は人間の実行に委ねる)
 
 ### 実機検証 (Arch VM / KVM)
 
@@ -123,7 +134,7 @@ upstream README の "Install from source" は
 中身を見たい場合だけ `nftables` を入れればよい)。
 
 `.deps.lock` は `makedepends=go` の 1 行のみ。`go` は Arch 公式 `extra`
-(`2:1.27.4-1` 時点) なので監視対象。`depends=()` / `makedepends=('go')` は 0.8.6 でも不変。
+(`2:1.27.4-1` 時点) なので監視対象。`depends=()` / `makedepends=('go')` は 0.8.7 でも不変。
 
 ### upstream の Arch packaging との関係
 
@@ -137,6 +148,12 @@ PKGBUILD を元にしている (同じ `install` 行・同じ build flag) が、
   `check()` の cross 判定を持たない (native build のみなので不要)
 - `options=('!strip' '!debug')` を付けない (cross build しないため strip で問題ない)
 
+v0.8.7 で upstream は release workflow に **tag から `packaging/arch/PKGBUILD` /
+`.SRCINFO` / `eleos.spec` を自動更新して main に signed commit で戻す** job を追加した。
+そのため tag 時点の `packaging/arch/PKGBUILD` は `pkgver=0.8.6` のまま (main 側が 0.8.7) で、
+これは正常。`sha256sums` は workflow が tag tarball を実測して埋めるので、本 repo の
+実測値と一致することを独立確認に使える (今回一致)。
+
 release notes / README は upstream の pacman repo を案内するが、本 repo は
 release asset を使わず tag tarball から自前 build する。同じ pkgname `eleos` が
 upstream repo と [nekono] の両方に存在し得るため、client 側で両 repo を有効にすると
@@ -148,11 +165,13 @@ upstream repo と [nekono] の両方に存在し得るため、client 側で両 
 |---|---|---|---|---|
 | 2026-11-11 | 0.8.5-1 | (this PR) | `50ffcf8b` (tag `v0.8.5`) | 受入 (自家 PKGBUILD 新規作成) |
 | 2026-11-13 | 0.8.6-1 | (this PR) | `3b227778` (tag `v0.8.6`) | 受入。Go source 変更なし、差分は systemd unit の hardening と upstream の Arch packaging (`packaging/arch/`, release workflow) のみ。`depends` / `makedepends` 不変 |
+| 2026-11-14 | 0.8.7-1 | (this PR) | `276ce1ff` (tag `v0.8.7`) | 受入。Go source / `go.mod` / `go.sum` / systemd unit / `config.default.yml` すべて byte 一致。差分は新規 `docs/` (Astro site) と release / snap workflow、`eleos.spec`、upstream `packaging/arch/` のみ。`depends` / `makedepends` 不変。実機検証は未実施 (source 同一のため) |
 
 ### 次回 bump 時の確認点
 
 - `source` の tag と sha256 を再実測 (upstream は tag を打ち直す運用はしていないが、
-  GitHub tarball は tag が動くと変わるので必ず実測する)
+  GitHub tarball は tag が動くと変わるので必ず実測する)。upstream の
+  `packaging/arch/.SRCINFO` (main 側) の `sha256sums` と突き合わせると独立確認になる
 - `go.mod` の `go` directive が Arch の `go` より新しくないか
   (`go 1.26.10` のように patch まで要求するので、Arch 側が古いと
   `GOTOOLCHAIN=auto` による toolchain download が走る。build 失敗時はここを疑う)
@@ -162,5 +181,9 @@ upstream repo と [nekono] の両方に存在し得るため、client 側で両 
   / `IPAddressDeny=any` が入った。unit がさらに厳しくなった場合、`elctl enable|apply|disable`
   が netlink 以外 (file write / DNS / exec 等) を必要としていないか実機で確認する
 - upstream の `packaging/arch/PKGBUILD` が変わったら、(a) 本 repo の build 手順に取り込むべき
-  変更か (b) 本 repo 固有の意図的 diff かの切り分けを更新する
+  変更か (b) 本 repo 固有の意図的 diff かの切り分けを更新する。
+  なお tag 時点の PKGBUILD は release workflow が main に遅れて更新するため、
+  tag 内の `pkgver` が 1 つ古いことがある (異常ではない)
+- `docs/` のような build に不要な tree が tarball に増えていないか
+  (0.8.7 で +90KB 程度。package には含めないので実害は無い)
 - `ports:` / `router:` / `nat:` など設定 schema の破壊的変更が無いか
