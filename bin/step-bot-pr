@@ -38,12 +38,22 @@ cur="$(git rev-parse --abbrev-ref HEAD)"
 [ "$cur" = "$head" ] || { note "BLOCK: on '$cur', expected '$head' (run: gh pr checkout $pr)"; exit 1; }
 [ -d "pkgs/$pkg" ] || { note "BLOCK: pkgs/$pkg not found"; exit 1; }
 
-# Only changes under pkgs/<pkg> are allowed.
-other="$(git status --porcelain | awk '{print $2}' | grep -v "^pkgs/$pkg/" || true)"
-if [ -n "$other" ]; then
-    note "BLOCK: unrelated changes present; commit/stash them first:"
-    printf '%s\n' "$other" | sed 's/^/    /'
-    exit 1
+# Only changes under pkgs/<pkg> belong to this PR; anything else (another
+# package's leftover work) is parked in a stash so it cannot ride along in the
+# amended commit, and so the tree stays clean for the merge.
+unrelated=()
+mapfile -t unrelated < <(
+    { git diff --name-only
+      git diff --cached --name-only
+      git ls-files --others --exclude-standard
+    } | sort -u | grep -v "^pkgs/$pkg/" || true
+)
+if [ "${#unrelated[@]}" -gt 0 ]; then
+    note "parking changes outside pkgs/$pkg (they stay out of PR #$pr):"
+    printf '    %s\n' "${unrelated[@]}"
+    git stash push -u -m "step-bot-pr $pr ($pkg): parked unrelated changes" \
+        -- "${unrelated[@]}"
+    note "parked as: $(git stash list | head -1)"
 fi
 
 allow=("PKGBUILD" "REVIEW.md" ".SRCINFO" ".deps.lock")
@@ -81,4 +91,9 @@ note "signature status: $sig"
 
 git push --force-with-lease origin "HEAD:refs/heads/$head"
 note "pushed $head"
+
+# Leave the tree on master: triage moves on to the next PR, and gh pr merge
+# cannot delete a branch that is still checked out locally.
+git checkout master
+note "back on master (branch $head stays pushed; merge with bin/step-merge)"
 note "next: bin/step-merge $pr"

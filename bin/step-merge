@@ -46,10 +46,13 @@ note "PR #$pr head=$head author=$author"
 
 gh pr merge "$pr" --merge --delete-branch
 
+# Always come back to an up-to-date master: upstream items edit master, and
+# step-upstream-pr refuses to run unless HEAD == origin/master. (Depending on
+# the caller we may be on the PR head branch, on master already, or detached.)
 cur="$(git rev-parse --abbrev-ref HEAD)"
-if [ "$cur" = "$head" ] || [ "$cur" = "HEAD" ]; then
+if [ "$cur" != "master" ]; then
     git checkout master
-    git pull --ff-only
 fi
+git pull --ff-only
 
 note "merged PR #$pr ($head)"

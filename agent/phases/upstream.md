@@ -45,8 +45,12 @@ upstream の新版を **1 つだけ** bump する phase。対象 Issue 番号と
    **Issue ごとに `Closes #a, closes #b`**（最初の 1 件しか自動 close されないため、
    `Closes #a, #b` は不可）と調査結果 / Test plan を書く。
 8. `gh_pr` method=diff で judgment review（source URL / build() の怪しい step / depends）。
+   この review は**自分で行う**。人間の返事を待って PR を open のまま phase を
+   終えない（block と判断したときだけ `escalate(kind="content")` で抜ける）。
 9. 問題なければ `step_merge`。merge 後に `gh_issue` で全 Issue が CLOSED か確認し、
    `finish(status="ok")` に pkg・版・PR 番号・確認したことを書く。
+   **1 item の完了 = Issue が閉じた状態**。PR を作っただけで `finish` しない
+   （次の item は master から始まる前提なので、open のまま残すと後続も止まる）。
 
 ## しないこと
 
