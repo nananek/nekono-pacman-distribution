@@ -2,7 +2,7 @@
 
 ## 状態
 
-**review 済み、approve** (最新: 2026-11-05 / 1.5.16)
+**review 済み、approve** (最新: 2026-11-23 / 1.5.17)
 
 AUR に `aria` / `aria-bin` は存在しないため、本 repo オリジナルの PKGBUILD として
 新規作成 (= AUR からの fork ではない)。
@@ -36,19 +36,19 @@ AUR に `aria` / `aria-bin` は存在しないため、本 repo オリジナル�
 - [x] `source_x86_64` / `source_aarch64` URL = `github.com/poppingmoon/aria`
       本家 release、typosquatting 無し
 - [x] `sha256sums` / `sha256sums_x86_64` / `sha256sums_aarch64` が実測値と一致
-  - `aria-v1.5.16-linux-x64.tar.gz`: `6e7938bb1044dd1d592affbbe75e8a9f927ea0382bad35e8e3600567369bb368`
-  - `aria-v1.5.16-linux-arm64.tar.gz`: `b40310a9c7502c508818a38f643f3e9361e3a39f53cb52ca4374b5e497a4e066`
+  - `aria-v1.5.17-linux-x64.tar.gz`: `a557e849d768c50a5312e0570a444dfab19c273816a484c1742490dcd487c2cb`
+  - `aria-v1.5.17-linux-arm64.tar.gz`: `4ae6795c71273d395d42ebfffbedea9b7d78cdb8c3db7cc26272bf59cb7fd344`
   - `com.poppingmoon.aria.desktop`: `b774b7ea50393e78016c3a8bfa0b26b480d3a32de8121c9694e97aaccb7e2342` (1.5.8 から無変更)
   - `com.poppingmoon.aria.png`: `878b0a27b7706036a2ddcb41bab05bf65ba9dd4718cabc25961f45daa5ab8ace` (同一)
-  - `com.poppingmoon.aria.metainfo.xml`: `58da414178a1536008cdbe14a7315c61d68043fc5c1a521b74d3395a192cb9f1`
-    (1.5.15 から変更あり、独立実測で更新。diff 確認: `<release version="1.5.16">`
+  - `com.poppingmoon.aria.metainfo.xml`: `16c0c521fbe145325727365f437b99066a3d1a16a142108e955107ab4a05745e`
+    (1.5.16 から変更あり、独立実測で更新。diff 確認: `<release version="1.5.17"`
     エントリ追加 3 行のみ、無害)
   - GitHub API の release asset digest とも一致確認済み (独立ダウンロード実測
     と asset metadata の digest 双方が一致)
-  - (注) 本 section は 1.5.13 bump 時に更新されず 1.5.12 の値のまま残っていた。
-    1.5.14 bump で現行値に揃えた (履歴表には 1.5.13 の検証が記録済み)
-- [x] tag `v1.5.16` の git commit (`547a64b8ca0e588d32c6dd5ae23b47e74965a55f`、
-      `release: 1.5.16 (#1032)`) は **GPG verified** (author: poppingmoon 本人、
+  - `pkg_verifysource` (makepkg --verifysource) で x64 tarball + flatpak/ 3 file
+    すべて Passed を確認
+- [x] tag `v1.5.17` の git commit (`8f4b35e5479d0632fe3a50e80c8313eb273c3d93`、
+      `release: 1.5.17 (#1046)`) は **GPG verified** (author: poppingmoon 本人、
       committer: `web-flow` = GitHub 上の PR merge、`verification.verified: true`,
       `verification.reason: valid`)。release は `github-actions[bot]` による
       CI 公開 (= verified commit からの自動 build pipeline、tampering の
@@ -84,6 +84,8 @@ AUR に `aria` / `aria-bin` は存在しないため、本 repo オリジナル�
       生成された `.pkg.tar.zst` の中身 (`opt/aria/`, `usr/bin/aria` symlink,
       `usr/share/applications`, `usr/share/icons`, `usr/share/metainfo`) を
       目視確認
+      (注) 1.5.17 bump 時の検証は `pkg_verifysource` (source 取得 + checksum
+      照合) と tarball 静的解析まで。フルの `makepkg` 再実行は行っていない。
 
 ## 未検証事項 (制約による)
 
@@ -130,6 +132,7 @@ release pipeline (`github-actions` bot による GPG verified commit からの
 | 2026-11-11 | 1.5.16-2 | (this PR) | — (pkgrel bump のみ) | `pkgrel` +1 (deps changed): gst-plugins-base-libs 1.28.8-1 → 1.28.9-1 |
 | 2026-11-17 | 1.5.16-3 | (this PR) | — (pkgrel bump のみ) | `pkgrel` +1 (deps changed): gst-plugins-base-libs 1.28.9-1 → 1.28.9-2 |
 | 2026-11-18 | 1.5.16-4 | (this PR) | — (pkgrel bump のみ) | `pkgrel` +1 (deps changed): gst-plugins-base-libs 1.28.9-2 → 1.28.9-3 |
+| 2026-11-23 | 1.5.17-1 | (this PR) | `8f4b35e5479d0632fe3a50e80c8313eb273c3d93` (GPG verified) | safe-to-bump: 1.5.16 → 1.5.17 (Issue #821。release notes は StreamController の dispose 修正 / isar_community upgrade / テーマの必要分のみコンパイルする refactor / 機微ファイルのみ確認する修正 / NotificationsListView の follow request 取得 / visible user 追加前の visibility 設定 / draft 保存時の先頭 mention 無視 / Flutter 3.50.0 への upgrade / 画像を論理サイズで resize する refactor / AiScript UI component の default value 更新反映 の bugfix 6 + build 2 + refactor 2 + release commit 計 11 commit)。 tarball は x64 / arm64 とも独立に実測し GitHub の release asset digest (asset `immutable: true`) と一致。 `flatpak/` は metainfo.xml の `<release version="1.5.17">` entry 追加 3 行のみ (desktop / png は sha256 変化なし)。 tarball の top-level 構造 (`aria` / `data` / `lib`) とエントリ数 (199 件) は 1.5.16 と同一で、 `lib/*.so` のファイル集合も同一 (`libmdk-braw.so` / `libmdk-r3d.so` / `libffmpeg.so.9` 等の同梱 media backend も従来どおり)。 `binary_scan` (readelf 相当) の NEEDED 再検証で新規 system 依存なし (gtk3 stack / gst-plugins-base-libs / libsecret のみ、 最大要求 GLIBC も 2.38 で変化なし)。 唯一の NEEDED 差分は `libflutter_linux_gtk.so` に `libwayland-client.so.0` / `libwayland-egl.so.1` が追加された点だが、 いずれも gtk3 の直接依存 `wayland` が提供するため depends 変更不要。 内容差分は upstream の変更で説明できる: Flutter 3.47.9 → 3.50.0 (`.fvmrc`)、 Rust toolchain 1.99.0 → 1.100.0、 SDK 制約 >=3.13.0 → >=3.14.0、 pubspec の依存 version 更新 (cached_network_image / file_picker / flutter_cache_manager / flutter_hooks / flutter_local_notifications 22 → 23 / flutter_svg / go_router / hooks_riverpod / image / material_ui / native_toolchain_rust / riverpod_annotation / riverpod_generator)。 新規 pub 依存は `aho_corasick` / `material_hooks` / `gal_linux` の 3 件 (いずれも pub.dev hosted の通常 package、 install script 無し)。 git 依存はすべて github.com/poppingmoon 配下 (自家 fork) の ref 更新 (fvp / mfm_parser / unifiedpush / webfont_list / isar_community / webcrypto) で、 新規の第三者 git source 追加なし。 tag commit は 1.5.13–1.5.16 と同じ形 (author poppingmoon、 committer web-flow、 GPG verified)、 release asset は github-actions[bot] が CI から公開。 検証は `pkg_verifysource` (source 取得 + 全 checksum Passed) と tarball 静的解析までで、 フルの `makepkg` 再実行とバイナリ実行は未実施 (GUI 起動の目視確認は client 機で推奨)。 |
 
 ## 更新方針
 
