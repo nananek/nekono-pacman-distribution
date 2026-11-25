@@ -2,7 +2,7 @@
 
 ## 状態
 
-**review 済み、approve** (最新: 2026-11-20 / 29.10.0)
+**review 済み、approve** (最新: 2026-11-25 / 29.10.1)
 
 AUR の `docker-rootless-extras` 由来。package/install の主要処理は継承しつつ、
 安定供給できる `slirp4netns` を hard dependency に維持し、利用可能な network
@@ -30,25 +30,46 @@ maintainer の意図的設計)。Debian apt の同名 package とは flow が異
   - maintainer: Ľubomír 'the-k' Kučera
   - contributors: Hugo Osvaldo Barrera / PastLeo / koba1t
 - Upstream: https://github.com/moby/moby (= Docker / Moby project)
-  - 2 つの shell script を `docker-v29.10.0` annotated tag から取得
-  - tag object: `f411721f04b2d1f8e1ab6aff34037acac7189520` (annotated + GPG 署名済み)
-  - tag commit: `06db1734267bf7770914b417bff6556d835bf8cc`
-  - release author: `vvoland` (既知 moby maintainer)、prerelease: false
-  - release publish: 2026-11-16T12:11:53Z / tagger: Paweł Gronowski
-    (Docker 社員、`verified: true`)
+  - 2 つの shell script を `docker-v29.10.1` annotated tag から取得
+  - tag object: `497e9c93a17abe303d417de5575e243dce5049db` (annotated + GPG 署名済み)
+  - tag commit: `54cd494d0b39abfc7a958fcc876f706271f8b909`
+  - tagger: Sebastiaan van Stijn `github@gone.nl` (= 既知 moby maintainer
+    `thaJeztah`、Docker 社員)、GPG 署名 `verified: true` / `reason: valid`
+  - release author: `thaJeztah`、prerelease: false
+  - release publish: 2026-11-24T21:49:50Z
+  - **注**: 29.10.0 までの tagger は `vvoland` (Paweł Gronowski) だったが、
+    本 release は `thaJeztah` が tag を切っている。両者とも既知の moby
+    maintainer であり、GPG 署名が `verified: true` で検証されているため
+    supply-chain 上の懸念はなし (= domain / owner の変更なし、repo も
+    `moby/moby` のまま)。
 
 ## 検証結果
 
-- [x] `source` URL = `raw.githubusercontent.com/moby/moby/docker-v29.10.0/...`
+- [x] `source` URL = `raw.githubusercontent.com/moby/moby/docker-v29.10.1/...`
   - Docker 公式 upstream repo、typosquat / なりすましリスクなし
-- [x] `sha256sums` 4 件すべてを 2026-11-20 に独立検証
-  - upstream 2 scripts は raw URL の直接取得値を照合。29.9.3 タグの内容と
-    **byte 単位で完全同一** (git blob SHA も同一) のため sha256 は不変
-  - `dockerd-rootless.sh` (29.10.0): `200203633806081a401e60aefdf68a8fa73fc7dc80aa854c52a69d47710a3488` (不変)
-  - `dockerd-rootless-setuptool.sh` (29.10.0): `1c9f0dc93ebb3d75255254ec760d26a912affba7f329ab8abffe8e25eb0b3f94` (不変)
+  - 29.10.0 からの URL 変更は tag 部分 (`docker-v29.10.0` → `docker-v29.10.1`) のみ
+- [x] `sha256sums` 4 件すべてを 2026-11-25 に独立検証 (`makepkg --verifysource`
+      で 4/4 Passed、加えて raw URL / Contents API blob SHA を照合)
+  - upstream 2 scripts は 29.10.0 タグの内容と **byte 単位で完全同一**
+    (sha256 4 値すべて不変)。`makepkg --verifysource` が新 tag から
+    download した実ファイルで 4/4 Passed
+    - raw 取得の実測値と Contents API の
+      `git/blobs/c5ea79a395729e5644d6b4c8635790c78609210f` が一致
+  - `dockerd-rootless.sh` (29.10.1): `200203633806081a401e60aefdf68a8fa73fc7dc80aa854c52a69d47710a3488` (不変)
+  - `dockerd-rootless-setuptool.sh` (29.10.1): `1c9f0dc93ebb3d75255254ec760d26a912affba7f329ab8abffe8e25eb0b3f94` (不変)
   - `docker.socket` (ローカル AUR snapshot、変更なし): `d8695293e5d4a814763f13e1d36ed37273040666b4b91363d6c33171df8934c7`
   - `99-docker-rootless.conf` (ローカル AUR snapshot、変更なし): `d0d790d4c3d887b10b2b155b83a58a44980b9fa638f8c0f1faec0739dc0ef473`
-- [x] `package()`:
+- [x] tag 範囲の差分 (`docker-v29.10.0...docker-v29.10.1`、281 commits / 30 files)
+  - 変更 file は `daemon/` / `vendor/` / `integration/` / `go.mod` /
+    `go.sum` / `cmd/dockerd/winresources/docker.ico` のみ。
+    **`contrib/` の変更は 0 件** (= 本 pkg が ship する 2 script に無関係)
+  - `vendor/github.com/moby/sys/user/*` の変更 = CVE-2026-135844
+    (user/group/id-mapping ファイル parse 時の unbounded read) の fix
+  - `daemon/containerfs_linux.go` の変更 = CVE-2026-135124
+    (`docker cp` 中の read-only bind mount 書換) の fix
+  - いずれも dockerd バイナリ側の修正で、Arch 公式 `docker` package が
+    受け持つ。本 pkg (rootless script + systemd unit + sysctl) は影響なし
+- [x] `package()` (29.10.0 から変更なし):
   - `install -Dm755 dockerd-rootless.sh → /usr/bin/dockerd-rootless.sh`
   - `install -Dm644 docker.socket → /usr/lib/systemd/user/docker.socket`
   - `install -Dm644 99-docker-rootless.conf → /usr/lib/sysctl.d/`
@@ -56,6 +77,8 @@ maintainer の意図的設計)。Debian apt の同名 package とは flow が異
     `/usr/lib/systemd/user/docker.service`
   - すべて静的、network fetch / eval / 動的コマンド構築なし
   - `awk` / `sed` / `head` は coreutils + base 同梱、makedepends 不要
+  - setuptool.sh が byte-identical のため `awk` 抽出結果
+    (`[Unit]` / `[Service]` / `[Install]` の 3 section) も従来と同一
 - [x] `depends`: `bash docker rootlesskit slirp4netns` — rootless 動作に
       必須の依存すべて揃っている
 - [x] `optdepends`:
@@ -78,8 +101,10 @@ maintainer の意図的設計)。Debian apt の同名 package とは flow が異
       / `docker-rootless-extras-bin` を network 互換に list
 - [x] `secrets` 混入なし (`.git` 削除済、秘密鍵 / token / `.gpg` ファイル
       等なし)
-- [x] AUR との diff: package/install の主要処理は同一。依存方針とlint用
-      no-op guardsのみ意図的差分 (`# Maintainer:` → `# Contributor:` + コメント追記含む)
+- [x] AUR との diff: 29.10.1 時点の AUR PKGBUILD (pkgver=29.10.1、
+      sha256 4 値は本 repo と一致) を取得して照合。package/install の主要処理は
+      同一。依存方針とlint用 no-op guardsのみ意図的差分
+      (`# Maintainer:` → `# Contributor:` + コメント追記含む)
 
 ## セキュリティ所見
 
@@ -89,13 +114,17 @@ maintainer の意図的設計)。Debian apt の同名 package とは flow が異
   可能性あり (PKGBUILD 内 TODO コメント済み)。
 - `kernel.unprivileged_userns_clone=1` sysctl は rootless Docker 必須。
   Linux ≥5.11 default 有効のため実質的に変化なし。意図した設定、問題なし。
+- 29.10.1 は **security release** (CVE-2026-135844 / CVE-2026-135124) だが、
+  両 CVE とも dockerd バイナリ側 (= Arch 公式 `docker` package) の修正で、
+  本 pkg が ship する成果物には含まれない。本 pkg 自身の供給内容に
+  脆弱性の持ち込みはない。
 
 ## 依存方針 (AUR との意図的 diff)
 
-AUR の現行 PKGBUILD (v29.10.0) と本 repo の PKGBUILD で `depends` /
+AUR の現行 PKGBUILD (v29.10.1) と本 repo の PKGBUILD で `depends` /
 `optdepends` の振り方に意図的な差異がある:
 
-| | AUR v29.10.0 | 本 repo |
+| | AUR v29.10.1 | 本 repo |
 |---|---|---|
 | `slirp4netns` | `optdepends` (recommended) | **`depends` (必須)** |
 | `gvisor-tap-vsock` | (記載なし) | `optdepends` |
@@ -144,6 +173,8 @@ upstream の新 release (docker 29.10.x 等) が出たら:
    1 行追記 (review 日付 + PKGBUILD repo SHA + upstream tag commit SHA)
 
 ## 更新履歴
+
+- **2026-11-25 / 29.10.1** — approve (Issue #842)。Moby v29.10.1 (release 2026-11-24、by `thaJeztah`) へ sync。annotated tag object `497e9c93a17abe303d417de5575e243dce5049db` の target commit `54cd494d0b39abfc7a958fcc876f706271f8b909`、tagger `Sebastiaan van Stijn <github@gone.nl>` (= `thaJeztah`, Docker 社員、既知 moby maintainer、GPG 署名 `verified: true` / `reason: valid`)。29.10.0 までの tagger は `vvoland` だったが本 release は `thaJeztah` が担当。両者とも既知 maintainer かつ署名検証成立、repo (`moby/moby`) / domain の変更もないため supply-chain 懸念なし。release note は **security release** で、CVE-2026-135844 (moby/sys の user/group/id-mapping ファイル parse 時 unbounded read、GHSA-ffh6-8jcg-cjmw) / CVE-2026-135124 (実行中 container 内 process が `docker cp` 中に read-only bind mount を writable 化できる、GHSA-vfmq-r373-x89f) の 2 件に加え、`Expect: 100-continue` 付き build context upload の "http: invalid Read on closed Body" 修正 / `kernel.apparmor_restrict_unprivileged_unconfined=1` 環境 (最近の Ubuntu) で同 container 内 process が互いを signal/trace できない AppArmor default profile の修正 / `docker network rm` の "has active endpoints" 誤検知修正 / Swarm ネットワーク接続と endpoint 削除の race 修正 / BuildKit v0.35.1 / Windows icon 更新。tag 範囲の差分 (`docker-v29.10.0...docker-v29.10.1`、281 commits / 30 files) の変更 file は `daemon/` / `vendor/` / `integration/` / `go.mod` / `go.sum` / `cmd/dockerd/winresources/docker.ico` のみで **`contrib/` の変更は 0 件**。本 pkg が ship する 2 script (`dockerd-rootless.sh` / `dockerd-rootless-setuptool.sh`) は raw URL 実測 + Contents API blob SHA 照合で 29.10.0 と **byte-identical** (sha256 4 値すべて不変)、`makepkg --verifysource` も 4/4 Passed。setuptool.sh が同一のため `awk '/Unit/,/EOT/'` 抽出入力 (`docker.service`) も従来と同一。PKGBUILD 改変は `pkgver` 1 行のみ (`pkgrel` は 1 のまま)。AUR も 29.10.1-1 で sha256 4 値一致、depends 構成に変更なし (意図的 diff 維持)。`.deps.lock` は変更なし (Arch 公式 `extra` の `docker` は本 issue 処理時点でまだ `1:29.10.0-1`、2026-11-25 に out-of-date flag が立った段階。rootlesskit 3.3.0-1 / slirp4netns 1.3.7-1 / bash 5.3.20-1 も不変)。Closes #842。
 
 - **2026-11-20 / 29.10.0** — approve (Issue #822)。Moby v29.10.0 (release 2026-11-16、by `vvoland`) へ sync (`pkgrel` は 2 → 1 に reset)。annotated tag object `f411721f04b2d1f8e1ab6aff34037acac7189520` の target commit `06db1734267bf7770914b417bff6556d835bf8cc`、tagger `vvoland` (Paweł Gronowski, Docker 社員、GPG 署名 `verified: true`)。release note は **minor release** で、Engine API 1.57 化 / API spec の OpenAPI 3.2 移行 / `insecure-registries` 明示時に loopback を自動 insecure 扱いしない **挙動変更** (⚠️ potential breaking change) / jobs extension (experimental) / embedded containerd の `/etc/docker/containerd.d/` drop-in / libnetwork (nftables backend / overlay / DNS) 修正群 / rootless 修正 2 件 (SELinux 有効時の overlay2 許可、`nosuid`/`nodev` bind mount 下での `docker cp` EPERM 修正) / BuildKit v0.35.0 / Go 1.27.4 / runc v1.5.3 を含むが、本 pkg が ship する 2 script (`dockerd-rootless.sh` / `dockerd-rootless-setuptool.sh`) は raw URL 実測で 29.9.3 と **byte-identical** (sha256 4 値すべて不変)。tag 範囲の差分 (`docker-v29.9.3...docker-v29.10.0`、1084 commits / 300 files) で `contrib/` の変更は `check-config.sh` のみ (本 pkg は未 ship)。PKGBUILD 改変は `pkgver` と `pkgrel` の 2 行のみ。AUR も 29.10.0-1 で sha256 4 値一致、depends 構成に変更なし (意図的 diff 維持)。`.deps.lock` は Arch 公式 `extra` の `docker` が `1:29.10.0-1` に追従したため更新 (rootlesskit 3.3.0-1 / slirp4netns 1.3.7-1 / bash 5.3.20-1 は不変)。Closes #822。
 
