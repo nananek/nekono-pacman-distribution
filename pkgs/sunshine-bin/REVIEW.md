@@ -105,3 +105,4 @@ upstream の新 release (v2026.5xx.xxxxxx 等) が出たら:
 | 2026-11-12 | 2026.914.233613-5 | (this PR) | — (pkgrel bump のみ) | `pkgrel` +1 (deps changed): qt6-base 6.12.0-4 → 6.12.0-5 |
 | 2026-11-18 | 2026.914.233613-6 | (this PR) | — (pkgrel bump のみ) | `pkgrel` +1 (deps changed): libpipewire 1:1.6.11-1 → 1:1.6.11-2 |
 | 2026-11-25 | 2026.914.233613-7 | (this PR) | — (pkgrel bump のみ) | `pkgrel` +1 (deps changed): qt6-base 6.12.0-5 → 6.12.1-1, qt6-svg 6.12.0-1 → 6.12.1-1 |
+| 2026-11-27 | 2026.914.233613-8 | (this PR) | — (pkgrel bump のみ) | `pkgrel` +1 (deps changed): libpipewire 1:1.6.11-2 → 1:1.6.12-1 |
