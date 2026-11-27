@@ -32,7 +32,8 @@ func DistPublishTool(env *Env) *Func {
 			}
 			env.J.Emit("publish", map[string]any{
 				"ok": data["ok"], "pass": data["pass"], "copied_new": data["copied_new"],
-				"deleted": data["deleted"], "rc": data["rc"], "error": data["error"],
+				"deleted": data["deleted"], "deleted_files": data["deleted_files"],
+				"rc": data["rc"], "error": data["error"],
 			})
 			return Result{Summary: fmt.Sprintf("publish ok=%v copied=%v deleted=%v rc=%v", data["ok"], data["copied_new"], data["deleted"], data["rc"]), Data: data}, nil
 		},

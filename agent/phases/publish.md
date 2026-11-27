@@ -11,11 +11,15 @@
      **黙って skip しない**。何が足りないかを summary に書き `finish(status="needs_human")`。
 3. `dist_publish` を実行する。2 pass 構成 (sync → copy --ignore-times) は不変。
    - `ok == false` は失敗。`error` と `pass` を findings に書いて `finish(status="failed")`。
-   - `deleted > 0` は退役 pkg の掃除。件数を summary に書く。
+   - `deleted > 0` は退役 pkg の掃除。件数を summary に書き、`deleted_files` の一覧は
+     そのまま次の `dist_verify` の `retired` に渡す（フェーズから `repo/x86_64` を
+     list する手段は無いので、これが 404 検証の唯一の経路）。
 4. `dist_verify` で照合する。`files` には必ず `nekono.db.tar.gz` と `nekono.db.tar.gz.sig` を
-   含め、今回 build した pkg の `.pkg.tar.zst` と `.sig` も加える。退役分は `retired` に入れる。
+   含め、今回 build した pkg の `.pkg.tar.zst` と `.sig` も加える。退役分は
+   `dist_publish.deleted_files` を `retired` に入れる。
    - `ok == true` が成功条件。**db と sig の両方が MATCH で初めて成功**と言える。
    - MISMATCH が残ったら `finish(status="failed")`。値や host 名は書かない。
+   - `deleted_files` が空なら `retired` も空でよい（退役は無かった）。
 5. `publish.env` の値は絶対に読まない・出力しない (`fs_read` でも deny される)。
 6. `sudo pacman -Sy` による client 検証はしない。最後に「user が client で
    `sudo pacman -Sy && pacman -Si <pkg>` を確認する」ことを summary に残して `finish(status="ok")`。
