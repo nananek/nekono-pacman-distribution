@@ -54,7 +54,7 @@
 
 pkgname=joplin-desktop
 pkgver=3.7.24
-pkgrel=1
+pkgrel=2
 pkgdesc='An open source note taking and to-do application with synchronization capabilities (Desktop, system electron42)'
 arch=('x86_64')
 url='https://joplinapp.org/'
@@ -98,6 +98,17 @@ build() {
         packages/app-desktop/bridge.ts
     sed -i '/const nextArg/a if (arg === "/usr/lib/joplin-desktop/app.asar") { argv.splice(0, 2); continue; }' \
         packages/lib/utils/processStartFlags.ts
+
+    # Enable keytar/libsecret on Linux so Joplin stores the E2EE master
+    # password and other `secure: true` settings in Secret Service instead of
+    # settings/database.sqlite. Upstream disables Linux keychain because of a
+    # 2019 sharp/libz conflict; keytar 7.9.0 is N-API and works with the system
+    # electron42, and [nekono] clients run pass-secret-service. Keep this as a
+    # local patch; re-check the upstream line on every version bump.
+    sed -i 's/return (shim.isWindows() || shim.isMac()) \&\& !shim.isPortable();/return (shim.isWindows() || shim.isMac() || shim.isLinux()) \&\& !shim.isPortable();/' \
+        packages/lib/shim.ts
+    grep -q 'shim.isWindows() || shim.isMac() || shim.isLinux()' packages/lib/shim.ts \
+        || { echo "[FATAL] keytar Linux patch did not apply (shim.ts changed upstream?)"; exit 1; }
 
     corepack install
     # --immutable は付けない: 上の rm で workspace が減り、 lockfile に
