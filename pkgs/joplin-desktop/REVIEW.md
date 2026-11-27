@@ -90,8 +90,11 @@ AUR の `joplin` (pkgbase=joplin, pkgver=3.7.24, pkgrel=1, AUR commit
   `platformSupportsKeyChain()` を sed で Linux 許可に変更する。 sandbox
   (`bin/joplin` + `--talk=org.freedesktop.secrets`) 内で keytar の
   `setPassword` / `getPassword` / `deletePassword` が通り、`mytest` を
-  読み戻せることを実測した。 Joplin 本体の `KeychainService` 検出
-  (`keychain.supported=1`) は build 後の実機で確認する。
+  読み戻せることを実測した。 3.7.24-3 を local build / install し、
+  `featureFlag.linuxKeychain=true` で `keychain.supported=1` /
+  `lastAvailableDrivers=["node-keytar"]`、keychain の set/get test
+  (`mytest`) 成功まで確認した。 3.7.24-2 は `shimInit` gate で 0 のまま
+  だった。
 
 ## 依存方針 (AUR との意図的な diff)
 
@@ -140,7 +143,12 @@ AUR の `joplin` (pkgbase=joplin, pkgver=3.7.24, pkgrel=1, AUR commit
    許可する。 **注意**: Secret Service API には per-app ACL が無く、
    Joplin から default collection 全体に到達できる (bin/geary と同じ制約)。
    upstream の該当行が変わった場合は build を fail させる grep gate を入れて
-   あるので、 bump 時に sed を追随させること。
+   あるので、 bump 時に sed を追随させること。 **2026-11-28 追記**:
+   `shimInit()` (`packages/lib/shim-init-node.ts`) にも同じ Windows/macOS
+   gate があり、`platformSupportsKeyChain()` だけを patch しても keytar
+   モジュールが捨てられて `keychain.supported=0` のままだった。 両方を
+   patch し、`shimInit` 側は `shim.platformSupportsKeyChain()` 経由に統一
+   した (pkgrel 3)。
 
 ## 更新履歴
 
@@ -148,3 +156,4 @@ AUR の `joplin` (pkgbase=joplin, pkgver=3.7.24, pkgrel=1, AUR commit
 |---|---|---|---|---|
 | 2026-11-27 | 3.7.24 | (this PR, 検証時 `4a55c9f2a9f89c6cad287e31f3fa5fbeef75b438a2529b58ba54fc7ba3683a2a`) | `20301fdae662c52eae22ba6b2f008e83a00fd5bf` | 初回 review。 sha256 実測一致、 build〜起動まで実測、 AUR 改変 6 件で受入 (user 承認待ち) |
 | 2026-11-28 | 3.7.24-2 | (this PR) | `20301fdae662c52eae22ba6b2f008e83a00fd5bf` | keytar/Linux 有効化 patch を追加 (E2EE password を Secret Service へ)。 keytar の set/get/delete は sandbox 内で実測済み。 Joplin 本体の keychain 検出は build 後確認 |
+| 2026-11-28 | 3.7.24-3 | (this PR) | `20301fdae662c52eae22ba6b2f008e83a00fd5bf` | `shimInit()` の keytar gate も patch。 3.7.24-2 は keytar モジュールを捨てて `keychain.supported=0` のままだったため |
