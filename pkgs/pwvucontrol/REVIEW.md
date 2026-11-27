@@ -96,3 +96,4 @@ upstream の新 release (0.5.3 等) が出たら:
 | 2026-11-13 | 0.5.3-7 | (this PR) | — (pkgrel bump のみ) | `pkgrel` +1 (deps changed): clang 23.1.4-1 → 23.1.5-1, rust 1:1.99.1-2 → 1:1.99.1-4 |
 | 2026-11-15 | 0.5.3-8 | (this PR) | — (pkgrel bump のみ) | `pkgrel` +1 (deps changed): rust 1:1.99.1-4 → 1:1.100.0-1 |
 | 2026-11-25 | 0.5.3-9 | (this PR) | — (pkgrel bump のみ) | `pkgrel` +1 (deps changed): gtk4 1:4.24.1-1 → 1:4.24.2-1 |
+| 2026-11-27 | 0.5.3-10 | (this PR) | — (pkgrel bump のみ) | `pkgrel` +1 (deps changed): glib2 2.90.1-1 → 2.90.2-1 |
