@@ -86,6 +86,12 @@ AUR の `joplin` (pkgbase=joplin, pkgver=3.7.24, pkgrel=1, AUR commit
   `check()` を外した状態で足りるかは build host で `bin/build-all <pkg>` の
   初回に確認する
 - [ ] `check()` (jest) は 48 GB 要求のため未実行。 CI に任せる
+- [x] keytar の Linux 有効化 patch (2026-11-28): `packages/lib/shim.ts` の
+  `platformSupportsKeyChain()` を sed で Linux 許可に変更する。 sandbox
+  (`bin/joplin` + `--talk=org.freedesktop.secrets`) 内で keytar の
+  `setPassword` / `getPassword` / `deletePassword` が通り、`mytest` を
+  読み戻せることを実測した。 Joplin 本体の `KeychainService` 検出
+  (`keychain.supported=1`) は build 後の実機で確認する。
 
 ## 依存方針 (AUR との意図的な diff)
 
@@ -121,9 +127,24 @@ AUR の `joplin` (pkgbase=joplin, pkgver=3.7.24, pkgrel=1, AUR commit
 7. **makedepends から `rsync` / `libxcrypt-compat` を外した**: rsync は
    app-cli の build だけが、 libxcrypt-compat は fpm (deb 生成) だけが
    使っていた。 どちらも消えたので不要 (実測: 両方無しで dir build が通る)。
+8. **Linux でも keytar/libsecret を有効化**: `packages/lib/shim.ts` の
+   `platformSupportsKeyChain()` を `shim.isLinux()` も true を返すように
+   build() で sed patch する。 upstream が Linux を無効化している理由は
+   2019 年の sharp/libz 衝突 (コメントに残っている) で、 keytar 7.9.0 は
+   N-API prebuilt、 system electron42 と pass-secret-service の組み合わせ
+   では再現しない。 これにより `secure: true` の設定
+   (`encryption.masterPassword` / `encryption.passwordCache` /
+   `sync.9.password` 等) は `settings` テーブルではなく
+   `org.freedesktop.secrets` に保存される。 sandbox wrapper
+   (`~/.dotfiles/bin/joplin`) 側で `--talk=org.freedesktop.secrets` を
+   許可する。 **注意**: Secret Service API には per-app ACL が無く、
+   Joplin から default collection 全体に到達できる (bin/geary と同じ制約)。
+   upstream の該当行が変わった場合は build を fail させる grep gate を入れて
+   あるので、 bump 時に sed を追随させること。
 
 ## 更新履歴
 
 | 日付 | release | review した PKGBUILD repo SHA | upstream tag commit | findings |
 |---|---|---|---|---|
 | 2026-11-27 | 3.7.24 | (this PR, 検証時 `4a55c9f2a9f89c6cad287e31f3fa5fbeef75b438a2529b58ba54fc7ba3683a2a`) | `20301fdae662c52eae22ba6b2f008e83a00fd5bf` | 初回 review。 sha256 実測一致、 build〜起動まで実測、 AUR 改変 6 件で受入 (user 承認待ち) |
+| 2026-11-28 | 3.7.24-2 | (this PR) | `20301fdae662c52eae22ba6b2f008e83a00fd5bf` | keytar/Linux 有効化 patch を追加 (E2EE password を Secret Service へ)。 keytar の set/get/delete は sandbox 内で実測済み。 Joplin 本体の keychain 検出は build 後確認 |
