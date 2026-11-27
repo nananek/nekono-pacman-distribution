@@ -66,6 +66,7 @@
 | `localsend-bin`  | -bin (Flutter prebuilt)       | AirDrop 代替 (LAN ファイル転送) |
 | `pwvucontrol`    | from-source (Rust/GTK4)       | PipeWire 音量コントロール |
 | `nekonolock`     | from-source (Rust)            | Sway のスクリーンロッカー (YubiKey OpenPGP / パスワード) |
+| `joplin-desktop` | from-source (Electron, system electron42) | ノート / ToDo (Joplin Desktop) |
 
 ### システム・インフラ
 

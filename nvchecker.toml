@@ -172,3 +172,13 @@ source = "github"
 github = "poppingmoon/aria"
 use_latest_release = true
 prefix = "v"
+
+[joplin-desktop]
+# Joplin desktop (Electron)。 release tag は "vX.Y.Z" 形式。
+# CLI (`joplin`) は [nekono] では配布せず desktop のみ (AUR の split を解消)。
+# GitHub releases/latest の tag_name を prefix "v" で strip して pkgver と
+# 比較する (実測: 2026-11-27 時点で v3.7.24 = PKGBUILD の pkgver)。
+source = "github"
+github = "laurent22/joplin"
+use_latest_release = true
+prefix = "v"
