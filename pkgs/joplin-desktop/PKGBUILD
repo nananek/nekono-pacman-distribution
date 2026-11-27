@@ -1,0 +1,202 @@
+# Maintainer: Nekono Nana KAKKO KARI <3267314+nananek@users.noreply.github.com>
+# Upstream AUR Maintainer: CUI Hao <cuihao.leo@gmail.com>
+# Upstream: https://aur.archlinux.org/packages/joplin (pkgbase=joplin, 3.7.24-1)
+#
+# nekono-pacman-distribution の改変 (= AUR joplin 3.7.24-1 との diff):
+#   - split package を解消: AUR は pkgbase=joplin で CLI (`joplin`) と
+#     `joplin-desktop` の 2 つを吐くが、 [nekono] は desktop 1 variant に絞る
+#     (= voicevox-bin と同じ「split を解消」方針)。 pkgbase / ディレクトリ名 /
+#     nvchecker section を `joplin-desktop` に統一。
+#     CLI をビルドしないので build() で `packages/app-cli` も削除する。
+#     どの package も @joplin/app-cli / joplin を依存に持たないことを確認済み
+#     (app-desktop の @joplin 依存は default-plugins / editor / lib /
+#     onenote-converter / renderer / tools / utils のみ)。 これで app-cli の
+#     tsc build と、 それが使う `rsync` (= AUR makedepends) が丸ごと不要になる。
+#     AUR が app-cli を残すのは CLI package も吐くため。
+#   - check() を削除: upstream の app-desktop jest テストは AUR コメント
+#     (2026-09-24) で「48 GB のメモリが必要」と報告されている。 build host は
+#     8 GB なので OOMKiller で build ごと落ちる。 `bin/build-all` は
+#     `makepkg -sc` で check() を自動実行するため、ここで外さないと daily-ops が
+#     回らない。 テストは upstream CI が担保する。
+#   - options=(!strip !debug) を追加: asarUnpack される native .node を strip
+#     せず、 debug pkg も作らない (= voicevox-bin / voicevox-engine-cuda と
+#     同じ理由。 bundle 同梱の prebuilt binary に debug symbol は無い)。
+#   - arch を x86_64 に限定: [nekono] の配布対象は x86_64。 AUR の aarch64
+#     分岐 (dist/linux-arm64-unpacked) は削除する。
+#   - `npx yarn install` はそのまま (--immutable は付けない): build() の冒頭で
+#     app-mobile / app-cli 等の workspace を rm するため、 lockfile からそれらの
+#     entry が落ち、 `--immutable` は YN0028 で必ず失敗する (実測)。
+#     解決は yarn.lock 準拠で行われ、 書き換わるのは削除した workspace 分だけ。
+#   - electron-builder は `--linux dir` のみ: 配布するのは resources だけなので
+#     AppImage / deb を作らない (= fpm/ruby が不要になり libxcrypt-compat も
+#     makedepends から外せる、 AppImage tools の download も消える)。
+#     実測: dir のみで 39 秒 (AppImage+deb 込みだと fpm の libcrypt.so.1 不足で
+#     失敗し、 AUR は libxcrypt-compat を makedepends に入れて回避している)。
+#   - .desktop / wrapper は package() で生成: .gitignore が pkgs/*/*.sh と
+#     pkgs/*/*.desktop を除外するため source に置けない (voicevox-bin の
+#     run.sh と同じ扱い)。 内容は AUR の該当ファイルと等価。
+#   - pkgver は literal: `_pkgver` 変数経由にすると nvchecker の検知が効かない
+#     (= electron37-bin / voicevox-bin と同じ注意)。
+#
+# 設計メモ:
+#   - upstream の official `yarn dist` は
+#     `gulp before-dist && yarn electronRebuild && npx electron-builder`。
+#     AUR は electronRebuild を省いているが、 joplin の native dep
+#     (sqlite3 5.1.6 / sharp 0.34 / keytar 7.9.0) はすべて N-API prebuilt で
+#     ABI 非依存のため electron42 でそのまま動く (= electronRebuild の
+#     `--force-abi 146` は Electron 42 の ABI と一致するが、 N-API には不要)。
+#     bump 時に native dep が N-API を外した場合は electronRebuild の追加が必要。
+#   - sharp は SHARP_IGNORE_GLOBAL_LIBVIPS=1 で prebuilt libvips を同梱するため
+#     depends の libvips は実際には実行時必須ではないが、 AUR に合わせて残す
+#     (= 外すと挙動が変わるリスクを取らない)。
+#   - electron42 は Arch 公式 extra の rolling。 extra から落ちた場合は
+#     electron37-bin と同じく自家 -bin が必要になる (voicevox-bin も同じ依存)。
+
+pkgname=joplin-desktop
+pkgver=3.7.24
+pkgrel=1
+pkgdesc='An open source note taking and to-do application with synchronization capabilities (Desktop, system electron42)'
+arch=('x86_64')
+url='https://joplinapp.org/'
+license=('AGPL-3.0-or-later')
+_electronVersion=42
+depends=("electron${_electronVersion}" "nodejs>=22" "libvips")
+optdepends=('libappindicator-gtk3: for tray icon')
+makedepends=('npm' 'git' 'python-setuptools' 'corepack')
+options=(!strip !debug)
+source=("joplin-${pkgver}.tar.gz::https://github.com/laurent22/joplin/archive/v${pkgver}.tar.gz")
+sha256sums=('8d9de9ef14528259f182883a90f63f3ad4d7d44011e2c278496f958cb73cdf4d')
+
+_setup_env() {
+    export YARN_CACHE_FOLDER="${srcdir}/yarn-cache"
+    export ELECTRON_SKIP_BINARY_DOWNLOAD=1
+    export npm_config_yes=true
+    export SHARP_IGNORE_GLOBAL_LIBVIPS=1
+}
+
+prepare() {
+    _setup_env
+    mkdir -p "${YARN_CACHE_FOLDER}"
+    cd "${srcdir}/joplin-${pkgver}"
+}
+
+build() {
+    _setup_env
+
+    cd "${srcdir}/joplin-${pkgver}"
+
+    # Delete unused components
+    # app-cli は配布しない (split 解消)。 これを消すと app-cli の tsc build と
+    # その rsync 依存も落ちる。 app-desktop は app-cli に依存していない。
+    rm -r packages/{app-mobile,app-clipper,app-cli,server,doc-builder}
+    # Fix: Build error due to removal of app-mobile
+    sed -i '/app-mobile\//d' packages/tools/gulp/tasks/buildScriptIndexes.js
+    # Fix: joplin-plugin-freehand-drawing complains "not in a git directory"
+    git init
+    # Fix: "Open secondary app instance" not working with system electron
+    sed -i "s#bridge().electronApp().electronApp().getPath('exe')#'/usr/bin/joplin-desktop'#" \
+        packages/app-desktop/bridge.ts
+    sed -i '/const nextArg/a if (arg === "/usr/lib/joplin-desktop/app.asar") { argv.splice(0, 2); continue; }' \
+        packages/lib/utils/processStartFlags.ts
+
+    corepack install
+    # --immutable は付けない: 上の rm で workspace が減り、 lockfile に
+    # 対して YN0028 (would have been modified) で必ず失敗する (実測)。
+    npx yarn install
+
+    # Replace npm dependencies with local ones
+    cd packages
+    sed -i -E 's_"@joplin/([^"]+)": .*_"@joplin/\1": "file://'$PWD'/\1",_g' */package.json
+
+    # Pack the app-desktop electron package
+    cd "${srcdir}/joplin-${pkgver}/packages/app-desktop"
+    npx gulp before-dist
+
+    # dir target だけ作る。 AUR の `--dir=dist/` は bool フラグに値が付いて
+    # おらず target を絞れないため、 AppImage / deb まで build され、
+    # fpm (ruby) 用に libxcrypt-compat、 AppImage 用に追加 download が要る。
+    # 配布するのは linux-unpacked/resources だけなので dir のみに絞る。
+    # dir target では AppImage が生成されず、 upstream の
+    # afterAllArtifactBuild (AppImage の checksum を作る hook) が
+    # "AppImage not found!" で落ちるので、 その 1 行を package.json から外す。
+    sed -i '/"afterAllArtifactBuild":/d' package.json
+
+    electronRoot=/usr/lib/electron${_electronVersion}/
+    electronVersion="$(<${electronRoot}/version)"
+    npx electron-builder --linux dir --x64 \
+        -c.directories.output=dist \
+        -c.electronDist="${electronRoot}" \
+        -c.electronVersion="${electronVersion}"
+}
+
+package() {
+    _setup_env
+
+    cd "${srcdir}/joplin-${pkgver}/packages/app-desktop"
+    mkdir -p "${pkgdir}/usr/lib"
+    cp -vr dist/linux-unpacked/resources "${pkgdir}/usr/lib/${pkgname}"
+
+    # Install icons
+    while read -r size; do
+        mkdir -p "${pkgdir}/usr/share/icons/hicolor/${size}/apps/"
+        cp "${pkgdir}/usr/lib/${pkgname}/build/icons/${size}.png" \
+            "${pkgdir}/usr/share/icons/hicolor/${size}/apps/${pkgname}.png"
+    done < <(ls build/icons | grep -Po '^(\d+)x\1+(?=\.png)')
+
+    # .desktop / wrapper は .gitignore が pkgs/*/*.desktop, pkgs/*/*.sh を除外
+    # するため source に置けない (= docker-rootless-extras は URL source、
+    # voicevox-bin は package() 内で run.sh を生成している)。 ここで生成する。
+    # 内容は AUR の joplin-desktop.desktop / .sh と等価 (同 repo の review で
+    # 中身を確認済み)。
+    install -dm755 "${pkgdir}/usr/share/applications"
+    cat > "${pkgdir}/usr/share/applications/${pkgname}.desktop" <<'DEOF'
+[Desktop Entry]
+Name=Joplin
+Comment=Joplin for Desktop
+Exec=/usr/bin/joplin-desktop
+Terminal=false
+Icon=joplin-desktop
+StartupWMClass=appimagekit-joplin
+Type=Application
+Categories=Office;
+MimeType=x-scheme-handler/joplin;
+SingleMainWindow=true
+DEOF
+
+    install -dm755 "${pkgdir}/usr/bin"
+    cat > "${pkgdir}/usr/bin/${pkgname}" <<'WEOF'
+#!/bin/bash
+# This script is forked from Arch-stock /usr/bin/electron*
+
+set -euo pipefail
+
+name=electron@electronversion@
+flags_file="${XDG_CONFIG_HOME:-$HOME/.config}/${name}-flags.conf"
+fallback_file="${XDG_CONFIG_HOME:-$HOME/.config}/electron-flags.conf"
+
+lines=()
+if [[ -f "${flags_file}" ]]; then
+    mapfile -t lines < "${flags_file}"
+elif [[ -f "${fallback_file}" ]]; then
+    mapfile -t lines < "${fallback_file}"
+fi
+
+flags=()
+for line in "${lines[@]}"; do
+    if [[ ! "${line}" =~ ^[[:space:]]*#.* ]] && [[ -n "${line}" ]]; then
+        flags+=("${line}")
+    fi
+done
+
+: ${ELECTRON_IS_DEV:=0}
+export ELECTRON_IS_DEV
+: ${ELECTRON_FORCE_IS_PACKAGED:=true}
+export ELECTRON_FORCE_IS_PACKAGED
+
+cd /usr/lib/joplin-desktop
+# Pass electron flags before asar path, and Joplin flags after it.
+exec /usr/lib/${name}/electron "${flags[@]}" /usr/lib/joplin-desktop/app.asar -- "$@"
+WEOF
+    chmod 755 "${pkgdir}/usr/bin/${pkgname}"
+    sed -i "s|@electronversion@|${_electronVersion}|" "${pkgdir}/usr/bin/${pkgname}"
+}
