@@ -57,18 +57,27 @@ if $JSON; then
     j_log="$(mktemp -t nekono-publish-XXXXXX.log)"
     json_exit() {
         local rc=$? copied=0 deleted=0
+        local -a deleted_files=()
         if [ -f "$j_log" ]; then
             copied="$(grep -c 'Copied (new)' "$j_log" 2>/dev/null || true)"
             deleted="$(grep -c 'Deleted' "$j_log" 2>/dev/null || true)"
+            # rclone -v logs "<file>: Deleted". Report the bare file names so the
+            # caller can pass them to dist_verify(retired=...): the publish phase
+            # cannot list repo/x86_64 itself, and without the names the 404 check
+            # of retired packages is impossible (2026-11-28: escalated as a gap).
+            mapfile -t deleted_files < <(grep 'Deleted' "$j_log" 2>/dev/null \
+                | sed -nE 's/^.*: (.*): Deleted$/\1/p' \
+                | sed 's|^.*/||' | sort -u)
             if [ "$rc" -ne 0 ] && [ -z "$j_error" ]; then
                 j_error="$(grep -iE 'error|fatal' "$j_log" 2>/dev/null | tail -n 1 | cut -c1-200 || true)"
             fi
         fi
-        printf '{"ok":%s,"pass":%s,"copied_new":%d,"deleted":%d,"error":%s,"rc":%d}\n' \
+        printf '{"ok":%s,"pass":%s,"copied_new":%d,"deleted":%d,"deleted_files":[%s],"error":%s,"rc":%d}\n' \
             "$(json_bool "$([ "$rc" -eq 0 ] && echo true)")" \
             "$(json_str "$j_pass")" \
             "${copied:-0}" \
             "${deleted:-0}" \
+            "$(json_str_list "${deleted_files[@]}")" \
             "$(json_str "$j_error")" \
             "$rc" >&3
         rm -f "$j_log"
