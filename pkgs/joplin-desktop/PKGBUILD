@@ -54,7 +54,7 @@
 
 pkgname=joplin-desktop
 pkgver=3.7.24
-pkgrel=2
+pkgrel=3
 pkgdesc='An open source note taking and to-do application with synchronization capabilities (Desktop, system electron42)'
 arch=('x86_64')
 url='https://joplinapp.org/'
@@ -109,6 +109,14 @@ build() {
         packages/lib/shim.ts
     grep -q 'shim.isWindows() || shim.isMac() || shim.isLinux()' packages/lib/shim.ts \
         || { echo "[FATAL] keytar Linux patch did not apply (shim.ts changed upstream?)"; exit 1; }
+
+    # shimInit() also had its own Windows/macOS gate that discarded the keytar
+    # module even after platformSupportsKeyChain() returned true on Linux.
+    # Route it through the same helper so both gates stay in sync.
+    sed -i 's/const keytar = (shim.isWindows() || shim.isMac()) && !shim.isPortable() ? options.keytar : null;/const keytar = shim.platformSupportsKeyChain() ? options.keytar : null;/' \
+        packages/lib/shim-init-node.ts
+    grep -q 'const keytar = shim.platformSupportsKeyChain() ? options.keytar : null;' packages/lib/shim-init-node.ts \
+        || { echo "[FATAL] keytar shimInit patch did not apply (shim-init-node.ts changed upstream?)"; exit 1; }
 
     corepack install
     # --immutable は付けない: 上の rm で workspace が減り、 lockfile に
