@@ -193,10 +193,17 @@ func cmdRun(ctx context.Context, args []string) error {
 	}
 
 	// Phase 3: build plan — computed after triage/upstream so their merges are
-	// included.
+	// included. Both phases may leave HEAD on a PR branch (they check one out to
+	// review or fix it) and build/publish only accept committed master, so get
+	// back to master first: otherwise build_plan reports a capability gap and the
+	// merged packages of this run never get built.
+	restoreMaster(ctx, a, st, "build")
+
 	planRes, perr := tool.BuildPlanTool(a.env).Run(ctx, json.RawMessage(`{}`))
 	if perr != nil {
-		return perr
+		st.Status = "failed_at_build"
+		st.Notes = append(st.Notes, "build_plan: "+perr.Error())
+		return finishRun(a, st)
 	}
 	if p, ok := planRes.Data.(tool.BuildPlan); ok {
 		st.BuildPlan = p
@@ -262,6 +269,23 @@ func cmdRun(ctx context.Context, args []string) error {
 		}
 	}
 	return finishRun(a, st)
+}
+
+// restoreMaster brings HEAD back to master after a phase that may have checked
+// a PR branch out, and records what it moved away from. A failure is only a
+// note: requireCleanMaster reports the gap with the phase's own tool name when
+// build_plan runs.
+func restoreMaster(ctx context.Context, a *app, st *runState, stage string) {
+	branch, rerr := tool.RestoreMaster(ctx, a.env)
+	switch {
+	case rerr != nil:
+		st.Notes = append(st.Notes, fmt.Sprintf("%s: cannot restore master (%s)", stage, rerr))
+		a.j.Emit("warn", map[string]any{"stage": stage, "msg": "cannot restore master", "detail": rerr.Error()})
+	case branch != "":
+		st.Notes = append(st.Notes, fmt.Sprintf("%s: restored HEAD from %s to master", stage, branch))
+		a.j.Emit("restore_master", map[string]any{"stage": stage, "from": branch})
+		a.j.Human("\n== %s: HEAD %s -> master", stage, branch)
+	}
 }
 
 func toOutcome(o phase.Outcome) *phaseOutcome {
