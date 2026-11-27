@@ -48,6 +48,10 @@ type BuildPlan struct {
 	Built  []string `json:"built"`
 	Error  string   `json:"error"`
 	RC     int      `json:"rc"`
+	// LogTail is the end of build-all's stderr when the run failed: makepkg
+	// reports the reason there and nowhere else, so a failing build is
+	// otherwise undiagnosable from inside a phase.
+	LogTail string `json:"log_tail,omitempty"`
 }
 
 // BuildPlanTool asks build-all what it would do.
@@ -99,8 +103,15 @@ func BuildRunTool(env *Env) *Func {
 			if err != nil {
 				return Result{}, err
 			}
+			if plan.RC != 0 {
+				// The progress filter only keeps marked lines, so the makepkg
+				// reason (`==> ERROR: ...`) would be dropped: keep its tail for
+				// the phase and for the journal, which is what the host reads.
+				plan.LogTail = logTail(res.Stderr, 80, 8000)
+			}
 			env.J.Emit("build_run", map[string]any{
 				"rc": plan.RC, "built": plan.Built, "error": plan.Error, "dry_run": plan.DryRun,
+				"log_tail": plan.LogTail,
 			})
 			summary := fmt.Sprintf("rc=%d built=%v", plan.RC, plan.Built)
 			if plan.Error != "" {
@@ -109,6 +120,16 @@ func BuildRunTool(env *Env) *Func {
 			return Result{Summary: summary, Data: plan}, nil
 		},
 	}
+}
+
+// logTail keeps the end of a build log for the report: at most maxLines lines
+// and maxBytes bytes, so a chatty makepkg cannot flood the model context.
+func logTail(s string, maxLines, maxBytes int) string {
+	t := tail(s, maxLines)
+	if len(t) > maxBytes {
+		t = t[len(t)-maxBytes:]
+	}
+	return strings.TrimSpace(t)
 }
 
 func parsePlan(res CmdResult) (BuildPlan, error) {
