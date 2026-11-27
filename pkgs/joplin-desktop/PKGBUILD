@@ -106,7 +106,10 @@ build() {
 
     # Replace npm dependencies with local ones
     cd packages
-    sed -i -E 's_"@joplin/([^"]+)": .*_"@joplin/\1": "file://'$PWD'/\1",_g' */package.json
+    # 区切りは `|`: build host のリポジトリ path (/home/kts_sz/...) は `_` を含むため、
+    # `_` 区切りだと $PWD の展開後に delimiters と衝突して
+    # `sed: unknown option to 's'` で build() が落ちる。
+    sed -i -E 's|"@joplin/([^"]+)": .*|"@joplin/\1": "file://'$PWD'/\1",|g' */package.json
 
     # Pack the app-desktop electron package
     cd "${srcdir}/joplin-${pkgver}/packages/app-desktop"
