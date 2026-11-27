@@ -43,6 +43,38 @@ func requireCleanMaster(ctx context.Context, env *Env, toolName string) error {
 	return nil
 }
 
+// RestoreMaster returns HEAD to master when a phase left it on a PR branch.
+//
+// Triage checks a deps/* head out to review or repair the bump; when the phase
+// finishes without merging, nothing switches the tree back and everyone after
+// it sees a PR branch. build_plan then refuses (it only builds committed
+// master), which used to end the whole run before any package was built (the
+// deps PR was left open and the merged one was never built). The driver calls
+// this between phases so the run continues from master.
+//
+// It returns the branch it moved away from, or "" when HEAD was already
+// master. A dirty tree is not touched: the edits belong to the model, so the
+// error is reported and requireCleanMaster explains the gap to the phase.
+func RestoreMaster(ctx context.Context, env *Env) (string, error) {
+	res := run(ctx, env.RepoRoot, execTimeout(env), "git", "rev-parse", "--abbrev-ref", "HEAD")
+	if res.RC != 0 {
+		return "", fmt.Errorf("cannot read HEAD: %s", errText(res))
+	}
+	branch := strings.TrimSpace(res.Stdout)
+	if branch == "" || branch == "master" {
+		return "", nil
+	}
+	if st := run(ctx, env.RepoRoot, execTimeout(env), "git", "status", "--porcelain"); st.RC == 0 {
+		if strings.TrimSpace(st.Stdout) != "" {
+			return branch, fmt.Errorf("HEAD is on %q and the working tree is not clean; not switching to master", branch)
+		}
+	}
+	if co := run(ctx, env.RepoRoot, execTimeout(env), "git", "checkout", "--quiet", "master"); co.RC != 0 {
+		return branch, fmt.Errorf("git checkout master from %q failed: %s", branch, errText(co))
+	}
+	return branch, nil
+}
+
 // firstLines joins the first n lines of a porcelain status with commas.
 func firstLines(s string, n int) string {
 	lines := strings.Split(strings.TrimSpace(s), "\n")
