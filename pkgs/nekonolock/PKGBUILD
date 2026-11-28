@@ -9,9 +9,9 @@
 # 配布先は [nekono] repo。移植手順と検証方法は packaging/README.md。
 
 pkgname=nekonolock
-pkgver=0.3.4
+pkgver=0.4.0
 pkgrel=1
-pkgdesc="Sway screen locker unlocked by a YubiKey OpenPGP challenge or a password"
+pkgdesc="Sway screen locker unlocked by an OpenPGP card challenge or a password"
 arch=('x86_64')
 url="https://github.com/nananek/nekonolock"
 license=('MIT')
@@ -23,7 +23,7 @@ depends=(
 )
 makedepends=('rust')  # cargo を含む
 optdepends=(
-    'pcsclite: YubiKey を pcscd 経由で使う場合（scdaemon の disable-ccid）'
+    'pcsclite: OpenPGP カードを pcscd 経由で使う場合（scdaemon の disable-ccid）'
     'ccid: PC/SC の CCID ドライバ'
 )
 backup=('etc/pam.d/nekonolock')
@@ -36,11 +36,11 @@ source=("$pkgname-$pkgver.tar.gz::https://github.com/nananek/nekonolock/archive/
         'nekonolock-auth.service'
         'nekonolock-sudo.toml'
         'LICENSE')
-sha256sums=('b541a774b4ef39b6695af32d6907507ac9434f5c127c3a9928bf9bc41952d684'
+sha256sums=('caaa94e245415435ee93f4ba6fca9b63f725a1ed51b13485dcfc94eff7ec74bd'
             'f4ca063733416b7e67e7af3eaa32b048d53affb2f4fc284b8e903a0d375c5f47'
             '79d6f29fd92abaef7c0265a5dbe784fb63a5e3ae20e5059c09bca4dd0d58d675'
             '3576102ac52ccbd2daa0bacaf8c08c7b01e0f9fec51557aca68639033fd4dd82'
-            'ef8eed8fadef6bb5b1cce399cbd3e925a192c6020816845fdf65bc625de59c98'
+            '625a49fafefe44be170db0f7f380a1f289aba6dfcd95912205603bbe49c36a34'
             'e8a8dae92194b557ef75b2ba2e287354f59638463c51aad3378520de6b17b59e')
 
 prepare() {
