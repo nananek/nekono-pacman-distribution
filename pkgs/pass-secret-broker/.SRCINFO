@@ -1,0 +1,27 @@
+pkgbase = pass-secret-broker
+	pkgdesc = Per-app Secret Service isolation for sandboxed desktop apps
+	pkgver = 0.1.0
+	pkgrel = 1
+	url = https://github.com/nananek/pass-secret-broker
+	arch = aarch64
+	arch = x86_64
+	groups = pass
+	license = MIT
+	makedepends = rust
+	depends = gcc-libs
+	depends = glibc
+	depends = dbus
+	depends = gnupg
+	provides = pass-secret-service
+	provides = org.freedesktop.secrets
+	conflicts = pass-secret-service
+	conflicts = pass-secret-service-git
+	conflicts = pass-secret-service-bin
+	conflicts = gnome-keyring
+	replaces = pass-secret-service
+	replaces = pass-secret-service-git
+	replaces = pass-secret-service-bin
+	source = pass-secret-broker-0.1.0.tar.gz::https://github.com/nananek/pass-secret-broker/archive/refs/tags/v0.1.0.tar.gz
+	b2sums = ed6d08f6c5944fa07a274d396b905fb04ac8b2651e58879e843f3c48bf27d0ea6924f79e42380d1e279093cbfd9bb1252e713688062d5323591975bc59a8692d
+
+pkgname = pass-secret-broker

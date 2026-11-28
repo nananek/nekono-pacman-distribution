@@ -1,0 +1,77 @@
+# Maintainer: Nekono Nana KAKKO KARI <3267314+nananek@users.noreply.github.com>
+#
+# 自家 source PKGBUILD (AUR fork ではない)。nananek/pass-secret-broker の
+# Rust 実装を build し、broker 本体と systemd user unit 2 本を同梱する。
+# pass-secret-service の代替 package として、provides / replaces で旧 package
+# を置き換える。配布先は [nekono] repo。
+
+pkgname=pass-secret-broker
+pkgver=0.1.0
+pkgrel=1
+pkgdesc="Per-app Secret Service isolation for sandboxed desktop apps"
+arch=('aarch64' 'x86_64')
+url="https://github.com/nananek/pass-secret-broker"
+license=('MIT')
+groups=('pass')
+depends=(
+    'gcc-libs'  # Rust バイナリの libgcc_s
+    'glibc'
+    'dbus'      # provider の private bus を起動する dbus-daemon
+    'gnupg'     # 内蔵 provider が gpg で secret を暗号化・復号する
+)
+makedepends=('rust')  # cargo を含む
+provides=(
+    'pass-secret-service'
+    'org.freedesktop.secrets'
+)
+conflicts=(
+    'pass-secret-service'
+    'pass-secret-service-git'
+    'pass-secret-service-bin'
+    'gnome-keyring'
+)
+replaces=(
+    'pass-secret-service'
+    'pass-secret-service-git'
+    'pass-secret-service-bin'
+)
+source=("$pkgname-$pkgver.tar.gz::https://github.com/nananek/pass-secret-broker/archive/refs/tags/v$pkgver.tar.gz")
+b2sums=('ed6d08f6c5944fa07a274d396b905fb04ac8b2651e58879e843f3c48bf27d0ea6924f79e42380d1e279093cbfd9bb1252e713688062d5323591975bc59a8692d')
+
+prepare() {
+    cd "$pkgname-$pkgver"
+    cargo fetch --locked --target "$(rustc -vV | sed -n 's|host: ||p')"
+}
+
+build() {
+    cd "$pkgname-$pkgver"
+    cargo build --frozen --release --target-dir target
+}
+
+check() {
+    cd "$pkgname-$pkgver"
+    # provider-run の private bus socket は path 長 100 bytes 未満に収める
+    # 必要がある。$srcdir 配下は長すぎるので、短い /var/tmp を使う。
+    # /var/tmp は exec 可能で、fake gpg を一時 dir に置くテストにも都合がよい。
+    local test_tmp
+    test_tmp=$(mktemp -d /var/tmp/pass-secret-broker-check.XXXXXX)
+    trap 'rm -rf "$test_tmp"' EXIT
+    TMPDIR="$test_tmp" cargo test --frozen --features test-support
+}
+
+package() {
+    cd "$pkgname-$pkgver"
+
+    install -Dvm755 -t "$pkgdir/usr/bin" "target/release/$pkgname"
+    install -Dvm644 -t "$pkgdir/usr/lib/systemd/user/" \
+        "contrib/systemd/pass-secret-broker.service" \
+        "contrib/systemd/pass-secret-provider@.service"
+
+    install -Dvm644 -t "$pkgdir/usr/share/licenses/$pkgname/" "LICENSE"
+    install -Dvm644 -t "$pkgdir/usr/share/doc/$pkgname/" "README.md"
+    install -Dvm644 -t "$pkgdir/usr/share/doc/$pkgname/docs/" \
+        "docs/design.md" \
+        "docs/decisions.md" \
+        "docs/inventory.md"
+    install -Dvm755 -t "$pkgdir/usr/share/doc/$pkgname/" "contrib/register-proxy.sh"
+}
