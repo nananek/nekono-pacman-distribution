@@ -7,7 +7,8 @@
 enabled = true
 # 16 桁の long key ID か 40 桁の fingerprint。
 key = "030130E2F156CD74"
-# 検証に使う公開鍵。root 所有で、group / other から書き換えられないこと。
+# 信頼する鍵（ASCII armored）。実カードでは公開鍵、カードを持たない開発環境では
+# root 所有の秘密鍵を置く。root 所有で、group / other から書き換えられないこと。
 public_key = "/etc/nekonolock/sudo-key.asc"
 challenge_bytes = 32
 timeout_sec = 30
