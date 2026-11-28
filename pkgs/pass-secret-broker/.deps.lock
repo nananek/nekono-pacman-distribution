@@ -1,0 +1,10 @@
+# Snapshot of Arch official repo versions for depends + makedepends of pass-secret-broker.
+# Auto-generated and updated by .github/workflows/dep-version-pr.yml.
+# Source: pkgs/pass-secret-broker/.SRCINFO (depends + makedepends entries).
+# Format: 1 line per package: <name>=<full-version>
+
+dbus=1.16.4-1
+gcc-libs=16.2.1+r23+gd564253eb6c8-1
+glibc=2.44+r78+gfcfb867c58ab-1
+gnupg=2.4.9-4
+rust=1:1.100.0-1
